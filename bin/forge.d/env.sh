@@ -13,7 +13,7 @@ forge_host_env() {
 
 forge_uname() { echo "${FORGE_UNAME:-$(uname -s)}"; }
 
-forge_is_darwin() { [ -z "${FORGE_PROC_ROOT:-}" ] && [ "$(forge_uname)" = Darwin ]; }
+forge_is_darwin() { [ -z "${FORGE_PROC_ROOT:-}" ] && { [ "$(forge_uname)" = Darwin ] || [ "$(uname -s)" = Darwin ]; }; }
 
 forge_meminfo() {
   local f=${FORGE_PROC_ROOT:-/proc}/meminfo k v
