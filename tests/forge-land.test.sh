@@ -83,7 +83,8 @@ topic() {
   git -C "$r" commit -q -m "$b"
   git -C "$r" checkout -q main
 }
-hid=$(tr -d '[:space:]' </etc/machine-id)
+hid=$(tr -d '[:space:]' </etc/machine-id 2>/dev/null) || hid=
+[ -n "$hid" ] || { hid=0123456789abcdef0123456789abcde0; export FORGE_MACHINE_ID=$hid; }
 oid=0123456789abcdef0123456789abcdef
 [ "$oid" != "$hid" ] || oid=fedcba9876543210fedcba9876543210
 put() { topic "$C" "$1" "$1.txt" s && mkdir -p "$C/.git/forge-test/$2" && : >"$C/.git/forge-test/$2/$(git -C "$C" rev-parse "$1^{tree}")"; }

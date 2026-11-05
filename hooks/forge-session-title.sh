@@ -25,7 +25,7 @@ fi
 
 jq -c --arg p "$project" --argjson first "$first" '
   def cut: if length > 40 then .[0:41] | sub("\\s+\\S*$"; "") | .[0:40] else . end;
-  def norm: gsub("\\s+"; " ") | trim;
+  def norm: gsub("\\s+"; " ") | sub("^ "; "") | sub(" $"; "");
   def tail: if length > 0 then " \(cut)" else "" end;
   (.prompt // "")
   | if test("^/forge-(phase|verify|ship)(\\s|$)") then empty

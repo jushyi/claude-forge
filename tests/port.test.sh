@@ -8,7 +8,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 mksrc() {
   mkdir -p "$1"
-  cp -a "$root"/{port,global,templates,schemas,skills,agents,hooks,bin,systemd} "${@:2}" "$1"/
+  cp -a "$root"/{port,global,templates,schemas,skills,agents,hooks,bin,systemd,launchd} "${@:2}" "$1"/
   git init -q -b main "$1"
   git -C "$1" add -A
   git -C "$1" commit -q -m src

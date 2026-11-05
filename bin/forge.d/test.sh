@@ -183,7 +183,8 @@ stamps() { echo "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir
 
 host_id() {
   local f g=${XDG_STATE_HOME:-$HOME/.local/state}/forge/machine-id
-  machine_id=
+  machine_id=${FORGE_MACHINE_ID:-}
+  [ -z "$machine_id" ] || return 0
   for f in /etc/machine-id /var/lib/dbus/machine-id "$g"; do
     machine_id=$(tr -d '[:space:]' 2>/dev/null <"$f") || machine_id=
     [ -z "$machine_id" ] || return 0

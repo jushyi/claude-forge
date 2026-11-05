@@ -247,7 +247,7 @@ printf -- '- Setup: `npm ci`\n' >.forge/TESTING.md
 passes "a TESTING.md with no command line skips coverage"
 rm .forge/TESTING.md
 passes "a repo with no TESTING.md skips coverage"
-cp "$root/.forge/TESTING.md" .forge/TESTING.md
+grep -v '^- CI full suite:' "$root/.forge/TESTING.md" >.forge/TESTING.md
 newt tests/newsuite.test.sh
 passes "forge's own All tests line covers a new tests/<name>.test.sh"
 tl . 'npm test' 'npm test -- {test}' 'npm test -- {files}'

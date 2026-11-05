@@ -10,7 +10,7 @@ notify() {
   case $s in
     0) return 0 ;;
     124) echo "forge: warning: $tool timed out after $t seconds (exit 124)" >&2 ;;
-    127)
+    *)
       if [ -n "${WSL_DISTRO_NAME:-}" ]; then
         w=${XDG_STATE_HOME:-$HOME/.local/state}/forge/notify-warned
         [ -e "$w" ] && return 0
@@ -18,8 +18,11 @@ notify() {
         echo "forge: warning: no notifier on this WSL2 system; forge alerts stay in its logs" >&2
         return 0
       fi
-      echo "forge: warning: $tool not found on PATH (exit 127)" >&2 ;;
-    *) echo "forge: warning: $tool failed with exit $s" >&2 ;;
+      if [ "$s" = 127 ]; then
+        echo "forge: warning: $tool not found on PATH (exit 127)" >&2
+      else
+        echo "forge: warning: $tool failed with exit $s" >&2
+      fi ;;
   esac
   return 1
 }

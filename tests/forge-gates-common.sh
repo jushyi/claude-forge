@@ -18,7 +18,8 @@ lastline() { tail -n1 "$tmp/out"; }
 gitinit() { git init -q -b main "$1" && git -C "$1" config user.name forge && git -C "$1" config user.email forge@example.com; }
 skey() { printf 'k%s' "$(git -C "$1" rev-parse --absolute-git-dir | tr -d '\n' | sha256sum | cut -c1-12)"; }
 
-hid=$(tr -d '[:space:]' </etc/machine-id)
+hid=$(tr -d '[:space:]' </etc/machine-id 2>/dev/null) || hid=
+[ -n "$hid" ] || { hid=0123456789abcdef0123456789abcde0; export FORGE_MACHINE_ID=$hid; }
 "$forge" --help >"$tmp/forge-help" || fail "forge --help exits 0"
 
 lint() { bash -c 'set -euo pipefail; shopt -s nullglob; for m in "$1"/bin/forge.d/*.sh; do . "$m"; done; test_lint "$2"' _ "$root" "$1"; }

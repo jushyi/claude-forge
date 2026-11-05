@@ -7,7 +7,8 @@ unset FORGE_ROOT FORGE_STALL_MIN FORGE_BG_CEIL_MIN DBUS_SESSION_BUS_ADDRESS FORG
 export FORGE_WATCHDOG_POLL_SECS=0.05
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-export FORGE_SYS_ROOT=$tmp/sys
+export FORGE_SYS_ROOT=$tmp/sys FORGE_RUN_ROOT=$tmp/run-root
+mkdir -p "$FORGE_RUN_ROOT/systemd/system"
 mkdir -p "$FORGE_SYS_ROOT"
 
 fail() { echo "forge-watchdog: FAIL $*" >&2; exit 1; }

@@ -28,7 +28,7 @@ for m in "${mods[@]}"; do
   if want "$m"; then
     dir=$root/mods/$m
     [ "$(jq -r .name "$dir/.claude-plugin/plugin.json")" = "$m" ] || fail "$m: plugin.json name must be the folder name"
-    if ! command -v claude >/dev/null; then
+    if [ -n "${FORGE_CLAUDE_STUB:-}" ] || ! command -v claude >/dev/null; then
       echo "SKIP mods $m: claude is not installed; claude plugin validate and test need it"
       ok "$m"
       continue

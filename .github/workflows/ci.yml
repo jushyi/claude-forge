@@ -28,7 +28,9 @@ jobs:
   fedora:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    container: fedora:latest
+    container:
+      image: fedora:latest
+      options: --init
     steps:
       - name: Install dependencies
         run: |
@@ -44,7 +46,9 @@ jobs:
   arch:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    container: archlinux:latest
+    container:
+      image: archlinux:latest
+      options: --init
     steps:
       - name: Install dependencies
         run: |

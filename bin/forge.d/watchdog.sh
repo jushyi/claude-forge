@@ -795,8 +795,8 @@ stop_cause() {
         | if .error == "rate_limit" then (.quotaLimits.resetsAt | numbers | ["limit", ., null]) // ["text", ([.message.content | if type == "string" then . else .[]? | .text? end | strings] | join(" ")), .at]
           else ["error", (.error // "unknown"), .at] end
       else first(([range($t | length) as $j | $t[$j] | select(note | contains("was restarted after the previous session ended") or contains("didn\u0027t finish before the previous session ended"))
-            | ((note | capture("<task-id>(?<i>[^<]+)</task-id>")?.i) // null) as $id
-            | select(any($t[$j + 1:][] | note | select(contains("<status>")) | capture("<task-id>(?<i>[^<]+)</task-id>")?.i; . == $id) | not)]
+            | ((note | (capture("<task-id>(?<i>[^<]+)</task-id>")? | .i)) // null) as $id
+            | select(any($t[$j + 1:][] | note | select(contains("<status>")) | (capture("<task-id>(?<i>[^<]+)</task-id>")? | .i); . == $id) | not)]
           | last | select(. != null) | ["reboot", "", .at]),
           ($t | map(select(note | contains("<status>killed</status>"))) | last | select(. != null) | ["killed", "", .at])) // empty end
     | map(. // "" | tostring | gsub("[\n\u001f]"; " ")) | join("\u001f")') || return 1

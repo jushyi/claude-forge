@@ -832,7 +832,9 @@ echo dirty >"$ci/untracked.txt"
 chead=$(git -C "$ci" rev-parse HEAD)
 ctree=$(git -C "$ci" rev-parse "HEAD^{tree}")
 cshort=$(git -C "$ci" rev-parse --short "$ctree")
-hs=$(git -C "$ci" rev-parse --path-format=absolute --git-common-dir)/forge-test/$(tr -d '[:space:]' </etc/machine-id)
+hid=$(tr -d '[:space:]' </etc/machine-id 2>/dev/null) || hid=
+[ -n "$hid" ] || { hid=0123456789abcdef0123456789abcde0; export FORGE_MACHINE_ID=$hid; }
+hs=$(git -C "$ci" rev-parse --path-format=absolute --git-common-dir)/forge-test/$hid
 cview() { jq -cn --arg h "$1" '{headRefOid: $h, statusCheckRollup: ($ARGS.positional | map(fromjson))}' --args "${@:2}"; }
 cirun() { rm -rf "$hs"; prdir=$ci prrun "$@"; }
 nostamp() { [ ! -e "$hs/$ctree" ] && [ -z "$(ls -A "$hs" 2>/dev/null)" ] || fail "$1 must write no stamp: $(ls -A "$hs")"; }
