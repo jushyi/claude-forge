@@ -255,6 +255,9 @@ doctor() {
   local -a repos=() cmds=() dw
   watchdog_path
   doctor_repos
+  while IFS= read -r w; do
+    [ -z "$w" ] || doctor_bad "$w"
+  done < <(forge_preflight || true)
   watchdog_enabled ||
     doctor_bad "forge-watchdog.timer is not enabled; fix: forge watchdog --install"
   for r in "${repos[@]}"; do

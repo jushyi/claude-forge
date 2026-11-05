@@ -79,6 +79,8 @@ jobs:
           } >>"$GITHUB_PATH"
       - name: Identify
         run: git config --global user.name ci && git config --global user.email ci@example.com
+      - name: Bash 3.2 hook check
+        run: PATH=/bin:/usr/bin:$PATH tests/hook-bash32.sh
       - name: Test
         run: tests/ci.sh
 

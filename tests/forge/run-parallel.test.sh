@@ -20,8 +20,8 @@ echo '[]' >"$CLAUDE_AGENTS"
 p=$PWD
 last() { tail -n1 "$CLAUDE_LOG"; }
 opts="--model opus --effort medium --permission-mode"
-s5="--settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"p_test_05\",\"FORGE_ROOT\":\"$p\",\"FORGE_PHASE\":\"05\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001}"
-sv="--settings {\"disableBundledSkills\":true,\"env\":{\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\",\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_ROOT\":\"$p\"},\"skillListingBudgetFraction\":0.0001}"
+s5="--settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"p_test_05\",\"FORGE_ROOT\":\"$p\",\"FORGE_PHASE\":\"05\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"bgIsolation\":\"none\",\"baseRef\":\"head\"}}"
+sv="--settings {\"disableBundledSkills\":true,\"env\":{\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\",\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_ROOT\":\"$p\"},\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"baseRef\":\"head\",\"bgIsolation\":\"none\"}}"
 norm() { [[ $1 =~ ^(.*)\ --settings\ (\{[^ ]*\})\ (.*)$ ]] && echo "${BASH_REMATCH[1]} --settings $(jq -cS . <<<"${BASH_REMATCH[2]}") ${BASH_REMATCH[3]}"; }
 work() {
   local w=.claude/worktrees/crm-export-$1 d=("$S"/phases/"$1"-*)
@@ -82,7 +82,7 @@ jq '(.phases[] | select(.slug == "export-ui") | .goal) = "UI2"' "$S"/features/cr
 : >"$CLAUDE_LOG"
 "$forge" implement crm/export >/dev/null
 [ "$(bgs)" = "P07" ] || fail "a replanned phase relaunches: $(bgs)"
-unset FORGE_CONCURRENCY
+export FORGE_CONCURRENCY=10
 ok concurrency
 fi
 
@@ -120,7 +120,7 @@ agents() { local a; for a; do jq -n --arg i "$(pid "${a%%:*}")" --arg a "$a" '$a
 
 if want caps; then
 many 12
-[ "$(bgs)" = "P05,P06,P07,P08,P09,P10,P11,P12,P13,P14" ] || fail "the default per-feature cap is 10: $(bgs)"
+[ "$(bgs)" = "P05,P06,P07,P08,P09,P10,P11,P12,P13,P14" ] || fail "an explicit FORGE_CONCURRENCY of 10 caps a feature at 10: $(bgs)"
 work 05
 agents 05:done 06:blocked 07:blocked 08:blocked 09:blocked 10:working 11:working 12:working 13:working 14:working
 export FORGE_MAX_SESSIONS=20
@@ -129,8 +129,7 @@ export FORGE_MAX_SESSIONS=20
 [ "$(bgs)" = "P15" ] || fail "19 live forge sessions (other projects' new and legacy-named phase, retry, verify and ship sessions and discuss, quick, fast, debug and new sessions counted; plain, capitalized, build, audit, blocked, done, failed, stopped, crashed not) leave room for one under a cap of 20, and blocked phases are not relaunched: $(bgs)"
 grep -qxF "forge: 20 forge sessions live; phase 16 waits for a free session" "$tmp/out" || fail "the wait message counts the session just started: $(cat "$tmp/out")"
 ! grep -q "is gone" "$tmp/out" || fail "a blocked phase session is live, not gone: $(cat "$tmp/out")"
-unset FORGE_MAX_SESSIONS
-jq -e '.env | has("FORGE_MAX_SESSIONS") or has("FORGE_CONCURRENCY") | not' "$root/global/settings.json" >/dev/null || fail "global/settings.json must leave the limits to code"
+export FORGE_MAX_SESSIONS=12
 cap=12
 all=$others
 others='[{"id": "q4", "name": "q ship crm/auth", "state": "working"}, {"id": "q16", "name": "q crm-intake Ship", "state": "working"},
@@ -140,14 +139,14 @@ others='[{"id": "q4", "name": "q ship crm/auth", "state": "working"}, {"id": "q1
 agents 05:done 06:blocked 07:blocked 08:blocked 09:blocked 10:working 11:working 12:working 13:working 14:working 15:working
 : >"$CLAUDE_LOG"
 [ "$(code "$forge" done 05)" = 0 ] || fail "done at the default machine cap exits 0: $(cat "$tmp/out")"
-[ -z "$(bgs)" ] || fail "with FORGE_MAX_SESSIONS unset, 12 live forge sessions fill the default cap of $cap: $(bgs)"
+[ -z "$(bgs)" ] || fail "with FORGE_MAX_SESSIONS at 12, 12 live forge sessions fill the default cap of $cap: $(bgs)"
 grep -qxF "forge: $cap forge sessions live; phase 16 waits for a free session" "$tmp/out" || fail "the default machine cap is the code default $cap: $(cat "$tmp/out")"
 others=$(jq -c 'map(select(.id != "q20"))' <<<"$others")
 agents 05:done 06:blocked 07:blocked 08:blocked 09:blocked 10:working 11:working 12:working 13:working 14:working 15:working
 others=$all
 : >"$CLAUDE_LOG"
 [ "$(code "$forge" done 05)" = 0 ] || fail "a later done exits 0: $(cat "$tmp/out")"
-[ "$(bgs)" = "P16" ] || fail "with FORGE_MAX_SESSIONS unset, 11 live forge sessions leave room for one under the default cap of $cap, blocked sessions holding no per-feature slot: $(bgs)"
+[ "$(bgs)" = "P16" ] || fail "with FORGE_MAX_SESSIONS at 12, 11 live forge sessions leave room for one under the default cap of $cap, blocked sessions holding no per-feature slot: $(bgs)"
 ok caps
 fi
 
@@ -166,7 +165,7 @@ agents 05:done 06:done
 : >"$CLAUDE_LOG"
 [ "$(code "$forge" done 05)" = 0 ] || fail "done with room: $(cat "$tmp/out")"
 [ "$(bgs)" = "P06" ] || fail "a later advance with room starts the phase resume left due: $(bgs)"
-unset FORGE_MAX_SESSIONS
+export FORGE_MAX_SESSIONS=12
 ok caps-resume
 fi
 
@@ -183,7 +182,7 @@ export FORGE_MAX_SESSIONS=15
 : >"$CLAUDE_LOG"
 [ "$(code "$forge" done 05)" = 0 ] || fail "done with room for Verify: $(cat "$tmp/out")"
 [ "$(verifies)" = 1 ] || fail "a later done with room starts Verify: $(cat "$CLAUDE_LOG")"
-unset FORGE_MAX_SESSIONS
+export FORGE_MAX_SESSIONS=12
 ok caps-verify
 fi
 
@@ -332,7 +331,7 @@ echo '{"status": "blocked", "summary": "stuck"}' >"$S"/phases/06-export-b/result
 [ "$(holds)" = "phase 07,phase 08,phase 06" ] || fail "resume at the cap records phase 06: $(cat "$held")"
 noted "phase 06"
 [ "$(jq -sr 'last.step' "$S"/phases/06-export-b/events.jsonl)" = wait ] || fail "resume at the cap still logs its wait event: $(cat "$S"/phases/06-export-b/events.jsonl)"
-unset FORGE_MAX_SESSIONS
+export FORGE_MAX_SESSIONS=12
 rm -f "$held"
 mem 3670016
 : >"$CLAUDE_LOG"
@@ -373,7 +372,7 @@ export FORGE_MAX_SESSIONS=1
 [ "$(holds)" = "verify crm/export,ship crm/export" ] || fail "Ship at the cap records ship crm/export: $(holds)"
 noted "ship crm/export"
 [ -f "$S"/features/crm-export/verify.json ] || fail "a held Ship keeps verify.json"
-unset FORGE_MAX_SESSIONS
+export FORGE_MAX_SESSIONS=12
 ok held
 fi
 
@@ -416,7 +415,7 @@ mkplan 07 "" src/b.ts src/a.ts
 : >"$CLAUDE_LOG"
 "$forge" implement crm/export >/dev/null
 [ "$(bgs)" = "P09,P10" ] || fail "waiting phases free their slots: $(bgs)"
-unset FORGE_CONCURRENCY
+export FORGE_CONCURRENCY=10
 mkplan 10 api src/a.ts
 [ "$(code "$forge" check 10)" = 0 ] || fail "the same path in another repo causes no wait: $(cat "$tmp/out")"
 mkplan 08 "" src/c.ts
@@ -496,7 +495,7 @@ git init -q -b main && git config user.name forge && git config user.email forge
 echo '[]' >"$CLAUDE_AGENTS"
 : >"$CLAUDE_LOG"
 p=$PWD sib=$tmp/lumen
-sr="--settings {\"env\":{\"FORGE_ROOT\":\"$p\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001}"
+sr="--settings {\"env\":{\"FORGE_ROOT\":\"$p\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"bgIsolation\":\"none\",\"baseRef\":\"head\"}}"
 rm -rf "$sib" && repo "$sib"
 mkdir -p "$sib/.forge/contracts" && touch "$sib/.forge/contracts/.keep"
 alltests "$sib"

@@ -1274,9 +1274,9 @@ ok jbc-browser
 fi
 
 if want settings; then
-m=$(jq -r '.hooks.PreToolUse[]? | select(any(.hooks[]; .command == "bash \"$HOME/.claude/hooks/forge-guard.sh\"")) | .matcher' \
+m=$(jq -r '.hooks.PreToolUse[]? | select(any(.hooks[]; .command == "sh \"$HOME/.claude/hooks/forge-hook.sh\" forge-guard.sh")) | .matcher' \
   "$root/global/settings.json")
-to=$(jq -r '.hooks.PreToolUse[]?.hooks[]? | select(.command == "bash \"$HOME/.claude/hooks/forge-guard.sh\"") | .timeout' "$root/global/settings.json")
+to=$(jq -r '.hooks.PreToolUse[]?.hooks[]? | select(.command == "sh \"$HOME/.claude/hooks/forge-hook.sh\" forge-guard.sh") | .timeout' "$root/global/settings.json")
 [ "$to" = 15 ] || fail "global/settings.json must give forge-guard a 15 s timeout, got $to"
 for t in Bash Edit Write NotebookEdit ScheduleWakeup CronCreate ReadNotifications; do
   [[ "|$m|" == *"|$t|"* ]] || fail "global/settings.json must run forge-guard on $t, matcher: $m"

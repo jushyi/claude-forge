@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 # Port approved forge files into the live Claude setup. Dry-run unless --apply.
 # Copies (never symlinks) so in-progress edits here can't change live sessions.
+case $OSTYPE in
+  darwin*)
+    for _h in /opt/homebrew /usr/local; do
+      [ ! -d "$_h/bin" ] || PATH=$_h/bin:$PATH
+      for _p in bash/bin coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin flock/bin rsync/bin; do
+        [ ! -d "$_h/opt/$_p" ] || PATH=$_h/opt/$_p:$PATH
+      done
+    done
+    export PATH
+    if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+      _b=$(command -v bash)
+      [ "$("$_b" -c 'echo "${BASH_VERSINFO:-0}"')" -ge 4 ] || { echo "port: needs Bash 4 or newer; run: brew install bash" >&2; exit 1; }
+      exec "$_b" "$0" "$@"
+    fi ;;
+esac
 set -euo pipefail
 if [ -L "$0" ]; then cd "$(dirname "$(readlink -f "$0")")"; else cd "$(dirname "$0")"; fi
 apply= only= uninstall= plugins= browser=
@@ -19,7 +34,6 @@ while [ $# -gt 0 ]; do
   shift
 done
 . bin/forge.d/platform.sh
-forge_gnubin
 if [ -z "$uninstall" ] && ! forge_preflight >&2; then
   echo "port: nothing changed; fix the above and rerun" >&2
   exit 1
@@ -99,11 +113,15 @@ map=(
   "hooks/:$HOME/.claude/hooks/"
   "bin/:$HOME/.local/bin/"
 )
-[ "$(forge_os)" = mac ] || map+=("systemd/:$units/")
+agents=$HOME/Library/LaunchAgents
+agent=com.github.claude-forge.watchdog
+if [ "$(forge_os)" = mac ]; then map+=("launchd/:$agents/"); else map+=("systemd/:$units/"); fi
 uninstall_forge() {
   [ -f "$manifest" ] || { echo "port: forge is not installed: $manifest is missing" >&2; exit 1; }
   local path dir t first had stripped n p
-  if [ "$(forge_os)" != mac ] && command -v systemctl >/dev/null; then
+  if [ "$(forge_os)" = mac ]; then
+    launchctl bootout "gui/$(id -u)/$agent" >/dev/null 2>&1 || echo "port: warning: could not unload $agent" >&2
+  elif command -v systemctl >/dev/null; then
     systemctl --user disable --now forge-watchdog.timer >/dev/null 2>&1 || echo "port: warning: could not disable forge-watchdog.timer" >&2
   fi
   while IFS= read -r t; do
@@ -401,6 +419,12 @@ if [ "$apply" = --apply ] && [ -z "$reload_failed" ] && [ "$(forge_os)" != mac ]
   ! { systemctl --user is-enabled --quiet forge-watchdog.timer && systemctl --user is-active --quiet forge-watchdog.timer; }; then
   systemctl --user enable --now forge-watchdog.timer ||
     echo "port: warning: systemctl --user enable --now forge-watchdog.timer failed; the next --apply retries it" >&2
+fi
+if [ "$apply" = --apply ] && [ "$(forge_os)" = mac ] && [ -f "$agents/$agent.plist" ]; then
+  sed -i "s|__HOME__|$HOME|g" "$agents/$agent.plist"
+  launchctl bootout "gui/$(id -u)/$agent" >/dev/null 2>&1 || true
+  launchctl bootstrap "gui/$(id -u)" "$agents/$agent.plist" ||
+    echo "port: warning: launchctl bootstrap failed; run forge doctor" >&2
 fi
 if [ "$apply" = --apply ]; then
   mkdir -p "$(dirname "$manifest")"

@@ -4,7 +4,10 @@ set -euo pipefail
 
 unset FNM_DIR
 db=$tmp/dbin
-mkdir -p "$db" "$tmp/elsewhere"
+mkdir -p "$db" "$tmp/elsewhere" "$tmp/run-root/systemd/system"
+export FORGE_RUN_ROOT=$tmp/run-root
+printf '#!/bin/sh\nexit 0\n' >"$db/claude"
+chmod +x "$db/claude"
 cat >"$db/systemctl" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$DOC_SYSTEMCTL_LOG"

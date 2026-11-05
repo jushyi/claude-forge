@@ -8,22 +8,6 @@ forge_os() {
   esac
 }
 
-forge_gnubin() {
-  [ "$(forge_os)" = mac ] || return 0
-  local b g
-  for b in /usr/local /opt/homebrew; do
-    [ -d "$b" ] || continue
-    PATH=$b/bin:$PATH
-    for g in coreutils findutils gnu-sed; do
-      [ ! -d "$b/opt/$g/libexec/gnubin" ] || PATH=$b/opt/$g/libexec/gnubin:$PATH
-    done
-    for g in flock rsync; do
-      [ ! -d "$b/opt/$g/bin" ] || PATH=$b/opt/$g/bin:$PATH
-    done
-  done
-  export PATH
-}
-
 forge_install_line() {
   local os=$1 tool=$2 p=$2
   case $tool in

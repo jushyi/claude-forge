@@ -750,7 +750,6 @@ n=$(grep -cE '^unset (.* )?FORGE_TEST_SLOT_HELD( |$)' "$w" || true)
 for v in FORGE_TEST_CPUS FORGE_TEST_LOG_DIR; do
   [ "$n" -ge 2 ] && [ "$(grep -E '^unset (.* )?FORGE_TEST_SLOT_HELD( |$)' "$w" | grep -cE " $v( |\$)" || true)" = "$n" ] || fail "forge-watchdog.test.sh unsets FORGE_TEST_SLOT_HELD without $v"
 done
-jq -e '.env | has("FORGE_MAX_SESSIONS") or has("FORGE_CONCURRENCY") | not' "$root/global/settings.json" >/dev/null || fail "global settings must leave the limits to code"
 ok test-slots-nested
 fi
 

@@ -1062,8 +1062,8 @@ fi
 
 if want "hooks resolve under \$HOME"; then
 jq -e '[.hooks[][].hooks[]] | length == 2 and all(has("args") | not)
-  and all(.command | test("^bash \"\\$HOME/\\.claude/hooks/[A-Za-z0-9-]+\\.sh\"$"))' "$settings" >/dev/null \
-  || fail "the two hooks must run 'bash \"\$HOME/.claude/hooks/<name>.sh\"' in shell form: $(jq -c '[.hooks[][].hooks[]]' "$settings")"
+  and all(.command | test("^sh \"\\$HOME/\\.claude/hooks/forge-hook\\.sh\" [A-Za-z0-9-]+\\.sh$"))' "$settings" >/dev/null \
+  || fail "the two hooks must run through forge-hook.sh in shell form: $(jq -c '[.hooks[][].hooks[]]' "$settings")"
 ok "hooks resolve under \$HOME"
 fi
 
@@ -1272,6 +1272,26 @@ fresh
 apply_plain
 [ "$(jq -r .source "$HOME/.local/state/forge/port.json")" = "$(cd "$src" && pwd -P)" ] || fail "port.json must record the source clone: $(cat "$HOME/.local/state/forge/port.json")"
 ok "guard fallback source recorded"
+fi
+
+if want "macOS installs a launchd agent"; then
+cat >"$tmp/bin/launchctl" <<'EOF'
+#!/usr/bin/env bash
+echo "$*" >>"$LAUNCHCTL_LOG"
+EOF
+chmod +x "$tmp/bin/launchctl"
+export LAUNCHCTL_LOG=$tmp/launchctl.log
+fresh
+FORGE_UNAME=Darwin "$port" --apply >"$tmp/out" 2>&1 || fail "--apply on macOS exited non-zero: $(cat "$tmp/out")"
+plist=$HOME/Library/LaunchAgents/com.github.claude-forge.watchdog.plist
+[ -f "$plist" ] || fail "--apply on macOS must install the launchd agent: $(cat "$tmp/out")"
+grep -qF "$HOME/.local/bin/forge" "$plist" && ! grep -q __HOME__ "$plist" || fail "the plist must name the real home: $(cat "$plist")"
+[ ! -e "$HOME/.config/systemd/user/forge-watchdog.timer" ] || fail "macOS must not install systemd units"
+grep -q "^bootstrap gui/$(id -u) $plist" "$LAUNCHCTL_LOG" || fail "--apply must load the agent: $(cat "$LAUNCHCTL_LOG")"
+FORGE_UNAME=Darwin "$port" --uninstall >"$tmp/out" 2>&1 || fail "--uninstall on macOS exited non-zero: $(cat "$tmp/out")"
+[ ! -e "$plist" ] || fail "--uninstall must remove the plist"
+grep -q "^bootout gui/$(id -u)/com.github.claude-forge.watchdog" "$LAUNCHCTL_LOG" || fail "--uninstall must unload the agent: $(cat "$LAUNCHCTL_LOG")"
+ok "macOS installs a launchd agent"
 fi
 
 [ -z "$only" ] || fail "no case $only"

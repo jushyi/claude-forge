@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/forge-guard.sh\"",
+            "command": "sh \"$HOME/.claude/hooks/forge-hook.sh\" forge-guard.sh",
             "timeout": 15
           }
         ]
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/forge-session-title.sh\"",
+            "command": "sh \"$HOME/.claude/hooks/forge-hook.sh\" forge-session-title.sh",
             "timeout": 5
           }
         ]

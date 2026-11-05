@@ -1642,7 +1642,7 @@ grep -qiE 'last (real )?user prompt' "$repo/bin/forge.d/help/watchdog.txt" || fa
 ok already-alerted
 fi
 
-lsj='{"env":{"CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001}'
+lsj='{"env":{"CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001,"worktree":{"bgIsolation":"none","baseRef":"head"}}'
 resume_stubs() {
   cat >"$bin/claude" <<'STUB'
 #!/usr/bin/env bash

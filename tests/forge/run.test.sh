@@ -34,7 +34,7 @@ printf '%s\n' "$PWD" "$@" >"$LEAN_LOG"
 echo "backgrounded · 0123abcd · x"
 EOF
 chmod +x "$tmp/ln/bin/claude"
-lean='{"env":{"CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001}'
+lean='{"env":{"CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001,"worktree":{"bgIsolation":"none","baseRef":"head"}}'
 lsess() { rm -f "$tmp/ln/log"; PATH=$tmp/ln/bin:$PATH LEAN_LOG=$tmp/ln/log bash -c 'set -euo pipefail; shopt -s nullglob; for m in "$1"/bin/forge.d/*.sh; do . "$m"; done; shift; session "$@"' _ "$root" "$@" >/dev/null || fail "session $*: exit $?"; mapfile -t la <"$tmp/ln/log"; }
 lset() { local i; for ((i = 0; i < ${#la[@]}; i++)); do [ "${la[$i]}" != --settings ] || { echo "${la[$((i + 1))]}"; return; }; done; echo none; }
 same() { jq -e --argjson w "$2" '. == $w' <<<"$1" >/dev/null 2>&1; }
@@ -43,7 +43,7 @@ same "$(lset)" "$lean" || fail "a caller that passes no settings launches with t
 [ "${la[0]}/${la[1]}/${la[2]}/${la[3]}/${la[$((${#la[@]} - 1))]}" = "$tmp/ln/w/--bg/-n/p P05 crm/x//forge-phase /r 05" ] || fail "the no-settings launch keeps its cwd, name and prompt: ${la[*]}"
 caller='{"env":{"FORGE_PORT_OFFSET":"10","FORGE_TEST_DB":"p_test_05","FORGE_ROOT":"/r","FORGE_PHASE":"05","FORGE_EXTRA":"x"}}'
 lsess "$tmp/ln/w" "p P05 crm/x" "/forge-phase /r 05" "$caller"
-same "$(lset)" '{"env":{"FORGE_PORT_OFFSET":"10","FORGE_TEST_DB":"p_test_05","FORGE_ROOT":"/r","FORGE_PHASE":"05","FORGE_EXTRA":"x","CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001}' ||
+same "$(lset)" '{"env":{"FORGE_PORT_OFFSET":"10","FORGE_TEST_DB":"p_test_05","FORGE_ROOT":"/r","FORGE_PHASE":"05","FORGE_EXTRA":"x","CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001,"worktree":{"bgIsolation":"none","baseRef":"head"}}' ||
   fail "the lean keys merge into the caller's settings, every caller env key kept: $(lset)"
 lsess "$tmp/ln/w" "p P05 crm/x" "continue" "" "0123abcd-full-id"
 [ "${#la[@]}" = 9 ] && [ "${la[0]}/${la[1]}/${la[2]}/${la[3]}/${la[4]}/${la[5]}/${la[6]}/${la[8]}" = "$tmp/ln/w/--bg/--resume/0123abcd-full-id/-n/p P05 crm/x/--settings/continue" ] ||
@@ -448,7 +448,7 @@ rm -rf "$tmp/d" && mkdir -p "$tmp/d/bin"
   wait $lk
   [ "$s" = 0 ] || fail "discuss beside a done session, another feature's and another project's live ones, with forge.lock held, starts: $s $(cat "$tmp/d/err")"
   [ "$(bgs)" = 1 ] || fail "discuss starts one session: $(cat "$CLAUDE_LOG")"
-  [ "$(grep -F -- " --bg " "$CLAUDE_LOG")" = "$p | --bg -n p discuss crm/intake --model opus --effort medium --permission-mode bypassPermissions --settings {\"env\":{\"FORGE_ROOT\":\"$p\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001} /forge-discuss crm/intake" ] ||
+  [ "$(grep -F -- " --bg " "$CLAUDE_LOG")" = "$p | --bg -n p discuss crm/intake --model opus --effort medium --permission-mode bypassPermissions --settings {\"env\":{\"FORGE_ROOT\":\"$p\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"bgIsolation\":\"none\",\"baseRef\":\"head\"}} /forge-discuss crm/intake" ] ||
     fail "discuss session at the root with its name, prompt and FORGE_ROOT settings: $(cat "$CLAUDE_LOG")"
   grep -qF "backgrounded · $(printf %s "p discuss crm/intake" | md5sum | cut -c1-8) · p discuss crm/intake" "$tmp/d/out" || fail "discuss prints claude --bg's output: $(cat "$tmp/d/out")"
   : >"$CLAUDE_LOG"
@@ -473,7 +473,7 @@ rm -rf "$tmp/da" && mkdir -p "$tmp/da/bin" "$tmp/da/proc"
   git init -q -b main && git config user.name forge && git config user.email forge@example.com
   git add -A && git commit -q -m init
   bgs() { grep -c -- " --bg " "$CLAUDE_LOG" || true; }
-  want() { printf '%s | --bg -n p discuss %s --model opus --effort medium --permission-mode bypassPermissions --settings {"env":{"FORGE_ROOT":"%s","CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001} /forge-discuss %s\n' "$p" "$1" "$p" "$2"; }
+  want() { printf '%s | --bg -n p discuss %s --model opus --effort medium --permission-mode bypassPermissions --settings {"env":{"FORGE_ROOT":"%s","CLAUDE_CODE_FORK_SUBAGENT":"0"},"disableBundledSkills":true,"skillListingBudgetFraction":0.0001,"worktree":{"bgIsolation":"none","baseRef":"head"}} /forge-discuss %s\n' "$p" "$1" "$p" "$2"; }
   run() { s=0; "$@" >"$tmp/da/out" 2>"$tmp/da/err" || s=$?; }
   echo '[]' >"$CLAUDE_AGENTS"
   : >"$CLAUDE_LOG"
@@ -793,10 +793,10 @@ recorded() { echo '{"findings": []}' >"$1/review.json"; echo '{"command": "true"
 p=$tmp/p fx5=$S/phases/05-export-core fx6=$S/phases/06-export-api
 last() { tail -n1 "$CLAUDE_LOG"; }
 opts="--model opus --effort medium --permission-mode"
-s5="--settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"p_test_05\",\"FORGE_ROOT\":\"$p\",\"FORGE_PHASE\":\"05\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001}"
-s6="--settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"p_test_06\",\"FORGE_ROOT\":\"$p\",\"FORGE_PHASE\":\"06\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001}"
-sr="--settings {\"env\":{\"FORGE_ROOT\":\"$p\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001}"
-sv="--settings {\"disableBundledSkills\":true,\"env\":{\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\",\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_ROOT\":\"$p\"},\"skillListingBudgetFraction\":0.0001}"
+s5="--settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"p_test_05\",\"FORGE_ROOT\":\"$p\",\"FORGE_PHASE\":\"05\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"bgIsolation\":\"none\",\"baseRef\":\"head\"}}"
+s6="--settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"p_test_06\",\"FORGE_ROOT\":\"$p\",\"FORGE_PHASE\":\"06\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"bgIsolation\":\"none\",\"baseRef\":\"head\"}}"
+sr="--settings {\"env\":{\"FORGE_ROOT\":\"$p\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"bgIsolation\":\"none\",\"baseRef\":\"head\"}}"
+sv="--settings {\"disableBundledSkills\":true,\"env\":{\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\",\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_ROOT\":\"$p\"},\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"baseRef\":\"head\",\"bgIsolation\":\"none\"}}"
 norm() { [[ $1 =~ ^(.*)\ --settings\ (\{[^ ]*\})\ (.*)$ ]] && echo "${BASH_REMATCH[1]} --settings $(jq -cS . <<<"${BASH_REMATCH[2]}") ${BASH_REMATCH[3]}"; }
 
 fresh
@@ -1240,7 +1240,7 @@ echo '{"phases": [{"slug": "export-core", "number": "08", "goal": "Core", "spec"
 "$forge" alloc crm/export >/dev/null
 git add -A && git commit -q -m init
 "$forge" implement crm/export >/dev/null
-[ "$(last)" = "$PWD/.claude/worktrees/crm-export-08 | --bg -n my-app.x P08 crm/export $opts bypassPermissions --settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"my_app_x_test_08\",\"FORGE_ROOT\":\"$PWD\",\"FORGE_PHASE\":\"08\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001} /forge-phase $PWD 08" ] || fail "phase 08 session: $(last)"
+[ "$(last)" = "$PWD/.claude/worktrees/crm-export-08 | --bg -n my-app.x P08 crm/export $opts bypassPermissions --settings {\"env\":{\"FORGE_PORT_OFFSET\":\"10\",\"FORGE_TEST_DB\":\"my_app_x_test_08\",\"FORGE_ROOT\":\"$PWD\",\"FORGE_PHASE\":\"08\",\"CLAUDE_CODE_FORK_SUBAGENT\":\"0\"},\"disableBundledSkills\":true,\"skillListingBudgetFraction\":0.0001,\"worktree\":{\"bgIsolation\":\"none\",\"baseRef\":\"head\"}} /forge-phase $PWD 08" ] || fail "phase 08 session: $(last)"
 ok settings
 fi
 

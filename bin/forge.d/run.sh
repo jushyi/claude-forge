@@ -2,7 +2,7 @@ forge_session_re='^([^/]+(/[^/]+)? (P[0-9]+(R[0-9]+)?|verify|ship) [^ /]+/[^ /]+
 
 session() {
   local s a
-  s=$(jq -cn --argjson c "${4:-null}" --arg f "${FORGE_FOREGROUND_TASKS:-}" '($c // {}) * {env: ({CLAUDE_CODE_FORK_SUBAGENT: "0"} + if $f == "" then {} else {FORGE_FOREGROUND_TASKS: $f} end), disableBundledSkills: true, skillListingBudgetFraction: 0.0001}') || return
+  s=$(jq -cn --argjson c "${4:-null}" --arg f "${FORGE_FOREGROUND_TASKS:-}" '($c // {}) * {env: ({CLAUDE_CODE_FORK_SUBAGENT: "0"} + if $f == "" then {} else {FORGE_FOREGROUND_TASKS: $f} end), disableBundledSkills: true, skillListingBudgetFraction: 0.0001, worktree: {bgIsolation: "none", baseRef: "head"}}') || return
   a=(-n "$2" --model opus --effort medium --permission-mode "${FORGE_PERMISSION_MODE:-bypassPermissions}" --settings "$s")
   [ -z "${5:-}" ] || a=(--resume "$5" -n "$2" --settings "$s")
   (cd "$1" && claude --bg "${a[@]}" "$3" </dev/null 9>&- 6>&-)

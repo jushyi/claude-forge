@@ -413,9 +413,7 @@ grep -qF 'GitHub Actions' "$tmp/tcmds" && grep -qF 'success' "$tmp/tcmds" ||
 rm -rf "$lr/seeded" && mkdir -p "$lr/seeded/.forge" && cp "$root/templates/TESTING.md" "$lr/seeded/.forge/"
 [ "$(code lint "$lr/seeded")" = 0 ] && [ ! -s "$tmp/out" ] || fail "a repo seeded from the TESTING template without CI passes test_lint: $(cat "$tmp/out")"
 cmds "$root/.forge/TESTING.md" >"$tmp/fcmds"
-! grep -qE '^[[:space:]]*- CI full suite:' "$root/.forge/TESTING.md" || fail "forge's TESTING.md declares no CI full suite line"
-grep -E '^- ' "$tmp/fcmds" | grep -F 'CI full suite' | grep -qiE 'none|no ' && grep -E '^- ' "$tmp/fcmds" | grep -F 'CI full suite' | grep -qi 'workflow' ||
-  fail "forge's TESTING.md Commands has a bullet on the CI full suite line saying forge declares none since it has no CI workflows: $(cat "$tmp/fcmds")"
+grep -qxF -- '- CI full suite: `ubuntu`' "$root/.forge/TESTING.md" || fail "forge's TESTING.md declares the ubuntu job as its CI full suite"
 awk '/^## Gates/{exit} 1' "$root/.forge/TESTING.md" | grep -F 'forge-gates' | grep -qF 'CI full suite' ||
   fail "forge's TESTING.md test notes cover the forge-gates CI full suite lint cases"
 [ "$(code lint "$root")" = 0 ] && [ ! -s "$tmp/out" ] || fail "forge's own TESTING.md passes test_lint: $(cat "$tmp/out")"
