@@ -22,6 +22,8 @@ jobs:
           echo "$HOME/.local/bin" >>"$GITHUB_PATH"
       - name: Identify
         run: git config --global user.name ci && git config --global user.email ci@example.com
+      - name: Browser suite detail
+        run: tests/forge-browser.test.sh 2>&1 | grep -a '^[-+]' | head -60 || true
       - name: Test
         run: tests/ci.sh
 
@@ -34,7 +36,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          dnf install -y -q nodejs npm git jq rsync curl python3 python3-pyyaml pipx util-linux procps-ng findutils diffutils which hostname gawk tar gzip patch
+          dnf install -y -q systemd nodejs npm git jq rsync curl python3 python3-pyyaml pipx util-linux procps-ng findutils diffutils which hostname gawk tar gzip patch
           PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install check-jsonschema
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Test as a regular user

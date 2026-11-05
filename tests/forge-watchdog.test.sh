@@ -4661,8 +4661,13 @@ if want timer; then
 cal=$(directive "$timer" Timer OnCalendar)
 active=$(directive "$timer" Timer OnUnitActiveSec)
 if [ -n "$cal" ]; then
-  norm=$(systemd-analyze calendar "$cal" 2>&1 | sed -n 's/^ *Normalized form: //p')
-  [ "$norm" = '*-*-* *:00/5:00' ] || fail "forge-watchdog.timer OnCalendar must fire every 5 minutes, got '$cal' ($norm)"
+  if command -v systemd-analyze >/dev/null; then
+    norm=$(systemd-analyze calendar "$cal" 2>&1 | sed -n 's/^ *Normalized form: //p')
+    [ "$norm" = '*-*-* *:00/5:00' ] || fail "forge-watchdog.timer OnCalendar must fire every 5 minutes, got '$cal' ($norm)"
+  else
+    echo "SKIP forge-watchdog timer calendar check: systemd-analyze is not installed"
+    [ "$cal" = '*:0/5' ] || fail "forge-watchdog.timer OnCalendar must fire every 5 minutes, got '$cal'"
+  fi
 elif [ -n "$active" ]; then
   case "$active" in 5min | 5m | 300 | 300s) ;; *) fail "forge-watchdog.timer OnUnitActiveSec must be 5 minutes, got '$active'" ;; esac
   [ -n "$(directive "$timer" Timer OnBootSec)$(directive "$timer" Timer OnActiveSec)" ] ||
