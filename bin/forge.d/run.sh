@@ -37,7 +37,7 @@ started() {
 tally() {
   local d=${XDG_RUNTIME_DIR:-$HOME/.local/state}/forge
   [ -z "${tallied:-}" ] || return 0
-  [[ ${FORGE_MAX_SESSIONS:-12} =~ ^[1-9][0-9]*$ ]] || die "FORGE_MAX_SESSIONS must be a positive integer, got '$FORGE_MAX_SESSIONS'"
+  [[ ${FORGE_MAX_SESSIONS:-$lim_sessions} =~ ^[1-9][0-9]*$ ]] || die "FORGE_MAX_SESSIONS must be a positive integer, got '$FORGE_MAX_SESSIONS'"
   mkdir -p "$d" || die "cannot create $d"
   exec 6>"$d/sessions.lock" || die "cannot open $d/sessions.lock"
   flock 6 || die "cannot lock $d/sessions.lock"
@@ -50,13 +50,13 @@ tally() {
 room() {
   local x avail
   tally
-  if [ "$nlive" -ge "${FORGE_MAX_SESSIONS:-12}" ]; then
+  if [ "$nlive" -ge "${FORGE_MAX_SESSIONS:-$lim_sessions}" ]; then
     waits="waits for a free session"
     echo "forge: $nlive forge sessions live; $1 $waits" >&2
     return 1
   fi
   avail=$(forge_mem_available) || die "cannot read MemAvailable from ${FORGE_PROC_ROOT:-/proc}/meminfo"
-  if [ "$avail" -lt $(((4 + nstarted) * 1048576)) ]; then
+  if [ "$avail" -lt $(((lim_reserve_gib + nstarted) * 1048576)) ]; then
     waits="waits for memory"
     x=$((avail * 10 / 1048576))
     echo "forge: MemAvailable $((x / 10)).$((x % 10)) GiB; $1 $waits" >&2
@@ -489,7 +489,7 @@ advance() {
   done
   if [ $all = 0 ]; then
     for n in "${due[@]}"; do
-      [ $run -lt "${FORGE_CONCURRENCY:-10}" ] || break
+      [ $run -lt "${FORGE_CONCURRENCY:-$lim_concurrency}" ] || break
       launch $n || case $? in
         10) ;;
         11)

@@ -1,0 +1,18 @@
+Usage: forge bg <name> [--cwd <dir>] [--env <KEY=VALUE>]... -- <cmd> [<arg>...]
+       forge bg --stop <name>
+       forge bg --active <name>
+
+Start a named background job that outlives the calling session: a
+systemd-run --user unit on Linux, a launchctl submit job on macOS, whose
+output goes to ~/.local/state/forge/bg/<name>.log. The job gets the caller's
+PATH. --stop stops it and exits 0 when it is not running; --active exits 0
+while it runs.
+
+Arguments:
+  <name>   letters, digits and : _ . -
+  --cwd    working directory of the job
+  --env    one environment variable, repeatable
+
+Example:
+  forge bg forge-quick-fix-web --cwd ../web -- npm run dev
+  forge bg --stop forge-quick-fix-web

@@ -220,8 +220,8 @@ the request from here on.
 10. Verify, with `--verify`. In each touched `W`, producer first, run its
     STACK build or start command when it has one and check it comes up
     without errors; run a serving command as
-    `systemd-run --user --collect -E PATH --unit forge-quick-<slug>-<repo> --working-directory <W> <command>`
-    and stop that unit after the operator answers. Then print short
+    `forge bg forge-quick-<slug>-<repo> --cwd <W> -- <command>`
+    and stop it with `forge bg --stop` after the operator answers. Then print short
     manual-test steps for the task and ask pass or fail through
     `AskUserQuestion`. Add each smoke failure, and each failed manual step
     with the operator's text, to `S/review.json` as an open high finding on

@@ -1,0 +1,13 @@
+Usage: forge limits
+
+Print the limits forge uses on this machine, computed from total memory
+in GiB (G) and CPU count (C), with FORGE_<NAME> in the environment or in
+~/.config/forge/env overriding the first three:
+
+  FORGE_MAX_SESSIONS  G/4, between 1 and 6, at most max(2, C)
+  FORGE_CONCURRENCY   G/8, between 1 and 4, at most max(1, C/2)
+  FORGE_TEST_RUNS     G/16, between 1 and 2, at most max(1, C/4)
+  session memory gate G/8 GiB, between 1 and 4, plus 1 GiB per session
+                      this call already started
+  test memory cap     G/4 GiB, between 1 and 4, and at most what is
+                      available now, unless TESTING.md sets - Memory:

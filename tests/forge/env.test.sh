@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 . "$(dirname "$0")/../forge-common.sh"
+unset FORGE_MAX_SESSIONS FORGE_CONCURRENCY
 
 envsh=$root/bin/forge.d/env.sh
 if want load; then

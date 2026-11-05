@@ -27,7 +27,7 @@ never claude stop, and lists claude agents --json --all again every
 blocked. Only an unfinished session, or a finished one that claude rm
 cannot remove, refuses the start.
 When the worktree cannot be created, it logs no start event and exits
-1. While $FORGE_MAX_SESSIONS (default 12) live,
+1. While $FORGE_MAX_SESSIONS (default: forge limits) live,
 non-blocked forge sessions of all projects are running, of any form
 (phase, verify, ship, discuss, quick, fast, new or debug; a
 session blocked on a question holds no place), it starts nothing,
@@ -39,7 +39,7 @@ GiB; phase <N> waits for memory" and logging "waits for memory" (see
 forge implement --help). Each wait
 leaves the result removed so the phase stays due and the next forge
 done, next or implement that finds room starts it, as forge implement
-does, up to $FORGE_CONCURRENCY (default 10) per feature, a session
+does, up to $FORGE_CONCURRENCY (default: forge limits) per feature, a session
 blocked on a question holding no place. Each wait also records the held
 phase N in ${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl, keeping
 the first hold time when it is already recorded, and prints "forge:

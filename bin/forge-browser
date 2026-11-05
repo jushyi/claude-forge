@@ -11,6 +11,16 @@ owner_wait=${FORGE_BROWSER_OWNER_WAIT:-540}
 me=${CLAUDE_CODE_SESSION_ID:-}
 lock_file=$(dirname "$prefix")/.forge-browser.lock
 owner_file=$(dirname "$prefix")/.forge-browser.owner
+case $OSTYPE in
+  darwin*)
+    for _h in /opt/homebrew /usr/local; do
+      for _p in bash/bin coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin flock/bin; do
+        [ ! -d "$_h/opt/$_p" ] || PATH=$_h/opt/$_p:$PATH
+      done
+    done
+    export PATH ;;
+esac
+forge=$(dirname "$(readlink -f "$0")")/forge
 
 die() {
   echo "forge-browser: $*" >&2
@@ -129,9 +139,7 @@ check_key() {
 
 stop_unit() {
   local out
-  if ! out=$(systemctl --user stop "$unit" 2>&1); then
-    [[ $out == *"not loaded"* ]] || die "could not stop $unit: $out"
-  fi
+  out=$("$forge" bg --stop "$unit" 2>&1) || die "could not stop $unit: $out"
 }
 
 peer_status() {
@@ -171,7 +179,7 @@ live_owner() {
   [ -s "$owner_file" ] || return 1
   { IFS= read -r id; IFS= read -r label; } <"$owner_file" || true
   [ -n "$id" ] && [ "$id" != "$me" ] || return 1
-  systemctl --user is-active --quiet "$unit" >/dev/null 2>&1 || return 1
+  "$forge" bg --active "$unit" >/dev/null 2>&1 || return 1
   agents=$(claude agents --json </dev/null) || die "cannot list Claude sessions to check browser owner ${label:-$id}"
   jq -e --arg s "$id" 'any(.[]; .sessionId == $s and ((.state // "") | IN("done","failed","stopped") | not))' <<<"$agents" >/dev/null || return 1
   owner=${label:-$id}
@@ -227,11 +235,11 @@ start() {
   install
   stop_unit
   rm -f "$owner_file"
-  systemd-run --user --unit="$unit" --collect --quiet \
-    --setenv=JBC_HEADLESS="$headless" --setenv=JBC_HOME="$jbc_home" --setenv=CHROME_PATH="$chrome" \
-    --setenv=JBC_CONFIRM_IRREVERSIBLE=1 --setenv=JBC_PROVIDER=openrouter \
+  "$forge" bg "$unit" \
+    --env JBC_HEADLESS="$headless" --env JBC_HOME="$jbc_home" --env CHROME_PATH="$chrome" \
+    --env JBC_CONFIRM_IRREVERSIBLE=1 --env JBC_PROVIDER=openrouter \
     -- "$BASH" -c 'OPENROUTER_API_KEY=$(<"$1") || exit 1; export OPENROUTER_API_KEY; exec "$2" "$3" < <(exec sleep infinity)' \
-    "$unit" "$key_file" "$node" "$prefix/server.mjs" {lock_fd}>&- || die "systemd-run could not start $unit"
+    "$unit" "$key_file" "$node" "$prefix/server.mjs" {lock_fd}>&- || die "forge bg could not start $unit"
   trap '[ -n "$started" ] || stop_unit' EXIT
   peer_status
   wait_devtools

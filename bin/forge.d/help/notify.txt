@@ -1,7 +1,7 @@
 Usage: forge notify <title> <body>
 
 Send a desktop notification to the operator at the laptop: runs
-notify-send -- <title> <body> with stdin from /dev/null, bounded at
+notify-send -- <title> <body> (osascript on macOS) with stdin from /dev/null, bounded at
 FORGE_NOTIFY_TIMEOUT seconds (default 10). Backslashes in <body> are
 doubled so notify-send shows them as typed. When
 DBUS_SESSION_BUS_ADDRESS is unset it is set to

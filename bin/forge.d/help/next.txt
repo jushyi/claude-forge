@@ -31,9 +31,9 @@ replan it, log a retry event (which ends its run), then delete
 verify.json, so a rerun fails with "no verify.json" and adds no gap
 twice, commit and start
 the phases due as forge implement does, up to $FORGE_CONCURRENCY
-(default 10) per feature, a blocked session holding no place, a retried
+(default: forge limits) per feature, a blocked session holding no place, a retried
 phase named "<project> P<N>R<k> <track>/<feature>". While
-$FORGE_MAX_SESSIONS (default 12) live, non-blocked forge sessions of all
+$FORGE_MAX_SESSIONS (default: forge limits) live, non-blocked forge sessions of all
 projects are running, of any form (phase, verify, ship, discuss, quick,
 fast, new or debug), it starts no phase, prints "forge: <n> forge
 sessions live; phase <N> waits for a free session" on stderr and exits

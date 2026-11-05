@@ -193,7 +193,7 @@ host_stamps() {
 
 tmp_kept() {
   [ -f "$1.unit" ] || return 1
-  case $(systemctl --user is-active "$(cat "$1.unit")" 2>/dev/null) in inactive | failed) return 1 ;; esac
+  forge_bg_active "$(cat "$1.unit")" || return 1
 }
 
 tmp_free() {
@@ -208,7 +208,7 @@ test_tmp() {
   local d f
   d=$(stamps "$1")/tmp
   for f in "$d"/*; do
-    [[ ${f##*/} =~ ^[0-9]+$ ]] && [ ! -d "/proc/${f##*/}" ] || continue
+    [[ ${f##*/} =~ ^[0-9]+$ ]] && ! kill -0 "${f##*/}" 2>/dev/null || continue
     ! tmp_kept "$f" || continue
     rm -rf "$f" "$f.unit" || die "cannot remove $f"
   done
@@ -252,7 +252,7 @@ snap_prune() {
   sd=$(snap_dir "$1") || { echo "forge: cannot find the main worktree of $1" >&2; return 1; }
   for f in "$sd"/* "$st"/snap/*; do
     l=$st/snap-owner/${f##*/}.lock s=0
-    if [[ ${f##*/} =~ ^[0-9]+$ ]] && { [ -d "/proc/${f##*/}" ] || tmp_kept "$st/tmp/${f##*/}"; }; then
+    if [[ ${f##*/} =~ ^[0-9]+$ ]] && { kill -0 "${f##*/}" 2>/dev/null || tmp_kept "$st/tmp/${f##*/}"; }; then
       [[ $f == "$sd"/* ]] || o=1
       continue
     elif [[ $f == "$sd"/k* && -e $l ]]; then
@@ -347,7 +347,7 @@ ancestor() {
   local h=$$
   while [[ $h =~ ^[0-9]+$ ]] && [ "$h" -gt 1 ]; do
     [ "$h" != "$1" ] || return 0
-    h=$(sed -n 's/^PPid:[[:space:]]*//p' "/proc/$h/status" 2>/dev/null)
+    h=$(forge_parent "$h")
   done
   return 1
 }
@@ -406,7 +406,7 @@ runs_take() {
 }
 
 test_run_slot() {
-  local r=${XDG_RUNTIME_DIR:-$HOME/.local/state}/forge/test-runs n=${FORGE_TEST_RUNS-2} slot o hn h me e a=${EPOCHREALTIME//[!0-9]/} q=
+  local r=${XDG_RUNTIME_DIR:-$HOME/.local/state}/forge/test-runs n=${FORGE_TEST_RUNS-$lim_test_runs} slot o hn h me e a=${EPOCHREALTIME//[!0-9]/} q=
   [[ $n =~ ^[1-9][0-9]{0,8}$ ]] || die "FORGE_TEST_RUNS must be a whole number of at least 1, got '$n'" 2
   ! runs_held "$r" || return 0
   e=$r/wait/$$
@@ -429,7 +429,7 @@ test_run_slot() {
     fi
     if [ -z "$q" ]; then
       q=1
-      me=$(proc_start $$) || die "cannot read /proc/$$/stat"
+      me=$(proc_start $$) || die "cannot read the start time of pid $$"
       trap "rm -f $(printf %q "$e")" EXIT
       traps
       echo "$$ $me $a" >"$e" || die "cannot write $e"
@@ -477,7 +477,7 @@ kib() {
 test_mem() {
   local m
   m=$(test_line "$1" Memory) || exit
-  m=${m:-4G}
+  m=${m:-$(forge_test_cap)}
   kib "$m" >/dev/null || die "$1/.forge/TESTING.md: - Memory: \`$m\`: not a size such as 4G or 512M"
   echo "$m"
 }
@@ -514,6 +514,10 @@ scope_props() {
 
 proc_start() {
   local s
+  if [ ! -r "/proc/$1/stat" ]; then
+    s=$(ps -o lstart= -p "$1" 2>/dev/null) && [ -n "$s" ] && echo "${s// /_}"
+    return
+  fi
   s=$(cat "/proc/$1/stat" 2>/dev/null) || return 1
   read -ra s <<<"${s##*) }"
   [ "${s[0]}" != Z ] && [ -n "${s[19]:-}" ] && echo "${s[19]}"
@@ -879,9 +883,7 @@ full_chain() {
 tree_passed() { [ -f "$1/$2" ] || based "$1/changed/$2" "$3" "$4" || { [ "$5" = all ] && full_chain "$4" "$1" "$2" HEAD; }; }
 
 load1() {
-  local a
-  read -r a _ 2>/dev/null <"${FORGE_PROC_ROOT:-/proc}/loadavg" && [[ $a =~ ^[0-9]+\.[0-9]{2}$ ]] || return 1
-  echo "$a"
+  forge_load1
 }
 
 test_failure() {
@@ -953,7 +955,7 @@ run_tests() {
   export FORGE_TEST_LOG_DIR=${log%.log}.d/
   log_dir
   probe
-  read -r la _ </proc/loadavg && ma=$(sed -n 's/^MemAvailable: *\([0-9]*\) kB$/\1/p' /proc/meminfo) && [ -n "$ma" ] || die "cannot read the load and memory"
+  la=$(FORGE_PROC_ROOT= forge_load1) && ma=$(FORGE_PROC_ROOT= forge_mem_available) && [ -n "$ma" ] || die "cannot read the load and memory"
   test_setup "$top" "$log"
   t1=$(date +%s)
   l0=$(load1) || l0=
@@ -1042,7 +1044,7 @@ run_one() {
   wt_lock "$top" "${log%/*}"
   test_tmp "$top"
   probe
-  read -r la _ </proc/loadavg && ma=$(sed -n 's/^MemAvailable: *\([0-9]*\) kB$/\1/p' /proc/meminfo) && [ -n "$ma" ] || die "cannot read the load and memory"
+  la=$(FORGE_PROC_ROOT= forge_load1) && ma=$(FORGE_PROC_ROOT= forge_mem_available) && [ -n "$ma" ] || die "cannot read the load and memory"
   test_setup "$top" "$log"
   t1=$(date +%s)
   for ((it = 1; it <= n; it++)); do
@@ -1090,7 +1092,7 @@ run_stack() {
   wt_lock "$top" "$gd"
   : >"$log"
   test_tmp "$top"
-  printf -v stop 'systemctl --user stop %q >>%q 2>&1 </dev/null' "$unit" "$log"
+  printf -v stop 'forge_bg_stop %q >>%q 2>&1 </dev/null' "$unit" "$log"
   eval "$stop" || [ $? -eq 5 ] || die "cannot stop the previous stack unit $unit, log $log"
   test_setup "$top" "$log"
   trap "if $stop || [ \$? -eq 5 ]; then rm -rf $(printf %q "$run_tmp") $(printf %q "$run_tmp.unit") $(printf %q "$tmp_link"); fi" EXIT
@@ -1098,7 +1100,7 @@ run_stack() {
   trap 'exit 143' TERM
   echo "$unit" >"$run_tmp.unit" || die "cannot write $run_tmp.unit"
   echo "forge: stack journal: journalctl --user -u $unit" >>"$log"
-  systemd-run --user --collect --unit "$unit" --working-directory "$top" --setenv "FORGE_PORT_OFFSET=$off" --setenv "PATH=$PATH" --setenv "TMPDIR=$tmp_link" --setenv "GIT_CEILING_DIRECTORIES=$GIT_CEILING_DIRECTORIES" bash -c "$stack" >>"$log" 2>&1 </dev/null ||
+  forge_bg "$unit" "$top" "FORGE_PORT_OFFSET=$off" "PATH=$PATH" "TMPDIR=$tmp_link" "GIT_CEILING_DIRECTORIES=$GIT_CEILING_DIRECTORIES" -- bash -c "$stack" >>"$log" 2>&1 </dev/null ||
     die "local stack failed to start, log $log"
   (cd "$top" && nogit env "FORGE_PORT_OFFSET=$off" bash -c "$tests") >>"$log" 2>&1 </dev/null 4>&- || s=$?
   if [ $s -ne 0 ]; then

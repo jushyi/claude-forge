@@ -255,7 +255,7 @@ doctor() {
   local -a repos=() cmds=() dw
   watchdog_path
   doctor_repos
-  systemctl --user is-enabled --quiet forge-watchdog.timer ||
+  watchdog_enabled ||
     doctor_bad "forge-watchdog.timer is not enabled; fix: forge watchdog --install"
   for r in "${repos[@]}"; do
     f=$r/.forge/TESTING.md

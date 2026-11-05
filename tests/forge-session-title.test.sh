@@ -365,7 +365,7 @@ has '`\[agent\]`[^.]*`E/s<k>/`' || fail "forge-verify must follow an [agent] tag
 has '`operator_ran`[^.]*true[^.]*`operator` line' || fail "forge-verify must set operator_ran true when an operator line was asked"
 ! in6 'Step <?k>? of <?n>?' || fail "forge-verify must not present walkthrough steps one at a time as 'Step k of n'"
 in6 'first[^.]*setup|setup[^.]*first' || fail "forge-verify must do every setup action it can before presenting a step"
-in6 'systemd-run --user' || fail "forge-verify walkthrough setup must start services under systemd-run --user"
+in6 'forge bg' || fail "forge-verify walkthrough setup must start services under forge bg"
 in6 'pairing code' || fail "forge-verify walkthrough setup must mint pairing codes or tokens"
 in6 'test push' || fail "forge-verify walkthrough setup must send test pushes"
 in6 'sudo password' || fail "forge-verify must name a sudo password as an action it cannot do itself"

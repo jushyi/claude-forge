@@ -1,6 +1,6 @@
 Usage: forge implement <track>/<feature>
 
-Start the feature's phases, up to $FORGE_CONCURRENCY (default 10) sessions
+Start the feature's phases, up to $FORGE_CONCURRENCY (default: forge limits) sessions
 at once. The feature must be ready (every dependency shipped) and
 allocated (forge alloc), with none of its sessions live (listed by claude
 agents with state working or blocked). Also restarts a feature whose
@@ -28,7 +28,7 @@ git-ignored in that repo.
 Then starts, in number order, each phase with no result whose
 dependencies are done (result done and branch merged into forge/<track>-<feature>)
 and that is not running, until the feature's running phases reach
-$FORGE_CONCURRENCY (default 10). A phase is running while it has no result
+$FORGE_CONCURRENCY (default: forge limits). A phase is running while it has no result
 and its latest start event is newer than its latest wait, retry or replan
 event and claude agents --json --all lists the session that start event
 names in a state other than crashed or stopped (an idle "done" session
@@ -52,7 +52,7 @@ quick|fast|new <task>", "<project> debug <symptom>", or the legacy
 "<project> <track>-<feature> Phase <N>[ retry <k>]", "... Verify" or
 "... Ship", whose state is not blocked, done, failed, stopped or
 crashed, so a session waiting on a question holds no place. Each session
-the call starts adds one. At or above $FORGE_MAX_SESSIONS (default 12,
+the call starts adds one. At or above $FORGE_MAX_SESSIONS (default: forge limits,
 set per host in ~/.config/forge/env) it starts nothing more, prints
 "forge: <n> forge sessions live; phase <N> waits for a free session" on
 stderr (n the machine-wide count) and exits 0; the phase stays due and

@@ -258,7 +258,7 @@ lock and never waits. A FORGE_TEST_WT_HELD naming another lock, or a
 lock whose holder is no ancestor, is ignored and the run waits.
 
 Every full, changed and --one run, and each --repeat run, that will
-execute a command takes one of $FORGE_TEST_RUNS run slots (default 2),
+execute a command takes one of $FORGE_TEST_RUNS run slots (default: forge limits),
 the machine's one test run semaphore, and holds it from before its
 Setup to the end of its command. The slots are flock'd files under
 ${XDG_RUNTIME_DIR:-$HOME/.local/state}/forge/test-runs/, one pool

@@ -93,6 +93,7 @@ scope_limit_us() {
 
 watchdog_test_limit() {
   local f=${XDG_STATE_HOME:-$HOME/.local/state}/forge/test-past-limit
+  [ "$(forge_uname)" != Darwin ] || return 0
   mkdir -p "${f%/*}" || :
   { flock 9 || echo "forge: warning: cannot lock $f.lock; the test-past-limit alert may repeat" >&2; test_limit_alert "$f"; } 9>>"$f.lock" ||
     { echo "forge: warning: cannot open $f.lock; the test-past-limit alert may repeat" >&2; test_limit_alert "$f"; }
@@ -140,7 +141,7 @@ watchdog_snaps() {
     s+=("$r")
   done
   [ ${#s[@]} -gt 0 ] || return 0
-  timeout -k 5 "$to" bash -c 'shopt -s nullglob; . "$1/test.sh" && shift && for r; do
+  timeout -k 5 "$to" bash -c 'shopt -s nullglob; . "$1/env.sh" && . "$1/test.sh" && shift && for r; do
     snap_prune "$r" || echo "forge: warning: cannot prune the forge test snapshots of $r; the next scan retries" >&2
   done' forge-snaps "$D" "${s[@]}" </dev/null 9>&- || rc=$?
   case $rc in
@@ -195,7 +196,7 @@ watchdog_perf() {
 
 doctor_boot() {
   local bf=${FORGE_PROC_ROOT:-/proc}/sys/kernel/random/boot_id df=$1 b= o rc=0 n t to=${FORGE_DOCTOR_TIMEOUT:-120}
-  b=$(cat "$bf" 2>/dev/null) || b=
+  b=$(forge_boot_id 2>/dev/null) || b=
   [ -n "$b" ] || { echo "forge: warning: cannot read the boot id from $bf; forge doctor does not run this scan" >&2; return 0; }
   [ "$(cat "$df" 2>/dev/null)" != "$b" ] || return 0
   o=$(timeout -k 5 "$to" "${D%/forge.d}/forge" doctor </dev/null 9>&-) || rc=$?
@@ -540,12 +541,12 @@ watchdog_refused() {
 watchdog_held() {
   local h=${XDG_STATE_HOME:-$HOME/.local/state}/forge/held.jsonl x n r k g t d f c e s o ef rc ds al=
   [ -s "$h" ] || return 0
-  [[ ${FORGE_MAX_SESSIONS:-12} =~ ^[1-9][0-9]*$ ]] ||
+  [[ ${FORGE_MAX_SESSIONS:-$lim_sessions} =~ ^[1-9][0-9]*$ ]] ||
     { echo "forge: warning: FORGE_MAX_SESSIONS must be a positive integer, got '$FORGE_MAX_SESSIONS'; no held launch runs" >&2; return 0; }
   n=$(claude agents --json </dev/null 6>&- | jq -r --arg re "$forge_session_re" '[.[] | select((.name // "") | test($re))
     | select(.state | IN("blocked", "done", "failed", "stopped", "crashed") | not)] | length') ||
     { echo "forge: warning: cannot list Claude sessions; no held launch runs this scan" >&2; return 0; }
-  [ "$n" -lt "${FORGE_MAX_SESSIONS:-12}" ] || return 0
+  [ "$n" -lt "${FORGE_MAX_SESSIONS:-$lim_sessions}" ] || return 0
   x=$({ flock 5 && jq -sr 'sort_by(.time)[] | [.root, .kind, .target, .time] | @tsv' "$h"; } 5>>"$h.lock") ||
     { echo "forge: warning: cannot read $h; no held launch runs this scan" >&2; return 0; }
   ef=$(mktemp) || { echo "forge: warning: cannot create a temp file; no held launch runs this scan" >&2; return 0; }
@@ -651,8 +652,24 @@ note_root() {
     echo "forge: warning: cannot record $1 in $rf; forge watchdog resumes this parked phase only while its session is listed or once a scan has seen its project" >&2
 }
 
+watchdog_enabled() {
+  if [ "$(forge_uname)" = Darwin ]; then
+    launchctl print "gui/$(id -u)/com.github.claude-forge.watchdog" >/dev/null 2>&1
+  else
+    systemctl --user is-enabled --quiet forge-watchdog.timer
+  fi
+}
+
 watchdog_install() {
   local u=$HOME/.config/systemd/user f miss=()
+  if [ "$(forge_uname)" = Darwin ]; then
+    f=$HOME/Library/LaunchAgents/com.github.claude-forge.watchdog.plist
+    [ -f "$f" ] || die "missing $f; install it with ./port --apply in the forge clone, then rerun forge watchdog --install"
+    launchctl bootout "gui/$(id -u)/com.github.claude-forge.watchdog" 2>/dev/null || :
+    launchctl bootstrap "gui/$(id -u)" "$f" </dev/null || die "launchctl bootstrap $f failed"
+    echo "forge: com.github.claude-forge.watchdog loaded"
+    return
+  fi
   for f in forge-watchdog.service forge-watchdog.timer; do
     [ -f "$u/$f" ] || miss+=("$u/$f")
   done
@@ -791,7 +808,7 @@ stop_cause() {
     error) printf 'API error %s\t%s\n' "$v" "$t" ;;
     reboot) printf 'reboot\t%s\n' "$t" ;;
     killed)
-      read -r u _ <"${FORGE_PROC_ROOT:-/proc}/uptime" && [[ $u =~ ^[0-9]+(\.[0-9]+)?$ ]] ||
+      u=$(forge_uptime) && [[ $u =~ ^[0-9]+(\.[0-9]+)?$ ]] ||
         { echo "forge: cannot read the uptime from ${FORGE_PROC_ROOT:-/proc}/uptime; $name counts as not rebooted" >&2; return 0; }
       [ "$t" -ge $(($(date +%s) - ${u%%.*})) ] || printf 'reboot\t%s\n' "$t" ;;
     text)

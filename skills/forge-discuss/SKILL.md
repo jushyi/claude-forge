@@ -182,9 +182,9 @@ while Design and Mockups run.
    ```
    unit=forge-mockup-<track>-<feature>
    port=$((8700 + $(printf %s <track>-<feature> | cksum | cut -d' ' -f1) % 1000))
-   systemctl --user stop "$unit" 2>/dev/null || true
-   [ -z "$(ss -Hltn "sport = :$port")" ] || { echo "port $port in use"; exit 1; }
-   systemd-run --user --unit="$unit" --collect --quiet \
+   forge bg --stop "$unit"
+   ! curl -fs --max-time 2 -o /dev/null "http://127.0.0.1:$port/" || { echo "port $port in use"; exit 1; }
+   forge bg "$unit" \
      -- python3 -m http.server "$port" --bind 127.0.0.1 \
      --directory "<F>/mockups"
    timeout 10 bash -c "until curl -fs --max-time 2 -o /dev/null http://127.0.0.1:$port/; do sleep 0.2; done"
@@ -206,8 +206,7 @@ while Design and Mockups run.
    After each Approve or Revise answer and before the next mockup opens,
    ask any researcher `blocked:` reply that arrived meanwhile (Research
    step 2).
-4. Once every mockup is approved, run `systemctl --user stop U 2>/dev/null
-   || true`, `forge-browser stop` only when this session's
+4. Once every mockup is approved, run `forge bg --stop U`, `forge-browser stop` only when this session's
    `forge-browser start --headed` succeeded, and
    `forge commit <track>/<feature> design`. After a failed start, never run
    `forge-browser stop`: the browser is then another session's or already

@@ -202,7 +202,7 @@ STUB
     printf '#!/usr/bin/env bash\nprintf "%%s %%s\\n" %s "$*" >>"$WD_LOG"\nexit 1\n' "$c" >"$bin/$c"
   done
   chmod +x "$bin"/*
-  export WD_LOG=$log WD_AGENTS=$agents WD_BUS=$env_dir/bus.log WD_SCOPES=$env_dir/scopes XDG_RUNTIME_DIR=$env_dir/run FORGE_PROC_ROOT=$env_dir/proc CLAUDE_CODE_TMPDIR=$env_dir/ctmp
+  export FORGE_CPUS=16 FORGE_MAX_SESSIONS=12 FORGE_CONCURRENCY=10 WD_LOG=$log WD_AGENTS=$agents WD_BUS=$env_dir/bus.log WD_SCOPES=$env_dir/scopes XDG_RUNTIME_DIR=$env_dir/run FORGE_PROC_ROOT=$env_dir/proc CLAUDE_CODE_TMPDIR=$env_dir/ctmp
   mkdir -p "$XDG_RUNTIME_DIR" "$FORGE_PROC_ROOT"
   printf 'MemTotal: 33554432 kB\nMemAvailable: 16777216 kB\n' >"$FORGE_PROC_ROOT/meminfo"
   mkdir -p "$FORGE_PROC_ROOT/sys/kernel/random" "$HOME/.local/state/forge"
@@ -552,7 +552,7 @@ qj=$HOME/.claude/plugins/data/codex-openai-codex/state/ws-1/jobs
 mkdir -p "$qj"
 qjob() { jq -n --arg t "$(date -u -d "$2" +%FT%T.000Z)" '{status: "failed", completedAt: $t, errorMessage: "Your workspace is out of credits."}' >"$qj/$1.json"; }
 qnotes() { grep -c '^notify-send --|forge: Codex out of credits|' "$log" || true; }
-qlogins() { grep -cxF 'systemd-run --user --quiet --collect --unit=forge-codex-login.service codex login' "$log" || true; }
+qlogins() { grep -cxF 'systemd-run --user --unit=forge-codex-login.service --collect --quiet -- codex login' "$log" || true; }
 run
 [ "$(qnotes)$(qlogins)" = 00 ] || fail "a scan with no failed Codex job starts no login: $(cat "$log")"
 ! grep -q forge-codex-login "$log" || fail "a scan with no failed Codex job touches no login unit: $(cat "$log")"

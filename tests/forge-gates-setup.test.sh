@@ -427,11 +427,11 @@ EOF
 chmod +x "$s"/*.sh
 git -C "$s" add -A && git -C "$s" commit -q -m init
 stack() { env -u FORGE_PORT_OFFSET PATH="$tmp/sbin:$PATH" ${OFF:+FORGE_PORT_OFFSET=$OFF} "$forge" test --stack "$@"; }
-klog() { sed -E -e 's#(\[TMPDIR=/tmp/fg-)[0-9]+\]#\1PID]#' "$K_LOG" 2>/dev/null || true; }
+klog() { sed -E -e 's#(TMPDIR=/tmp/fg-)[0-9]+\]#\1PID]#' "$K_LOG" 2>/dev/null || true; }
 slog=$s/.git/forge-stack.log
 unit=forge-stack-s_k_1-$(git -C "$s" rev-parse --absolute-git-dir | tr -d '\n' | sha256sum | cut -c1-8)
 stop="systemctl[--user][stop][$unit]"
-start() { echo "systemd-run[--user][--collect][--unit][$unit][--working-directory][$s][--setenv][FORGE_PORT_OFFSET=$1][--setenv][PATH=$tmp/sbin:$PATH][--setenv][TMPDIR=/tmp/fg-PID][--setenv][GIT_CEILING_DIRECTORIES=$s/.git/forge-test/tmp${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}][bash][-c][./stack.sh]"; }
+start() { echo "systemd-run[--user][--unit=$unit][--collect][--quiet][--working-directory=$s][--setenv=FORGE_PORT_OFFSET=$1][--setenv=PATH=$tmp/sbin:$PATH][--setenv=TMPDIR=/tmp/fg-PID][--setenv=GIT_CEILING_DIRECTORIES=$s/.git/forge-test/tmp${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}][--][bash][-c][./stack.sh]"; }
 cd "$s/sub"
 : >"$K_LOG"
 [ "$(code stack)" = 0 ] || fail "a passing Stack tests command exits 0: $(cat "$tmp/out") $(klog)"
@@ -639,7 +639,7 @@ done
 rm -rf "$tst/tmp/$tdd"
 printf -- '- Local stack: `./t.sh stack`\n- Stack tests: `./t.sh st`\n' >>"$tw/.forge/TESTING.md"
 tdstack() { tds=0; : >"$TD_LOG"; : >"$K_LOG"; TMPDIR=$tmp/outer GIT_CEILING_DIRECTORIES=$tmp/ceiling PATH="$tmp/sbin:$PATH" "$forge" test --stack "$tw" >"$tmp/out" 2>&1 & tdp=$!; wait "$tdp" || tds=$?; }
-tdenv() { grep -qF "[--setenv][TMPDIR=/tmp/fg-$tdp][--setenv][GIT_CEILING_DIRECTORIES=$tst/tmp:$tmp/ceiling][bash][-c][./t.sh stack]" "$K_LOG" || fail "$1 passes --setenv TMPDIR=/tmp/fg-$tdp and GIT_CEILING_DIRECTORIES=$tst/tmp:$tmp/ceiling to systemd-run: $(cat "$K_LOG")"; }
+tdenv() { grep -qF "[--setenv=TMPDIR=/tmp/fg-$tdp][--setenv=GIT_CEILING_DIRECTORIES=$tst/tmp:$tmp/ceiling][--][bash][-c][./t.sh stack]" "$K_LOG" || fail "$1 passes --setenv TMPDIR=/tmp/fg-$tdp and GIT_CEILING_DIRECTORIES=$tst/tmp:$tmp/ceiling to systemd-run: $(cat "$K_LOG")"; }
 tdstack
 [ "$tds" = 0 ] || fail "a passing --stack run exits 0: $(cat "$tmp/out") $(cat "$K_LOG")"
 tdsaw "a passing --stack run" st
@@ -661,7 +661,7 @@ tds=0; : >"$TD_LOG"; : >"$K_LOG"
 TMPDIR=$tmp/outer GIT_CEILING_DIRECTORIES=$tmp/ceiling PATH="$tmp/tsbin:$tmp/sbin:$PATH" "$forge" test --stack "$tw" >"$tmp/out" 2>&1 & tdp=$!
 wait "$tdp" || tds=$?
 tsp=$tdp
-tu=$(sed -n 's/.*\[--unit\]\[\([^]]*\)\].*/\1/p' "$K_LOG" | head -n1)
+tu=$(sed -n 's/.*\[--unit=\([^]]*\)\].*/\1/p' "$K_LOG" | head -n1)
 [ "$tds" = 1 ] && grep -qF "did not stop" "$tmp/out" || fail "a --stack run whose unit fails to stop exits 1: $tds $(cat "$tmp/out")"
 [ -n "$tu" ] || fail "the --stack run starts a unit: $(cat "$K_LOG")"
 [ -d "$tst/tmp/$tsp" ] || fail "a unit that fails to stop keeps its TMPDIR $tst/tmp/$tsp: $(ls -A "$tst/tmp")"
@@ -857,7 +857,7 @@ sne=(PATH="$tmp/sbin:$PATH")
 : >"$K_LOG"
 snrun --stack "$sn"
 [ "$sns" = 0 ] || fail "a passing --stack run exits 0: $sns $(cat "$tmp/out") $(cat "$K_LOG")"
-grep -qF "[--working-directory][$sn][" "$K_LOG" || fail "a --stack run passes --working-directory $sn, the worktree top, to systemd-run: $(cat "$K_LOG")"
+grep -qF "[--working-directory=$sn][" "$K_LOG" || fail "a --stack run passes --working-directory $sn, the worktree top, to systemd-run: $(cat "$K_LOG")"
 snsaw "a passing --stack run" st "a4|u"
 rm -f "$sn/.git/forge-setup"
 sne=(PATH="$tmp/sbin:$PATH" "${sngit[@]}")

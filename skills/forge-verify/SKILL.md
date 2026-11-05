@@ -159,8 +159,7 @@ Arguments: `$ARGUMENTS` — the project root `R`, then `<track>/<feature>`.
    Environment starts only once every run of the stage has passed or been
    fixed.
 5. Environment. For each repo whose STACK names a command that serves it,
-   run `systemd-run --user --collect --unit forge-<feature>-<name>
-   --working-directory <W> <command>`, with every character of `<name>`
+   run `forge bg forge-<feature>-<name> --cwd <W> -- <command>`, with every character of `<name>`
    outside `[A-Za-z0-9:_.-]` replaced by `_`, and confirm it answers.
    Commands started from Bash any other way are reaped.
    Then, before the sheet, check each repo's build: read
@@ -255,7 +254,7 @@ Arguments: `$ARGUMENTS` — the project root `R`, then `<track>/<feature>`.
    actions you cannot do yourself (a physical action, a sudo password, a
    secret you cannot read, an external console), each with why, after
    first doing every setup action you can for them (start or restart
-   services under `systemd-run --user` as step 5 does, build and install,
+   services under `forge bg` as step 5 does, build and install,
    mint pairing codes or tokens, send test pushes, and undo the state a
    pre-run left, such as a record it created, or name that state in what
    the operator should see). Then print one sheet with one line per
@@ -348,7 +347,7 @@ Arguments: `$ARGUMENTS` — the project root `R`, then `<track>/<feature>`.
    `flock "$(git -C R rev-parse --path-format=absolute --git-common-dir)/forge.lock" git -C R commit -m "docs(todo): defer <track>/<feature> verify findings" -- .forge/todo.md`;
    a `<repo>` child is its own repo, so commit step c's lines in
    `R/<repo>/.forge/todo.md` there the same way right after.
-8. Stop the environment: `systemctl --user stop` each unit step 5
+8. Stop the environment: `forge bg --stop` each job step 5
    started and, when this session's last `forge-browser start` succeeded,
    `forge-browser stop`, so no browser process outlives the env. Run it
    then even after a skipped or failed pass, so the next session waiting on

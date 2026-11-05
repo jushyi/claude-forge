@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+case $OSTYPE in
+  darwin*)
+    for _h in /opt/homebrew /usr/local; do
+      for _p in bash/bin coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin flock/bin rsync/bin; do
+        [ ! -d "$_h/opt/$_p" ] || PATH=$_h/opt/$_p:$PATH
+      done
+    done
+    export PATH
+    if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+      _b=$(command -v bash)
+      [ "$("$_b" -c 'echo "${BASH_VERSINFO:-0}"')" -ge 4 ] || { echo "forge: needs Bash 4 or newer; run: brew install bash" >&2; exit 1; }
+      exec "$_b" "$0" "$@"
+    fi ;;
+esac
 set -euo pipefail
 shopt -s nullglob
 
@@ -16,13 +30,14 @@ for _m in "$D"/*.sh; do
   . "$_m"
 done
 forge_host_env
+forge_limits
 
 cmd=${1:-}
 [ -n "$cmd" ] || usage
 shift
 case $cmd in
   -h | --help | help) help; exit 0 ;;
-  status | ready | map | validate | alloc | commit | archive | resolve | check | review | event | paths | implement | done | next | resume | clean | repos | push | pr | merge-check | merge | land | golive | gc | test | fixes | ui | watchdog | notify | doctor | discuss | concern | launch | owed | perf | quick-log | plan-done | task-done | finish | replay | shadow | cutover) ;;
+  bg | limits | status | ready | map | validate | alloc | commit | archive | resolve | check | review | event | paths | implement | done | next | resume | clean | repos | push | pr | merge-check | merge | land | golive | gc | test | fixes | ui | watchdog | notify | doctor | discuss | concern | launch | owed | perf | quick-log | plan-done | task-done | finish | replay | shadow | cutover) ;;
   *) echo "forge: unknown command '$cmd'" >&2; usage ;;
 esac
 case ${1:-} in -h | --help) help "$cmd"; exit 0 ;; esac
@@ -81,6 +96,15 @@ if [ "$cmd" = watchdog ]; then
     [ "$*" = --install ] || usage
     watchdog_install
   fi
+  exit
+fi
+if [ "$cmd" = bg ]; then
+  forge_bg_cli "$@"
+  exit
+fi
+if [ "$cmd" = limits ]; then
+  [ $# -eq 0 ] || usage
+  forge_print_limits
   exit
 fi
 if [ "$cmd" = notify ]; then

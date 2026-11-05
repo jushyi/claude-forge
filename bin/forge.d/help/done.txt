@@ -52,7 +52,7 @@ Then, under the lock, so simultaneous finishes serialize:
     id is gone or no longer working or blocked
   - for any result, since a blocked phase frees its slot, start
     the phases due as forge implement does, up to $FORGE_CONCURRENCY
-    (default 10) per feature, a session blocked on a question holding
+    (default: forge limits) per feature, a session blocked on a question holding
     no place, or, when every phase is done
     (result done and branch merged), the verify session in the feature
     worktree:
@@ -61,7 +61,7 @@ Then, under the lock, so simultaneous finishes serialize:
     legacy name "<project> <track>-<feature> Verify") is working or blocked;
     it gets a FORGE_PORT_OFFSET chosen as forge implement --help
     describes and a start event carrying it in F/events.jsonl
-  - start nothing while $FORGE_MAX_SESSIONS (default 12) live,
+  - start nothing while $FORGE_MAX_SESSIONS (default: forge limits) live,
     non-blocked forge sessions of all projects are running, of any form
     (phase, verify, ship, discuss, quick, fast, new or debug):
     print "forge: <n> forge sessions live; phase <N> waits for a free

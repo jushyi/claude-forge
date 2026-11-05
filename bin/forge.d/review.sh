@@ -27,9 +27,9 @@ codex_stop() {
 
 codex_login() {
   local u=forge-codex-login.service
-  timeout 10 systemctl --user stop "$u" </dev/null 2>/dev/null || :
-  timeout 10 systemd-run --user --quiet --collect --unit="$u" codex login </dev/null ||
-    echo "forge: warning: cannot start the Codex login unit $u through systemd-run" >&2
+  forge_bg_stop "$u" </dev/null 2>/dev/null || :
+  forge_bg "$u" "" -- codex login </dev/null ||
+    echo "forge: warning: cannot start the Codex login job $u" >&2
 }
 
 codex_quota() {

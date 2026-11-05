@@ -108,6 +108,14 @@ Used by forge sessions (run by hand only after editing JSON yourself):
 Run in the project root, the directory holding .forge/.
 Run 'forge <command> --help' for a command's arguments, files and example.
 
+Limits and background jobs:
+  limits                     print the session, concurrency, test run and
+                             memory limits computed for this machine
+  bg <name> [--cwd <dir>] [--env K=V]... -- <cmd...>
+                             start a named background job through
+                             systemd-run or launchctl; --stop <name> and
+                             --active <name> stop or check it
+
 Environment:
   FORGE_ROOT              project root (default: current directory)
   FORGE_TEMPLATES         doc and check templates (default
@@ -115,12 +123,12 @@ Environment:
   FORGE_SCHEMAS           JSON schemas (default ~/.claude/forge/schemas)
   FORGE_PERMISSION_MODE   permission mode of every forge session
                           (default bypassPermissions)
-  FORGE_CONCURRENCY       phase sessions a feature runs at once (default 10)
+  FORGE_CONCURRENCY       phase sessions a feature runs at once (default: forge limits)
   FORGE_MAX_SESSIONS      live, non-blocked forge sessions of all
                           projects (phase, Verify, Ship, Discuss, Quick,
                           Debug and the other forge forms) at which
                           implement, done, next, resume and discuss
-                          --auto start nothing more (default 12); starts also wait for
+                          --auto start nothing more (default: forge limits); starts also wait for
                           MemAvailable of 3 GiB plus 1 GiB per session
   FORGE_ENV               per-host settings file (default
                           ${XDG_CONFIG_HOME:-~/.config}/forge/env): each

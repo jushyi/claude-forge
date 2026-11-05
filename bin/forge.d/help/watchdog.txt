@@ -554,7 +554,7 @@ forge implement and forge next record a launch held at the machine-wide
 cap as {root, kind, target, time}. No file or an empty one does nothing.
 It lists claude agents --json once and counts the live forge sessions as
 forge's launches do (a forge session name, state not blocked, done,
-failed, stopped or crashed); at or above ${FORGE_MAX_SESSIONS:-12} it runs
+failed, stopped or crashed); at or above $FORGE_MAX_SESSIONS it runs
 nothing this scan, and a failed listing warns and runs nothing. Under the
 flock held.jsonl.lock it reads the records sorted by time and, oldest
 first, drops a record without running anything when its target no longer

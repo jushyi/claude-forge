@@ -17,7 +17,7 @@ export FORGE_TEMPLATES=$root/templates FORGE_SCHEMAS=$root/schemas LC_ALL=C
 tmp=$(cd "$(mktemp -d)" && pwd -P)
 trap 'rm -rf "$tmp"' EXIT
 export XDG_RUNTIME_DIR=$tmp/run XDG_STATE_HOME=$tmp/state FORGE_ENV=/dev/null
-export FORGE_PROC_ROOT=$tmp/proc FORGE_SYS_ROOT=$tmp/sys
+export FORGE_PROC_ROOT=$tmp/proc FORGE_SYS_ROOT=$tmp/sys FORGE_CPUS=16 FORGE_MAX_SESSIONS=12 FORGE_CONCURRENCY=10
 mkdir -p "$FORGE_PROC_ROOT" "$FORGE_SYS_ROOT" && printf 'MemTotal: 33554432 kB\nMemAvailable: 16777216 kB\n' >"$FORGE_PROC_ROOT/meminfo" && echo '0.00 0.00 0.00 1/100 1' >"$FORGE_PROC_ROOT/loadavg"
 mkdir -p "$FORGE_PROC_ROOT/pressure" && printf 'some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n' >"$FORGE_PROC_ROOT/pressure/cpu"
 

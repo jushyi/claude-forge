@@ -211,7 +211,7 @@ if want quota-notify; then
 fi
 
 auth=$home/.codex/auth.json
-login_start="systemd-run --user --quiet --collect --unit=forge-codex-login.service codex login"
+login_start="systemd-run --user --unit=forge-codex-login.service --collect --quiet -- codex login"
 logins() { grep -cxF "$login_start" "$LOGIN_LOG" || true; }
 if want quota-login; then
   rm -f "$nst" "$auth" && : >"$NOTIFY_LOG" && : >"$LOGIN_LOG"
