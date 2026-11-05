@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ship",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "final_review",
+    "pr",
+    "date"
+  ],
+  "properties": {
+    "final_review": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pr": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    }
+  }
+}

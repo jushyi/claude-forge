@@ -1,0 +1,32 @@
+{
+  "steps": [
+    {
+      "id": "S01",
+      "text": "Mount the routing board in the enclosure.",
+      "prereqs": []
+    },
+    {
+      "id": "S02",
+      "text": "Wire one owner lamp per owner to the board.",
+      "prereqs": [
+        "Three owner lamps",
+        "Soldering iron",
+        "Board powered off"
+      ],
+      "hold": {
+        "text": "Measure the supply voltage at each lamp header.",
+        "expected": "5.0 V within 0.2 V"
+      }
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "A01",
+      "requirements": [
+        "ROUTE-01"
+      ],
+      "text": "Send one test lead through the board.",
+      "expected": "Exactly one owner lamp lights."
+    }
+  ]
+}

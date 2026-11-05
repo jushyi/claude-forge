@@ -1,0 +1,206 @@
+Usage: forge review <track>/<feature> [--base <rev>] [--prior <record>]
+                    [--out <path>]
+
+Review a diff on Codex through the codex plugin's companion and write the
+findings as review JSON. Blocks until Codex finishes, which can take
+minutes.
+
+  <track>/<feature>   review the worktree holding the current directory
+                      against main; writes the feature's review.json
+  --base <rev>        review against <rev> instead of main; <rev> is
+                      the companion's --base and the focus says "Report
+                      only defects that this diff introduces against
+                      <rev>". A <rev> that 'git -C <worktree>
+                      rev-parse --verify <rev>^{commit}' does not resolve
+                      exits 1 naming it, with no companion run
+  --prior <record>    <record> is the previous round's review record,
+                      valid against review.schema.json; a missing, unreadable or invalid
+                      record, or one whose tree is not in the reviewed
+                      worktree, exits 1 naming it, with no companion run
+  --out <path>        write the review record to <path>, absolute or
+                      relative to the current directory, instead of the feature's review.json, and
+                      name it in the findings: line. Its parent directory
+                      must exist, else it exits 1 naming it, with no
+                      companion run. The feature directory stays the
+                      review context, and no feature review.json is
+                      written. At most one review runs per worktree at a
+                      time; reviews of different worktrees with different
+                      --out paths can run at once
+
+--base, --prior and --out follow the <track>/<feature> target, in any
+order, each at most once. A phase number, a repeated option, an option
+without its value or with an empty one, any other argument or an unknown
+option is a usage error (exit 2).
+
+The companion's path is read on every call from installed_plugins.json.
+First its setup check. Before any companion call, the Codex job records
+written in the last 5 minutes
+(~/.claude/plugins/data/codex-openai-codex/state/*/jobs/*.json) are read;
+when the one with the latest completedAt (so no job has completed since)
+failed with "out of credits" or "usage limit" in its parseError,
+errorMessage or a "Codex error:" line of its logFile, the check fails
+with that message and no companion runs. Once per failed job, it also
+sends a desktop notification through forge notify, titled "forge: Codex
+out of credits", its body the matched message then "switch Codex seats;
+reviews use the fallback reviewer until then". That job's completedAt
+goes to ~/.local/state/forge/codex-quota-notified once the notification
+is sent, and a job whose completedAt that file already holds sends none.
+A notified job also fails the check for the rest of that UTC day unless a
+later job completed. A sent notification also opens a Codex login, so the
+operator can log into a seat with usage: it stops a
+forge-codex-login.service left running from an earlier failure, then
+starts 'codex login' as that transient user unit (systemd-run --user
+--collect), passing no BROWSER, which opens the login page in a fresh tab.
+A failed notification starts no login, and its retry starts the one. A
+new login clears the block: when ~/.codex/auth.json was modified after the
+failed job's completedAt, compared to the millisecond, that job no longer
+fails the check or causes the rest-of-day skip and sends no notification
+or login, while codex-quota-notified stays and a later failed job notifies
+and opens a login again. No auth.json clears nothing.
+A failed notification, state write or login start prints a "forge:
+warning:" line on stderr and changes nothing else: the check still fails
+and the fallback runs.
+A companion review that fails runs this check again right after, so its
+own out-of-credits job notifies at once, and forge watchdog runs it on
+each scan; the review's "codex: <cause>" line and exit 3 stay as they are.
+Then 'setup --json' must report Codex available and logged in. Then, in the
+worktree, 'adversarial-review --base <base> --wait --json <focus>', the
+focus limiting Codex to defects the diff introduces and naming the
+feature's spec.json. When that spec has a focus, the focus text goes on
+with the full contents of $FORGE_TEMPLATES/checks/<focus>.md for each focus
+tag, the spec's targets and pii_fields, and the instruction that a
+violation is a high finding whose summary starts "[<focus> <ID>]"; a focus
+tag with no criteria file fails, naming the missing path. A spec with no
+focus gets the focus text alone. Each finding maps to: severity critical
+or high to high, medium to medium, low to low; line from line_start;
+summary "<title>: <body>"; file relative to the worktree; fixed false;
+source "codex".
+
+With --prior, the focus text also lists the record's findings, one
+"<file>:<line> <severity>: <summary>" line each, followed by
+" (dismissed: <reason>)" when the finding's dismissed is a non-empty
+string, and tells Codex that a finding at the same file in a hunk
+unchanged since that round keeps that severity unless its body starts
+"New evidence:" and names what is new, that a finding repeating a prior
+one keeps that finding's title word for word, and that a finding
+repeating a dismissed finding stays dismissed unless its body starts
+"New evidence:" naming what is new. Severity carry-over: when the prior record has a top-level
+tree, forge, after mapping the codex findings and before writing the
+record, gives each codex finding whose file, line and title (the summary
+text before its first ": ") equal a prior finding's (the first such
+prior finding in record order) that prior finding's severity, and each
+codex finding whose file and line equal only prior findings with other
+titles the highest of its own and their severities, unless a hunk of 'git -C <worktree> diff -U0 <prior tree> HEAD^{tree} -- <file>'
+covers the line on its old side, the hunks above the line add and remove
+a different number of lines (so the line number moved and the finding
+keeps its own severity) or the finding's summary contains
+"New evidence:". Dismissal carry-over, also only with a prior tree: a
+codex finding whose file and title equal a prior finding's whose
+dismissed is a non-empty string (the first such prior finding in record
+order) gets that dismissed reason, so it is not open, when its body
+(the summary after the title) does not start "New evidence:", its line
+is outside every hunk of that diff on the new side and the prior
+finding's line is outside every hunk on the old side. A line that only
+moved under an edit elsewhere in the file still matches; a finding in
+a changed hunk or with new evidence stays open. A prior record without
+tree gets the focus text only.
+
+Operator decisions: when the feature's
+spec.json has a non-empty decisions array, the focus text also lists
+each decision verbatim, one per line, under a heading saying they are
+operator decisions and not defects, and tells Codex not to report the
+behavior they decide. An absent or empty decisions array leaves the
+block out.
+
+Security title tag, every review: the focus text asks that a finding
+about an authentication, authorization, secret, injection or
+personal-data defect start its title (the summary text before the first
+": ") with "[security]", "[pii]" or "[auth]". forge treats such a
+finding as security-class (see the findings: line below).
+
+Every finding carries a source: codex, or reviewer for the findings of a
+Sonnet fallback. When the codex part cannot run (failed
+setup check, companion error, parseError, output without findings or
+lines), the review file holds {"findings": [], "pending": ["codex:
+<cause>"]} and stdout has the line "codex: <cause>". The session then
+runs the Sonnet forge-reviewer, which writes review/reviewer-<repo>.json
+in the feature directory, <repo> being the basename of the reviewed
+worktree's repo, appends its findings to the review file and deletes
+pending. While a review file's pending is non-empty, forge fixes and
+forge archive refuse. A companion that exits N
+gives the cause "adversarial-review exited N: <reason>", the reason
+being the output's parseError, else its codex.stderr, else the last
+non-empty stderr line, newlines flattened and cut to 240 characters.
+The review's stderr and stdout go to forge-codex.log in the worktree's
+git dir (git rev-parse --absolute-git-dir).
+
+After every companion call (setup, review) forge stops the
+companion's broker for that call's directory when the call started it:
+the plugin's broker record for the directory (loadBrokerSession in
+'scripts/lib/broker-lifecycle.mjs') names a new endpoint after the call.
+A broker that was already running, another session's, is left running;
+when the record cannot be read forge warns and leaves the broker running.
+The stop runs the plugin's
+'scripts/session-lifecycle-hook.mjs SessionEnd', stdin {"cwd": <dir>},
+CLAUDE_PLUGIN_DATA set and CODEX_COMPANION_SESSION_ID and
+CODEX_COMPANION_APP_SERVER_ENDPOINT unset. A failed teardown prints
+"forge: codex broker teardown in <dir> failed" on stderr and changes
+nothing else.
+
+Every run that writes the review file (exit 0 or 3) ends stdout, after
+any "codex: <cause>" line, with
+  findings: <n> open (<h> high, <m> medium, <l> low) in <review.json>
+counting the file's open findings, <review.json> being its absolute
+path, or the --out path resolved against the current directory. When
+the codex part failed, ", pending codex" follows the closing
+parenthesis, and when k open findings are Codex-only mediums,
+", <k> advisory" follows that. Findings with the same
+file, line and summary count once. A finding is open by the forge done
+rule: it is closed when fixed is true, when deferred names a valid owner
+(todo; a feature review has no valid phase owner) or when dismissed is
+non-empty; a fixer or reviewer that rejects a finding sets
+dismissed to the reason. A high security-class finding ([security],
+[pii] or [auth] title, or a spec with security or pii in focus) is
+closed by dismissed only when it starts "settled: ", which the session
+writes as "settled: <operator's words>" after asking the operator, and
+cannot be deferred to todo. A finding whose source is codex and severity medium is
+advisory: it stays in the file but is left out of the open counts. A
+review that printed this line is finished; read the file instead of
+running it again.
+
+Exit codes:
+  0  the codex part ran; stdout is the findings: line
+  1  error: a current directory outside a git worktree, a missing spec
+     or criteria file, a --base rev that does not resolve, a missing or
+     invalid --prior record, an --out path whose parent directory does
+     not exist
+  2  usage
+  3  the codex part needs an agent fallback; stdout has its
+     "codex: <cause>" line, then the findings: line
+
+STATE is the project's state dir that forge paths prints as STATE.
+
+Reads:
+  ~/.claude/plugins/installed_plugins.json
+  the --prior <record>
+  ~/.claude/plugins/data/codex-openai-codex/state/*/jobs/*.json and logs
+  the modification time of ~/.codex/auth.json
+  STATE/features/<track>-<feature>/spec.json
+  $FORGE_TEMPLATES/checks/<focus>.md
+
+Writes:
+  <worktree git dir>/forge-codex.log
+  STATE/features/<track>-<feature>/review.json, or the --out <path>
+  each review.json or --out record with top-level "tree": 'git -C <worktree> rev-parse
+    HEAD^{tree}', the tree reviewed
+  ~/.local/state/forge/codex-quota-notified, the completedAt of the last
+    failed Codex job notified as out of credits
+  runs systemctl --user stop and systemd-run --user for the
+    forge-codex-login.service login unit
+  a Sonnet fallback writes
+    STATE/features/<track>-<feature>/review/reviewer-<repo>.json
+
+Example:
+  forge review forge/run
+  forge review forge/run --base 4f2a9c1 --prior /tmp/round1.json
+  forge review forge/run --out "$STATE/features/forge-run/review-forge.json"

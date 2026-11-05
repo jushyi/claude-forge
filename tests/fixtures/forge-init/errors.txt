@@ -1,0 +1,56 @@
+exit 2
+forge-init: lib needs a description: lib="<one line>"
+exit 2
+forge-init: nope is not a child repo
+exit 0
+lib added
+exit 2
+usage: forge-init <name> <description> [<repo>=<description>...]
+Run 'forge-init --help' for details.
+exit 2
+usage: forge-init <name> <description> [<repo>=<description>...]
+Run 'forge-init --help' for details.
+exit 2
+usage: forge-init <name> <description> [<repo>=<description>...]
+Run 'forge-init --help' for details.
+exit 0
+Usage: forge-init <name> <description> [<repo>=<description>...]
+
+Set up forge in the current directory: a workspace whose direct
+subdirectories are git repos, or a single-repo project (a workspace of
+one). Safe to rerun: adds new repos and missing docs, never overwrites a
+doc, and re-renders every router. Never creates, changes or reads a
+CLAUDE.md; Claude Code loads .claude/rules/*.md alongside it.
+
+Arguments:
+  <name>                  project name, the router's heading
+  <description>           one line: what the project is
+  <repo>=<description>    one line: what a child repo is; required for a
+                          repo without a rendered router, which otherwise
+                          keeps its line
+
+Reads:
+  */.git                  each direct subdirectory holding one is a child repo
+  <repo>/.claude/rules/forge.md
+                          a rendered repo router keeps its description line
+  <repo>/PRODUCT.md DESIGN.md
+                          linked from that repo's router when present
+  vault/Index.md <repo>/vault/Index.md
+                          linked from that router when present
+  $FORGE_TEMPLATES/       doc and router templates
+                          (default ~/.claude/forge/templates)
+
+Writes:
+  .git                    git init, when the root is not a repo
+  .gitignore              one /<repo>/ line per child repo
+  .claude/rules/forge.md  the workspace router
+  .forge/                 PROJECT RULES REJECTED STATE todo seeds; tracks/;
+                          a single repo also gets the repo docs below
+  <repo>/.claude/rules/forge.md
+                          the repo router
+  <repo>/.forge/          STACK INTEGRATIONS CONVENTIONS TESTING
+                          ARCHITECTURE CONCERNS RULES REJECTED
+
+Example:
+  cd ~/Projects/acme
+  forge-init acme "Acme apps." web="The web app."

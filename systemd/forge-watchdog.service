@@ -1,0 +1,8 @@
+[Unit]
+Description=Scan once for stalled forge sessions
+
+[Service]
+Type=oneshot
+TimeoutStartSec=5min
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin
+ExecStart=%h/.local/bin/forge watchdog

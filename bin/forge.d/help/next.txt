@@ -1,0 +1,111 @@
+Usage: forge next <track>/<feature>
+
+Act on the operator's verify result under forge.lock. On pass, first
+check that every requirement id in requirements.json whose owner is
+agent (or absent) is held by a phase of split.json in its requirements,
+skipping operator and post-ship requirements, which no phase holds: when
+any is not, start nothing, keep
+verify.json and refuse the ship start (see below) with "requirement(s)
+<IDs> map to no phase", the IDs space-separated in file order, nothing
+held; a missing or unreadable requirements.json exits 1 naming it.
+Otherwise start the ship session in the project root: "<project> ship <track>/<feature>" running
+"/forge-ship <root> <track>/<feature>", unless a ship session (or one
+under the legacy name "<project> <track>-<feature> Ship") is working or
+blocked. The ship session runs in the project root, not a worktree.
+The ship start passes the same
+machine-wide checks as a phase start (forge implement --help): when the
+session cap or memory holds it, it prints
+"forge: <n> forge sessions live; <track>/<feature> Ship waits for a
+free session" or "forge: MemAvailable <x> GiB; <track>/<feature> Ship
+waits for memory" on stderr and exits 0 with verify.json left in place, so a later forge next
+starts it. The held Ship is recorded in
+${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl as ship
+<track>/<feature>, keeping the first hold time when it is already
+recorded, printing "forge: recorded the held ship <track>/<feature>;
+forge watchdog starts it once room frees" on stderr; forge watchdog
+starts it through forge next <track>/<feature> once room frees (see
+forge implement --help). On gaps, for each phase a gap
+names (every named phase must be in the split, or nothing changes):
+append "Gap: <gap>" to its spec in spec.json and split.json,
+replan it, log a retry event (which ends its run), then delete
+verify.json, so a rerun fails with "no verify.json" and adds no gap
+twice, commit and start
+the phases due as forge implement does, up to $FORGE_CONCURRENCY
+(default 10) per feature, a blocked session holding no place, a retried
+phase named "<project> P<N>R<k> <track>/<feature>". While
+$FORGE_MAX_SESSIONS (default 12) live, non-blocked forge sessions of all
+projects are running, of any form (phase, verify, ship, discuss, quick,
+fast, new or debug), it starts no phase, prints "forge: <n> forge
+sessions live; phase <N> waits for a free session" on stderr and exits
+0; the phase stays due for the next forge done, next, implement or
+resume that finds room. A phase start likewise waits while MemAvailable
+is under 3 GiB plus 1 GiB for it and each phase already started in the
+call ("forge: MemAvailable <x> GiB; phase <N> waits for memory"), as
+forge implement --help describes. A held phase and every
+later due phase not yet started are recorded in held.jsonl the same way
+as phase <N>, and forge watchdog starts them once room frees. Before
+each phase start (a retry's included), after the count and before its
+live-session check, forge claude rm's a finished session of that phase
+still listed as working or blocked (its result.json exists, or its
+transcript ends in assistant text holding a line starting "result:"
+outside a ``` fence), running claude rm <id> alone, never claude stop,
+and listing claude agents --json --all again every 0.5 s for up to 5 s
+until the id is gone or no longer working or blocked, as forge
+implement --help describes.
+
+A start it refuses or skips prints "forge: <kind> <target> not started:
+<reason>" on stderr (kind phase, verify or ship; target the phase
+number or <track>/<feature>) and goes on with the other due phases: a
+phase, Verify or Ship that already has a live unfinished session, the
+reason naming it, nothing held; a Ship whose feature has a requirement
+no split phase maps ("requirement(s) <IDs> map to no phase"), nothing
+held; a finished session that claude rm
+cannot remove (a failed claude rm whose session is still listed, or one
+still working or blocked 5 s after claude rm), the reason naming the
+session, its id and that it is finished but still running after claude
+rm, nothing held; a phase
+worktree with uncommitted changes that keep git from merging
+forge/<track>-<feature> into it ("worktree <w> has uncommitted
+changes", git's output printed first, nothing held); or a claude --bg
+that fails to start ("claude --bg exited <s>: <last stderr line>", or
+"root <path> is not trusted by Claude Code" when claude's stderr starts
+"Workspace not trusted", <path> the main checkout of the session's
+cwd), which logs no start event, is not counted and is recorded in
+held.jsonl as a held start is, with the same "forge: recorded the held
+<kind> <target>" line, so forge watchdog retries it. Each refused kind
+and target sends one notification per run through forge's notify,
+titled "forge: launch refused" with body "<root basename> <kind>
+<target>: <reason>"; a failed start already recorded in held.jsonl
+sends none, so watchdog rescans do not repeat it, and a failed notify
+only warns. After all its other work (gaps, commits, events, the other
+starts and holds) next then exits 8. A capacity hold (sessions or
+memory) is no refusal: it sends no notification and the exit
+stays 0.
+
+Exit codes:
+  0  acted on the verify result; any held start is recorded
+  1  no verify.json, a gap naming a phase outside the split, a missing
+     or unreadable requirements.json on pass, or another failure
+  8  a launch was refused or skipped, already reported
+
+Reads:
+  .forge/features/<track>-<feature>/{verify,split,spec,requirements}.json
+  .forge/tracks/<track>.json
+  claude agents --json, claude agents --json --all
+  ~/.claude/projects/*/<sessionId>.jsonl
+                                (live sessions of a phase about to start)
+  /proc/meminfo                 (see forge implement --help)
+
+Writes:
+  .forge/features/<track>-<feature>/split.json, verify.json (removed on gaps)
+  .forge/phases/NN-slug/spec.json, events.jsonl, later step files removed
+  a git commit of the planning state
+  the Claude sessions it removes
+  <git common dir>/forge.lock   (see forge commit --help)
+  ${XDG_RUNTIME_DIR:-~/.local/state}/forge/sessions.lock
+                                (see forge implement --help)
+  ${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl, held.jsonl.lock
+                                (held starts)
+
+Example:
+  forge next forge/run

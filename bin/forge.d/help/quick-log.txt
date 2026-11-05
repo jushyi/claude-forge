@@ -1,0 +1,55 @@
+Usage: forge quick-log <slug> <task> <repo>...
+       forge quick-log --import
+
+Append one entry {slug, task, repos, date} to STATE/quicks.json, the
+project's state dir file (see forge paths), under the repo's forge.lock,
+the lock forge commit holds, and print "forge: recorded quick <slug>".
+It writes STATE/quicks.json.new and moves it into place, and makes no
+git commit. A missing quicks.json reads as {"quicks": []}; entries keep
+append order.
+
+Arguments:
+  <slug>    the quick's kebab-case slug; one the file already holds is
+            refused
+  <task>    the task text as typed, flags already stripped; not empty
+  <repo>... one or more distinct repo basenames the quick touched
+
+The date is today's local date as YYYY-MM-DD, as track shipped dates are.
+A quicks.json that does not parse is refused before anything is
+written.
+
+Exits non-zero with a message on stderr, writing nothing, on bad
+arguments (no repo, an empty task, a slug that is not kebab-case, a repo
+named twice), a slug already logged, a file that does not parse as JSON,
+or a lock or write failure. The repo's index and work tree stay as they
+were.
+
+--import backfills past PR-merged forge quicks from git history. Run it
+from the project root. It reads, never moving a branch, the main branch
+of the root, of each git repo directly under the root and of each
+.forge/repos.json entry, and takes every commit subject
+"Merge pull request #N from <owner>/forge/quick-<slug>"; Merge branch
+commits do not count. Matches group by slug: task is the title from
+gh pr view N, run in the repo with the earliest merge, date is that
+merge's author date as a local YYYY-MM-DD, and repos are the basenames
+of every repo where the slug merged. A slug merged only in a
+.forge/repos.json entry belongs to that repo's own project and is
+skipped, as is a slug the file already holds. New entries append in
+date order in one write under the same lock, printing a recorded line
+per slug; with nothing new it writes nothing and exits 0. Any gh
+failure exits non-zero with gh's message, writing nothing. Quicks that touched only a repo without a remote leave no merge
+commit and stay unlogged.
+
+Reads:
+  STATE/quicks.json
+  .forge/repos.json and the main history of each scanned repo (--import)
+  gh pr view <N> --json title (--import)
+
+Writes:
+  STATE/quicks.json, through STATE/quicks.json.new
+  <git common dir>/forge.lock, forge.lock.holder (outside a git repo,
+  .forge/forge.lock)
+
+Example:
+  forge quick-log ticket-photo-lightbox 'page the ticket photo lightbox' acme-hub
+  forge quick-log --import

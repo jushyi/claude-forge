@@ -1,0 +1,10 @@
+{
+  "manual_test": [
+    "[agent] E/s1/out.txt INT-01: submit the intake form and see the lead saved",
+    "[operator] INT-02: GET /leads/1 returns the lead",
+    "[watched] INT-04: the intake page on a phone-sized window"
+  ],
+  "result": "pass",
+  "gaps": [],
+  "operator_ran": true
+}

@@ -1,0 +1,26 @@
+$ forge-browser start (pin sha256 does not match the tarball)
+exit non-zero
+stderr names sha256: yes
+prefix exists: no
+npm calls: 0
+systemd-run calls: 0
+node processes: 0
+unit running: no
+key leaked: no
+$ forge-browser start (hub.patch does not apply)
+exit non-zero
+stderr names hub.patch: yes
+prefix exists: no
+npm calls: 0
+systemd-run calls: 0
+node processes: 0
+unit running: no
+key leaked: no
+$ forge-browser start (CHROME_PATH missing)
+exit non-zero
+stderr names CHROME_PATH: yes
+prefix exists: yes
+systemd-run calls: 0
+node processes: 0
+unit running: no
+key leaked: no

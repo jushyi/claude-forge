@@ -1,0 +1,67 @@
+Usage: forge discuss <track>/<feature>
+       forge discuss --auto <track>/<feature>...
+
+Start the feature's discuss session in the background. Fails with usage
+when the argument is missing, extra or not <track>/<feature>, naming the
+file when the feature has no STATE/features/<track>-<feature>/requirements.json,
+and with "forge: <track>/<feature> waits on unshipped features" when a
+dependency has not shipped (see forge ready --help).
+
+When claude agents --json lists a working or blocked session named
+"<project> discuss <track>/<feature>" (or the legacy "<project>
+<track>-<feature> discuss"), <project> the directory name of the project
+root or of one of the feature's phase repos, it prints "forge:
+<track>/<feature> already has a live session <name>; not starting
+another" on stderr, starts nothing and exits 0.
+
+Otherwise it runs, in the project root,
+  claude --bg -n "<project> discuss <track>/<feature>" --model opus
+    --effort medium --permission-mode $FORGE_PERMISSION_MODE
+    --settings '{"env":{"FORGE_ROOT":"<root>"}}'
+    "/forge-discuss <track>/<feature>"
+and prints its output; attach to the session with claude agents. When
+claude --bg fails it exits 1 naming the session. It takes no forge.lock
+and does not wait for admission. Once the session ends with a result
+line and no uncommitted change outside .forge/, a later forge implement, done, next or
+resume removes it (see forge implement --help).
+
+With --auto it takes one or more features and starts one auto discuss
+session per feature, which settles each decision with its recommended
+option and asks the operator only a researcher's or splitter's blocked:
+reply and a UI feature's design interview and mockup approvals. It
+first runs the usage, requirements.json and ready checks above for every
+listed feature, and when any fails it exits 1 naming that feature and
+starts nothing. Then, for each feature in argument order, a
+live session for it prints the skip line above and it goes on to the next
+feature. Otherwise the start waits for admission as forge implement's
+phase starts do: at $FORGE_MAX_SESSIONS live forge sessions or low
+MemAvailable it prints "forge: ...; <track>/<feature> discuss waits for
+a free session" (or "waits for memory") on stderr, starts no
+later feature and exits 0; run the same command again later to start the
+rest, since the live ones are skipped. An admitted feature starts the
+same session with the prompt
+    "/forge-discuss --auto <track>/<feature>"
+and counts as live for the next feature's admission. It takes no
+forge.lock either.
+
+Every working discuss session, plain or --auto, counts toward
+$FORGE_MAX_SESSIONS for every start that waits for admission; --auto
+starts also count blocked discuss sessions of any project, which wait on
+an operator's blocked: decision. Only --auto starts themselves wait for
+admission.
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  .forge/tracks/<track>.json
+  STATE/features/<track>-<feature>/requirements.json, split.json
+  claude agents --json
+  /proc/meminfo   (--auto)
+
+Writes:
+  the Claude sessions it starts
+  ${XDG_RUNTIME_DIR:-~/.local/state}/forge/sessions.lock   (--auto)
+
+Example:
+  forge discuss forge/run
+  forge discuss --auto forge/run forge/ship

@@ -1,0 +1,860 @@
+Usage: forge test [--force] [<dir>]
+       forge test --changed [--base <ref>] [--force] [<dir>]
+       forge test [--repeat <n>] --one <test> [--base <ref>] [<dir>]
+       forge test --passed [--changed] [<dir>]
+       forge test --stack [<dir>]
+
+Run the project's tests for the git worktree holding <dir> (default the
+current directory), at one of four tiers. Runs in any directory, whatever
+FORGE_ROOT says.
+
+The commands are the first backticked span of these lines in
+<worktree top>/.forge/TESTING.md:
+  - All tests: `<command>`             the full suite
+  - Test: `<command with {test}>`      one test by name or path
+  - Changed tests: `<command with {files}>`
+                                       the tests covering changed files
+  - Failed tests: `<command with {log}>`
+                                       the failing test ids of a failed
+                                       changed run, for the base check
+  - Setup: `<command>`                 installs dependencies, such as
+                                       npm ci or uv sync
+  - Local stack: `<command>`           starts the app's local stack in
+                                       the foreground, for --stack
+  - Stack tests: `<command>`           tests run against that stack,
+                                       for --stack
+  - Memory: `<size>`                   the memory budget of a full,
+                                       changed or --repeat run,
+                                       default 4G;
+                                       1 to 9 digits, no leading 0,
+                                       then K, M or G
+  - Memory one: `<size>`               the narrow memory budget of a
+                                       --one run, the same form; default half
+                                       the Memory budget in KiB,
+                                       rounded down and floored at
+                                       512M (2G by default)
+  - CPUs one: `<n>`                    sets the job count of a --one or
+                                       --repeat run, the one tier, to min(nproc, <n>)
+                                       in place of its default 2, higher
+                                       or lower (the job count, below);
+                                       a whole number of at least 2
+  - CPUs all: `<n>`                    sets the job count of a full or
+                                       changed run, the all tier, to
+                                       min(nproc, <n>) in place of its
+                                       default max(2, floor(nproc / 4)),
+                                       higher or lower; a whole number
+                                       of at least 2; never read by
+                                       --one or --repeat
+  - Timeout: `<minutes>`               the hard wall-clock limit of
+                                       every test command and Setup,
+                                       all tiers alike, default 60; a
+                                       positive integer of minutes
+                                       without a leading 0, such as 45
+  - Quarantine (added YYYY-MM-DD): `<command>`
+                                       known-flaky tests, run after a
+                                       passing full-tier run; the date
+                                       is the day the line was added
+  - Perf log: `<command>`              the app's usage-log metrics, run
+                                       by forge perf pull, not a forge
+                                       test tier
+forge replaces {test} with the shell-quoted test id, {files} with the
+changed repo-relative paths, each shell-quoted, space-separated, and
+{log} with the path of the failed run's log copy (the base check,
+below). Test, Changed tests, Failed tests, Quarantine and Perf log are
+optional; a missing Test or
+Changed tests line falls back to the next wider tier (Test, then Changed
+tests, then All tests). A repo with no tests declares it with the line
+"- All tests: none" (no backticks, trailing whitespace allowed) in its
+"## Commands" section; forge test then prints 'forge: <path> declares
+"- All tests: none"; tests not run' on stderr and exits 5, running
+nothing. A backticked All tests command wins over that line. When the
+file is missing, or the All tests line is missing or has neither a
+backticked command nor none, forge test prints 'forge: no "- All
+tests:" line in <path>; add a command or "- All tests: none"' on stderr
+and exits 6, running nothing. --one with a Test line runs without
+either.
+
+forge map and forge check lint these command lines: a Test line
+without {test}, a Changed tests line without {files}, a Failed tests
+line without {log}, a line with no backticked command ("no backticked
+command"), or a line that fails bash -n once {test}, {files} and {log}
+are replaced by quoted sample paths fails them with exit 1, naming the
+file, the line and the reason, such as "forge: <path>: - Failed tests:
+`<command>`: no {log} placeholder"; a command that is a <...>
+placeholder needs no placeholder, and a "- All tests: none" declaration
+passes them. They
+fail a Memory or Memory one line whose size is not a positive integer of
+at most 9 digits without a leading 0 and with suffix K, M or G (1024-based, as
+systemd reads it), such as 4G or 512M, the same way, and a Timeout line
+whose value is not a positive integer without a leading 0, printing
+"forge: <path>: - Timeout: `<value>`: not a whole number of minutes such
+as 45", and a CPUs one or CPUs all line whose value is not a whole
+number of at least 2, such as 1, x or an empty value, printing "forge:
+<path>: - CPUs one: `<value>`: not a whole number of CPUs of at least 2"
+(or "- CPUs all:"). A full or changed run, and a
+--one run, fails such a Memory, Memory one or Timeout line with the same
+message and exit 1 before its Setup line, memory cap probe or run slot; a
+--one or --repeat run fails such a CPUs one line the
+same way, running nothing, and a full or changed run fails such a CPUs
+all line the same way, "<root>/.forge/TESTING.md: - CPUs all: `<value>`:
+not a whole number of CPUs of at least 2" and exit 1, before any
+run slot wait or run.
+They fail a Quarantine line with no "(added YYYY-MM-DD)" date (the old
+"- Quarantine: `<command>`" form), with a date that is not a valid
+calendar date, or with a date more than 7 days (168 h) old, measured
+from 00:00 UTC of that date, printing one line naming the file, the line
+number and the line; a Quarantine line with no backticked command or
+one failing bash -n fails them as the other lines do. forge test itself
+still runs an undated Quarantine line.
+
+forge test runs the full suite. --changed runs the Changed tests line
+over the files that differ between the merge base of HEAD and <ref>
+(default main) and <tree>, the run tree below, as listed by git diff
+--name-only <merge base> <tree>: the files changed since the merge base,
+committed or not, plus untracked non-ignored files; with no such
+file it passes without running anything, printing "forge: tests passed
+(<tree>), no changed files", and without a Changed tests line it runs the
+full suite. The command runs in the worktree top (below) with its output,
+stdout and stderr, in <git dir>/forge-test.log (the worktree's own git
+dir), replaced on each run. On exit 0 it records a pass stamp for <tree>,
+the run tree: the tree of the whole working state when the run started
+(the index plus every tracked and untracked, non-ignored file, as git
+add -A would stage it, built in a temporary index), taken once at the
+start. It prints "forge: tests passed (<tree>)". A full run stamps
+<git common dir>/forge-test/<machine-id>/<tree>, a changed run
+<git common dir>/forge-test/<machine-id>/changed/<tree>, adding a line
+with the merge base it diffed against, <machine-id> being the trimmed
+contents of /etc/machine-id, read once per run. A Changed tests command
+may write the empty file $FORGE_TEST_LOG_DIR/.full to assert that it
+ran every suite the All tests line runs; a clean changed-tier pass whose
+command wrote it then also records the full stamp
+<git common dir>/forge-test/<machine-id>/<tree>, so a later full run of
+<tree> reports cached. Without the marker, or on a failure, a changed
+run records no full stamp. When the merge base's
+tree differs from <tree> and is itself stamped on this host (a full
+stamp, or a changed stamp that counts as a pass as --passed describes),
+the changed run adds the line "chain <merge-base tree>" instead of the
+merge base, so a rerun after a fix with --base <pre-fix commit> records
+a pass chained to the pre-fix pass. Only stamps under this
+host's <machine-id> count, so a pass recorded on another host, or at the
+old unkeyed forge-test/<tree> path, never caches a run. When
+/etc/machine-id is missing, unreadable or empty, forge test prints
+"forge: cannot read /etc/machine-id; cannot key test stamps" on stderr
+and exits 1, recording no stamp. The command runs in the worktree top,
+reading the live worktree, so a commit or edit there while the run goes
+can reach what it reads, but the pass is stamped for the start tree
+whatever the worktree holds when the run ends. On a failure it
+prints "forge: tests failed, log <log>" on stderr and exits with the
+command's exit code, or 1 when that code is 5 or 75, so 5 always means
+no test command and 75 always means a resource exit. A run stopped at
+its time limit (below) exits 124 instead.
+
+A full or changed run also empties <git dir>/forge-test.d/ when
+it truncates forge-test.log and exports FORGE_TEST_LOG_DIR=<absolute git
+dir>/forge-test.d/ to the command, overwriting any value in the
+environment, so a runner can write one log per suite there; --one and
+--repeat leave it unset. Forge's own runner, tests/forge.test.sh, writes
+each suite's output to <dir>/<suite>.log, <suite> being its path under
+tests/ without .test.sh (forge/commit, forge-commit), and prints one
+line per suite into forge-test.log:
+  ok <suite> (<s>s)
+  FAIL <suite> (exit <code>, <s>s, log <path>)
+
+Every tier, --one and --stack included, first runs the Setup line,
+with the same TMPDIR, GIT_CEILING_DIRECTORIES and unset git variables
+as the test commands; its output goes to <git dir>/forge-test.log
+(forge-stack.log for --stack) ahead of the tests'. A full, changed or
+--one run runs Setup after taking its run slot (below), so Setup sees
+the run's FORGE_TEST_CPUS and CARGO_BUILD_JOBS (below); --stack, which
+takes no slot, runs it before it starts the stack. Every Setup run,
+the --stack one included, runs under the same timeout -k 10s <n>m as
+the test commands (the time limit, below). Setup runs only in the
+worktree top, holding a flock on <git dir>/forge-setup.lock, <git dir>
+the worktree's own git dir. Under that lock forge hashes the
+worktree's manifests: <sha256> is the sha256 of the Setup command plus,
+for each dependency manifest or lockfile at any depth (package.json,
+package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml, yarn.lock,
+pyproject.toml, uv.lock, poetry.lock, requirements*.txt, Cargo.toml,
+Cargo.lock, go.mod, go.sum) that git ls-files -co --exclude-standard
+lists (tracked and untracked, not ignored), sorted, its path and the
+sha256 of its bytes in the worktree top, so an unstaged or untracked
+manifest edit changes it and an ignored manifest does not. It compares
+"<machine-id> <sha256>", <machine-id> as for the pass stamps, with the
+worktree's <git dir>/forge-setup stamp. When /etc/machine-id cannot
+be read it prints "forge: cannot read /etc/machine-id; cannot key
+the Setup stamp" on stderr and exits 1.
+
+When the stamp differs, is another host's or a bare hash, or is
+missing (an older value is never migrated, so a stamp an older forge
+wrote mismatches once), Setup runs in the worktree top under the lock
+and, when it passes, writes "<machine-id> <sha256>" to the worktree's
+forge-setup stamp. When the stamp matches, Setup is skipped. So a
+worktree, _land and the base check's worktree each run Setup once per
+manifest or Setup command change, and their ignored dependency and
+build dirs, such as node_modules, venvs, cargo target and cmake build*,
+stay in place from run to run and build incrementally. forge land
+cleans _land without -x, so it keeps its ignored files and its setup
+stamp. Without a Setup line no hash is taken and nothing runs.
+A failing Setup prints "forge: setup failed, log <log>" on stderr and
+exits 1, running no test and recording no stamp, and leaves the setup
+stamp as it was.
+
+A run whose tree already has the stamp it needs runs nothing and prints
+"forge: tests passed (<tree>), cached": a full run needs a full stamp
+or a chained one, a changed stamp of this host whose "chain <tree>"
+lines reach, through changed stamps of their trees and within 20 links,
+a full stamp of this host for a tree of a commit in HEAD's history (a
+merge-base line never counts toward it, so a changed stamp holding only
+its merge base does not cache a full run); a changed run a full stamp
+or a changed stamp holding either its merge base or the "chain <tree
+of merge base>" line a pass would write now for that base, which it
+writes only while that tree differs from <tree> and
+is itself stamped on this host, checked live as for --passed below. A
+chain line for another base, or one whose tree is no longer stamped,
+does not count, so the run executes its tests. A
+run whose tree has no such stamp also runs nothing when the tree of one
+of the last 20 commits of HEAD, HEAD's own included, most recent first,
+has the stamp the run needs and differs from <tree> only in docs-only
+paths; for a full run that is a full stamp or a chained one as above,
+for a changed run a full stamp or a changed stamp of any merge base
+that counts under --passed
+--changed below, chain lines included, so a merge that brought only
+docs-only paths from the base keeps the pass. Docs-only paths are
+paths under .forge/ other than .forge/TESTING.md, paths ending in .md at
+any depth, and paths under the top-level docs/ (not sub/docs/, docs2/ or
+.mdx). It prints "forge: tests passed (<tree>), cached from
+<stamped tree> (docs-only change)", runs no Setup and no command, leaves
+the log alone and records no stamp for <tree>, so forge land never takes
+a carried pass for a full one. The carry-over never applies in forge
+land's _land worktree (<repo>/.claude/worktrees/_land), where the landed
+tree always needs its own full pass. No refusal is checked before the
+carry-over: a <tree> whose own run hit a test failure is still carried.
+--force reruns, skipping only the cache and the docs-only carry-over.
+
+Every full, changed, --one, --repeat and --stack run that will execute
+a command first takes the worktree lock, a flock on <absolute git
+dir>/forge-test.lock (the worktree's own git dir), and holds it to the
+end of the run, writing "pid <pid> in <worktree top>" into it. It takes
+the lock after the cached, docs-only and no-changed-files checks, so
+those runs never wait, and before its TMPDIR and,
+for a full or changed run, the truncation of forge-test.log and the
+emptying of forge-test.d/. A run that finds the lock held prints once
+on stderr
+  forge: waiting for the test run in <worktree> (pid <n>)
+<n> the holder's pid read from the lock file, and polls each second.
+After $FORGE_TEST_SLOT_WAIT minutes (default 30) it gives up and exits
+75, running nothing and leaving forge-test.log and forge-test.d/ as
+they were. A run that got the lock after waiting checks its tree's
+stamps again, so a second run of a tree the first one passed returns
+cached. So two --one runs, or a --one beside a full run, in one
+worktree queue instead of running side by side; runs in different
+worktrees never share the lock, and _land, the base check's worktree
+and each --stack run's worktree
+each hold their own. The command runs with FORGE_TEST_WT_HELD set to
+the lock path and without the lock's file descriptor; a nested forge
+test in the same worktree whose FORGE_TEST_WT_HELD names its own lock
+path, held by a pid that is one of its ancestor processes, takes no
+lock and never waits. A FORGE_TEST_WT_HELD naming another lock, or a
+lock whose holder is no ancestor, is ignored and the run waits.
+
+Every full, changed and --one run, and each --repeat run, that will
+execute a command takes one of $FORGE_TEST_RUNS run slots (default 2),
+the machine's one test run semaphore, and holds it from before its
+Setup to the end of its command. The slots are flock'd files under
+${XDG_RUNTIME_DIR:-$HOME/.local/state}/forge/test-runs/, one pool
+shared by every repo and worktree on the machine; a run with another
+XDG_RUNTIME_DIR uses a separate pool. A holder writes its pid and
+worktree top into its slot file, and a holder that dies frees its slot
+with its flock. A FORGE_TEST_RUNS that is not a whole number of at
+least 1, such as 0, x or an empty value, is a usage error naming
+FORGE_TEST_RUNS. Slots go in arrival order: a waiting run writes an
+entry holding its arrival time and its process start time (field 22 of
+/proc/<pid>/stat) and takes a free slot only when no live older waiter
+is waiting; an entry whose pid is dead or now names a process started
+at another time is dropped. A run that finds no slot free prints once
+on stderr
+  forge: waiting for a test run slot (<n> in use: <holders>)
+<n> the slots in use and <holders> each holder's worktree, and waits
+until one frees. The wait never gives up and never exits 75;
+FORGE_TEST_SLOT_WAIT does not bound it. The command runs with
+FORGE_TEST_SLOT_HELD set to its slot file and without the slot's file
+descriptor; a nested forge test whose FORGE_TEST_SLOT_HELD names a
+slot held by one of its ancestor processes takes no slot and never
+waits, so it cannot deadlock, and any other value is ignored. --stack
+takes no slot. A slot only orders runs: it reads neither memory nor
+CPU load, and a run gets its full job count and memory cap (below)
+whatever other runs hold.
+
+Every command forge test executes, full, changed, quarantine and
+--one alike, runs with FORGE_TEST_CPUS and CARGO_BUILD_JOBS (cargo's job
+count) exported to the same value, the run's job count, overwriting any
+value in the environment. The job count is min(nproc, <n>), <n> being
+its tier's line when present, "- CPUs all: `<n>`" for the all tier
+(full and changed runs) and "- CPUs one: `<n>`" for the one tier
+(--one and --repeat), else the tier's default: 2 for the
+one tier and max(2, floor(nproc / 4)) for the all tier. A CPUs line
+sets the count higher or lower than the default, always capped at
+nproc. The CPUs all line applies to full and changed runs only, never
+to --one or --repeat. On 24 CPUs a full run with no CPUs
+all line gets 6, a --one run with no CPUs one line gets 2,
+"- CPUs all: `12`" gives it 12 and "- CPUs all: `32`" gives it 24; on 4
+CPUs the all tier gets 2 and on 1 CPU every tier gets 1. A repo raises
+the count with a CPUs line when its runner can use more workers without
+overrunning its "- Memory:" budget. The run slots (above) reserve no
+CPUs, so a run gets its full job count whatever other runs hold, and
+the Memory budget does not set it. The retry after a memory kill halves
+it (below). Setup (above) runs with the same FORGE_TEST_CPUS.
+Pass it to the runner's worker cap (vitest --maxWorkers, turbo
+--concurrency, ctest -j, make or cmake -j) so a run starts no more
+workers than the machine has CPUs.
+
+Every command also runs with core dumps disabled: forge prefixes its
+bash -c string with ulimit -c 0, which sets the soft and hard limit, so
+no child can raise it and a crashing test stores no core file.
+
+Every command forge test executes, full, changed, quarantine,
+--one, --repeat, the Failed tests line, Setup and the --stack Local
+stack and Stack tests commands alike, runs in the worktree top itself
+with GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE and GIT_COMMON_DIR unset,
+so a run started from a git hook that exported them hands the command
+none of them. forge makes no copy of the worktree: the command reads
+the live worktree, its uncommitted, untracked and ignored files
+included, such as a .env, node_modules or a build dir, and git status
+there shows the worktree's own changes. The run tree (above) is taken
+once at the start and is what the stamp records, so an edit the
+command sees mid-run never changes the tree a pass is stamped for. The
+worktree lock (above) keeps two runs of one worktree from overlapping.
+TESTING.md is read from the worktree top, and the log, the peak file,
+runs.log, the failed logs and the stamps live in the worktree's git dir
+and common dir. A --stack run stops any leftover stack unit of its
+worktree before its Setup.
+
+When it creates its TMPDIR directory, forge also sweeps the test
+snapshot worktrees older forge versions left under <main
+worktree>/.claude/worktrees/, with their git worktree registrations,
+owner records and the legacy <git common dir>/forge-test/snap/,
+skipping one an in-flight run of an older forge still holds, then runs
+one git worktree prune; forge watchdog runs the same sweep on each
+scan. When a removal fails it prints "forge: cannot remove <path>" on
+stderr and exits 1 before any command.
+
+Every command forge test executes, full, changed, quarantine,
+--one, --repeat, the Setup line and the --stack Local stack and Stack
+tests commands alike, runs with TMPDIR exported, overwriting any value
+in the environment, set to /tmp/fg-<pid>, <pid> forge's, a symlink
+to a directory of its own, <git common dir>/forge-test/tmp/<pid>, on
+the home filesystem rather than a tmpfs /tmp, so the TMPDIR path stays
+short enough for unix sockets while temp files stay off the /tmp quota
+and out of the memory cap. forge creates the directory empty and the
+symlink once the run will execute a command, so cached, docs-only,
+no-changed-files and --passed runs create none. An existing
+/tmp/fg-<pid> is replaced only when it is a symlink owned by the
+user whose target is not a kept directory (below); anything else fails
+the run before any command, naming the path. --stack passes the
+symlink to the stack unit with systemd-run --setenv TMPDIR=<link>.
+forge removes the directory and the symlink when it exits, whether the
+run passed, failed, died or got a HUP, INT or TERM; a --stack run
+removes them after stopping the unit. When it creates its
+directory, forge removes each sibling tmp/<pid> directory whose pid is
+no longer a live process, so a run killed outright, by SIGKILL or the
+OOM killer, leaks its temp files only until the next run in that repo
+and its symlink until a run reuses that pid.
+The exception is a --stack run whose unit fails to stop: it keeps its
+directory and symlink and records the unit name beside the directory
+in tmp/<pid>.unit, and later runs remove the directory and record only
+once systemctl --user is-active reports that unit inactive or failed,
+and keep them on any other answer, including none when the user
+manager cannot be reached. A run whose
+own pid, reused, already has such a kept directory and record removes
+both when that unit is inactive or failed, and otherwise fails before
+running any command, naming the unit and the systemctl --user stop
+command that frees it, as does a run whose /tmp/fg-<pid> links to
+such a kept directory.
+A nested forge test makes its own directory under its repo's git
+common dir; anything it leaves in the outer TMPDIR goes with the outer
+run's. Because the directory lies inside the git common dir, every
+command also runs with GIT_CEILING_DIRECTORIES exported with
+<git common dir>/forge-test/tmp prepended to any inherited value, so
+git run in a plain temp dir under TMPDIR finds no repository.
+
+When systemd-run is on PATH, a full, changed or --one run first
+probes
+  systemd-run --user --scope --quiet --expand-environment=no
+      -p MemoryMax=<budget> -p MemoryHigh=<high>K -p MemorySwapMax=0
+      -- true
+with <budget> the run's budget (the Memory line's size, default 4G, or
+the Memory one budget for --one) and <high> floor(<budget> in KiB * 9 /
+10), at least 1, an integer KiB count, never a percentage (4G gives
+3774873K, 512M gives 471859K).
+--expand-environment=no keeps systemd-run from expanding $ in the
+command. When the probe fails, a property the host rejects or a
+systemd-run without --expand-environment, it prints "forge: memory cap
+unavailable, running uncapped" on stderr and runs as without
+systemd-run; it still takes its run slot and its time limit. Otherwise
+the command runs in a transient scope, systemd-run --user --scope
+--quiet --unit=forge-test-<pid>-<n> --expand-environment=no with the
+same three memory properties, the unit forge-test-<pid>-<i>-<n> for
+--one and --repeat, <i> the iteration and <n> the attempt: the scope is
+throttled above MemoryHigh, killed at MemoryMax and never swaps. No
+forge scope sets a CPU weight, a CPU quota, AllowedCPUs, any CPU
+pinning or a runtime limit. After each attempt, and after the
+Quarantine line's run, forge reads the scope's Result with systemctl
+--user show, then stops the scope with systemctl --user stop
+<unit>.scope, ending any process left in it, such as a setsid child
+that outlived the command or its timeout, its errors appended to the
+log and never fatal and the run's exit code unchanged, and resets it
+with systemctl --user reset-failed. An attempt stopped by its time
+limit is a timeout (below), checked first, so it is never retried as a
+memory kill. Otherwise an exit 137 or a Result of oom-kill is a memory
+kill; a systemctl error counts as no kill.
+A memory kill is retried once, its output appended to the same log. Before
+the retry forge prints on stderr
+  forge: tests killed for memory: peak <x>G of <budget> budget; retrying with <j> jobs
+<x> the killed attempt's peak in GiB with one decimal, from its peak file
+(below) when it wrote one, else from systemctl --user show -p MemoryPeak
+--value on its scope when that prints a number, else the word unknown,
+and runs the retry with FORGE_TEST_CPUS and CARGO_BUILD_JOBS set to
+<j> = max(1, floor(FORGE_TEST_CPUS / 2)), 3 giving 1 and 12 giving 6. A
+second one prints "forge: tests killed for memory (budget <budget>), log
+<log>" on stderr and exits 75, recording no stamp. --one does the
+same with its output on the terminal, as does each --repeat iteration;
+a second memory kill exits 75.
+Any other failure is never retried. Without systemd-run the command runs uncapped and an exit
+137 is its own exit code. Every run, --one included, starts its command in
+a process group of its own and waits for it; a HUP, INT or TERM to forge
+sends TERM to that group, stops the run's forge-test-<pid>-*.scope units
+with systemctl --user stop (errors logged, never fatal) and exits 129,
+130 or 143 at once.
+
+In a capped scope the command runs under an outer bash that runs the
+bash -c string, keeps its exit status, reads the scope's cgroup path from
+the 0:: line of ${FORGE_PROC_ROOT:-/proc}/self/cgroup, writes
+${FORGE_SYS_ROOT:-/sys}/fs/cgroup<path>/memory.peak (bytes) to <git
+dir>/forge-test-<pid>.peak, <pid> forge's, and exits with the saved
+status, so a command that calls exit or exec still records its peak. The
+file is removed before each attempt and once read, so concurrent runs of
+a worktree never share it; the last attempt's is the run's peak. A
+memory-killed attempt writes none, an uncapped run has none, the
+Quarantine line is not wrapped, and a missing or non-numeric file means
+no peak. When a full,
+changed or --one run read a peak above 80% of its budget (peak KiB
+* 5 > budget KiB * 4; for --repeat the highest iteration's peak; a
+memory-killed --one or --repeat run included) it prints on stderr
+  forge: memory peak <x>G of <budget> budget; set - Memory: <y>G in <top>/.forge/TESTING.md
+<x> the peak in GiB with one decimal, <budget> the Memory value as
+written, <y> the peak plus 25% rounded up to whole GiB; a --one run
+prints "set - Memory one: <y>G" and its narrow budget instead. A run at
+or below 80% prints nothing. A project without a Memory line runs at the 4G
+default, which a large suite can outgrow; set the line the hint names.
+
+Every full, changed and --one run, and each --repeat iteration, runs
+its command under coreutils
+  timeout -k 10s <n>m
+without --foreground, so at the limit timeout sends TERM to the
+command's whole process group and KILL 10 s later to what is left, a
+command that ignores TERM included. <n> is the Timeout line's minutes,
+or 60 without one, the same limit for every tier. The Quarantine line
+and Setup (above) run under the same limit; --stack's Local stack and
+Stack tests have none. The clock starts with each command, so the run slot and
+worktree-lock waits do not count. A descendant that left the process
+group with setsid or setpgid is not signalled by timeout; in a capped
+scope the scope stop after the attempt (above) still ends it. A run
+counts as timed out when its deadline passed, not by its exit status
+alone: a command ended by the KILL makes timeout exit 137, which is a
+timeout, never a memory kill, so it is not retried and prints no
+"tests killed for memory" line.
+
+A run stopped at its limit prints on stderr
+  forge: tests timed out after <n> min (limit from <source>), log <log>
+with <source> "- Timeout: in <path to TESTING.md>" or "the 60 min
+default", and exits 124,
+never 75, so forge land and implementers count it
+a failure, not an environment wait. It prints neither "forge: tests
+failed" nor "forge: tests passed" and records no pass stamp. A full
+or changed run writes its runs.log line with exit timeout, removes
+the tree's pass stamps, writes no failed log and releases its run slot
+as on any failure. A --one or --repeat run writes no runs.log
+line; --repeat also prints its "repeat failed on iteration" line. A
+Quarantine line stopped at its limit prints "forge: quarantine failed
+(exit 124); not gating" and changes nothing else.
+
+Each full or changed run that runs its command appends one line per
+attempt to <git common dir>/forge-test/runs.log, so each attempt writes
+its line and a load-triggered rerun (below) adds a second one after the
+first attempt's:
+  <date> <time> <tier> <tree> <wait s> <run s> <exit> <load1> <MemAvailable kB> <budget> peak=<KiB> cpu=<value>
+the time it finished, the tier (all or changed), the full tree hash, the
+seconds it waited for its run slot (about 0 for a nested run), the
+seconds its command ran (both attempts after a memory kill), its final
+exit code or timeout for a run stopped at its time limit, the 1-minute
+load average from /proc/loadavg
+and MemAvailable from /proc/meminfo read before the waits, the
+Memory budget as written (default 4G), and the run's memory peak in KiB
+from forge-test-<pid>.peak, or peak=- with no peak, the line of a run ending
+in a second memory kill included, and as the twelfth field cpu=<value>,
+the some avg10 of ${FORGE_PROC_ROOT:-/proc}/pressure/cpu read at the
+run's start, or cpu=- when that file cannot be read; the eleven fields
+before it are unchanged. Cached runs, the no-changed-files
+case, a worktree-lock wait that gave up, --one and --repeat write
+nothing.
+
+When the command of a full or changed run fails with a test
+failure, the run copies forge-test.log to
+<git common dir>/forge-test/failed/<tree>-<tier>.log, <tree> the full
+tree hash and <tier> all or changed, and, when <git
+dir>/forge-test.d/ exists, that directory to failed/<tree>-<tier>.d/,
+replacing an older copy, so the per-suite logs it names survive the next
+run and the base check below can read them. A test failure is any exit
+but 0, 75, 126, 127 or one above 128, 5 included, whose forge-test.log
+and files under $FORGE_TEST_LOG_DIR hold neither "No space left on
+device" nor "Disk quota exceeded". Only a test failure writes the
+failed log. An environment failure, a command exit of 126 or 127, an
+exit above 128 (killed by a signal, such as a low-memory reap) or a log
+holding one of those two texts, writes no failed log, leaves an older
+one of its tree and tier as it is, still removes the tree's pass
+stamps, forge-test/<machine-id>/<tree> and
+forge-test/<machine-id>/changed/<tree>, and prints
+"forge: tests failed, log <log>". A run stopped at its time limit
+writes no failed log either, like a signal kill. A command exit of 75,
+a memory kill and a worktree-lock wait that gave up write nothing. A
+full or changed run that its own stamp does not cache first deletes
+every entry of failed/ older than 30 minutes; that prune is cleanup
+only. A test failure never refuses a rerun: the next run of the same
+tree and tier runs at once. A passing run of that tree and tier removes
+the file and its .d copy. --one and --repeat write no failed log.
+
+A full or changed run reads the 1-minute load, the first field of
+${FORGE_PROC_ROOT:-/proc}/loadavg, right before its command starts and
+right after it ends. When the command fails with a test failure, not a
+timeout or a memory kill, and the higher of the two loads is >= nproc,
+the run writes the first attempt's runs.log line, prints on stderr
+  forge: rerun: load <l> >= nproc <n>
+<l> the higher load as read and <n> nproc, and reruns once: the command
+runs again in the same run slot under the same time limit, with
+$FORGE_TEST_LOG_DIR emptied and its output appended to the same
+forge-test.log, running no second Setup. A loadavg that cannot be read
+counts as below nproc, so no rerun, and a rerun never reruns. Its result
+then follows the usual path: a pass stamps the tree and ends
+"forge: tests passed (<tree>)", and a failure fails as before, writing
+the failed log copy and, for a --changed run, running the base check
+below. runs.log gets one line per attempt. --one and --repeat never
+rerun.
+
+A failed --changed run then checks whether its failures already fail on
+the merge base, so a branch is not held up by tests broken before it.
+The base check runs only when all of these hold: the run ran the real
+changed tier (a Changed tests line; a --changed run that fell back to
+All tests, keyed all, does not qualify), its command failed with a test
+failure, not a timeout, a memory kill or an exit of 5, 75, 126, 127 or
+above 128, its failed/<tree>-changed.log was written, and TESTING.md has
+both a Failed tests and a Test line. Otherwise the run fails as above.
+
+forge runs the Failed tests command, read from the worktree top's
+TESTING.md, in the worktree top with {log} replaced by the path of
+failed/<tree>-changed.log and FORGE_TEST_LOG_DIR set to
+failed/<tree>-changed.d/, the copied per-suite logs. It prints one
+"<id> <file>" pair per non-empty stdout line, split at the last
+space: <id> a test id the Test line accepts as {test}, <file> the
+test's source path relative to the repo root. forge never parses the
+runner's output itself. Add the line only when the
+changed tier runs every selected test to completion (no fail-fast, no &&
+chain), so every failing test is listed. Forge's own line prints its
+FAIL suites:
+  - Failed tests: `awk '$1=="FAIL"{print $2, "tests/"$2".test.sh"}' {log}`
+An empty output, a non-zero exit, a line without a space or more than 10
+ids skips the base check. An id whose <file> does not exist at the merge
+base or differs there from the tested tree (a test the branch added,
+renamed or edited, such as a case added to an existing file) is a new
+failure, never a pre-existing one.
+
+The merge base, the one the run diffed against (--base <ref>), is
+checked out detached in one persistent worktree per repo,
+<git common dir>/forge-test/base: git worktree add --detach the first
+time, later git checkout --detach --force <merge base> and git clean -fd
+there, or, when that fails, the worktree removed and added again; a
+worktree that still cannot be prepared skips the base check. Each
+remaining id then runs alone through the Test line in <git common
+dir>/forge-test/base itself, the way --one runs it: Setup in the base
+worktree, the failed run's own run slot, the Memory one budget,
+memory cap with its one retry after a memory kill, and time limit; a
+failing Setup leaves that id unjudged. An id that fails there is
+pre-existing, one
+that passes there is a new failure, and one whose base run timed out or
+was killed for memory is unjudged. The base runs' output goes to one
+log, copied to <git common dir>/forge-test/base-fails/<base tree>-<n>.log,
+<n> the next free number, which the 30-minute prune of failed/ never
+touches.
+
+When every id is pre-existing the run passes. It writes the changed
+stamp for <tree> as any changed pass does, the "chain <merge-base tree>"
+line included, with the same check that the chained tree kept its stamp
+during the run, releases
+its run slot, removes failed/<tree>-changed.log and its .d/
+copy, prints on stdout
+  forge: tests passed (<short>), pre-existing failures on <base short>: <id> <id>...
+the ids space-separated in Failed tests order, <base short> the merge
+base's short hash, and exits 0. forge test --passed --changed and forge
+done take that stamp like any changed pass. It also
+appends a base-fails event to the events.jsonl a failing Quarantine
+run's event goes to (below), its message naming the ids, the base tree
+(<base short> and the base ref) and the base log; when that write fails
+it warns on stderr and the pass stands.
+
+Then, for each pre-existing id, it looks in the repo's main checkout's
+.forge/concerns.json, the one forge concern add writes (a missing file
+means no concerns), for an open concern whose text starts
+"Pre-existing test failure: <id>". When there is none it runs
+  forge concern add <repo> test medium <file> -- 'Pre-existing test failure: <id> fails on base tree <base short> (<base ref>); log <base log>'
+<file> the id's file from Failed tests, <base log> the durable
+base-fails/ log, <repo> the name forge concern add resolves to the
+repo's main checkout: a child directory of the project root, else the
+project root under its basename. Each id so has at most one open
+concern; a resolved one does not stop a new one. When the lookup or the
+add fails it prints a "forge: warning: ..." line on stderr naming the id
+and the cause, and the pass stands: exit 0, stamp, pass line and event
+unchanged. A failed run opens no concern.
+
+A new failure, an unjudged id or a skipped base check leaves the run
+failed exactly as without the base check: the same "forge: tests
+failed, log <log>" line, exit code, log and failed/ record. When at
+least one id was pre-existing, it first prints on stderr
+  forge: pre-existing failures on <base short>: <id> <id>...
+so the fixer can skip those ids; with none pre-existing, or no base
+check, it prints no such line. An id is only as fine as the Failed tests
+command makes it: with suite- or file-level ids, as forge's own are, a
+suite or file that already fails on the base hides a new failure in that
+same suite or file.
+
+When the command of a full-tier run passes and its pass stamp is
+written, forge runs the Quarantine line, when there is one, in the
+worktree top after releasing its run slot, under the same
+memory cap and time limit but never retried, its output
+appended to the same log. Its result never changes the run's exit code,
+stamp or runs.log line. Exit 0 prints nothing more.
+Any other exit prints "forge: quarantine failed (exit <n>); not gating"
+on stderr and, with FORGE_ROOT set, appends a quarantine event with the
+message "exit <n>, log <log>" to the events.jsonl of the phase directory
+S/phases/$FORGE_PHASE-*/ when FORGE_PHASE names one, else of the feature
+directory S/features/<t>-<f>/ when the worktree is on branch
+forge/<t>-<f> and that directory exists, else of none. S is the state
+dir of FORGE_ROOT, ${XDG_STATE_HOME:-~/.local/state}/forge/<repo> (see
+forge paths); when S cannot be resolved its error is printed on stderr
+and no event is written. Only the full tier runs the Quarantine line: a
+full run, or a --changed run that falls back to the full tier because
+there is no Changed tests line. Changed-tier runs, a changed pass promoted to a
+full stamp by the .full marker included, cached runs, docs-only
+carry-overs, the no-changed-files case, failed runs, --one and --repeat
+never run it.
+
+When the Quarantine line is dated more than 48 h ago, measured from
+00:00 UTC of its date, every full, changed, --one and --repeat
+invocation prints once on stderr
+  forge: warning: quarantine added <date> (<n> h ago); lift it or fix the tests
+with <date> the line's date as written and <n> the whole hours since
+that date, cached, docs-only and no-changed-files results included.
+An undated line and one dated 48 h ago or less print no warning, nor
+do --passed and --stack.
+
+--one runs the Test line in the foreground, its output passing through,
+the way a full run runs its command: the worktree lock, a run slot
+with FORGE_TEST_SLOT_HELD set, the narrow Memory one budget (the Memory
+one line, else half the Memory line's size in KiB, rounded down and
+floored at 512M, so 2G by default and 6291456K for 12G), which sets its
+scope's MemoryMax and MemoryHigh, its job count (2 capped at nproc, or
+min(nproc, <n>) with a CPUs one line), Setup, the memory cap probe, a
+capped scope with its one retry after a memory kill and its time limit.
+A --one run queues on the worktree lock behind another --one or a full
+run in the same worktree. A nested --one under an ancestor holding the
+lock or a run slot takes neither, as any nested forge test.
+It records no stamp and writes no runs.log line; it exits with the
+command's code, or 1 for 5 or 75, 75 only when its worktree-lock wait
+gives up or a second memory kill ends it, and 124 when its time limit
+stops it. Without a Test line it
+runs the changed tier, or the full suite, the same way, at the Memory
+budget.
+
+--repeat <n> --one <test> runs the --one command up to <n> times in
+sequence, <n> a positive integer, under one run slot, each iteration
+in its own capped scope with a unit name unique to that iteration and
+retry, and each with FORGE_TEST_CPUS exported. It stops at the first
+failing iteration, printing
+  forge: repeat failed on iteration <i>/<n>
+on stderr and exiting with that iteration's code, or 1 for 5 or 75, or
+124 after the timeout line when the iteration hit its time limit; when
+every iteration passes it prints "forge: repeat passed <n>/<n>" and exits
+0. Without a Test line it repeats the fallback tier's command the same
+way. --repeat without --one, with --stack or --passed, or with an
+<n> that is not a positive integer is a usage error.
+
+--passed runs nothing. It exits 0 when the working state's tree is
+HEAD's (no uncommitted change, staged file or untracked non-ignored file)
+and a full stamp exists for it, or a chained one as described for the
+cache above (a changed stamp whose chain lines reach a full stamp of a
+tree in HEAD's history; a merge-base line never counts), with --changed
+a full or changed stamp, else prints why and exits 1, 5 for a "- All
+tests: none" declaration or
+6 when there is no "- All tests:" line. A changed stamp of any merge
+base counts when it is empty or holds a merge-base line, whatever
+chain lines it also holds. One holding only "chain <tree>" lines counts
+only while a chained tree is itself stamped on this host, checked live
+and recursively, each tree visited once and at most 20 links deep, so a
+cycle stops: a full stamp
+of it, or a changed stamp of it that counts in turn. A chain broken by a
+removed pre-fix stamp, as after a later failed run of that tree, or
+reaching only another host's stamp, counts as no pass unless the stamp
+also holds a merge-base line. The same check applies to the docs-only
+carry-over below. Such a pass is only a changed pass unless its chain
+reaches a full stamp of a tree in HEAD's history as above; forge land
+applies the same chain rule to its full-pass requirement.
+Without that stamp it accepts the same docs-only carry-over as a run:
+one of the last 20 commits of HEAD has a tree with the stamp the tier
+needs (full: a full stamp or a chained one; --changed: either) that
+differs from HEAD's tree only in docs-only paths, and it prints
+"forge: tests passed (<tree>), cached from <stamped tree> (docs-only
+change)" and exits 0,
+recording no stamp. forge land needs a full pass.
+
+--stack runs the Local stack line against the Stack tests line. When
+either line, or the file, is missing it prints 'forge: no "- Local
+stack:" or "- Stack tests:" line in <path>; stack not run' on stderr and
+exits 5, starting nothing. Otherwise it takes the worktree lock, stops
+any leftover forge-stack-<name>-<hash> unit, where <name> is the
+worktree directory's name with each character outside [A-Za-z0-9:_.-]
+replaced by _ and <hash> is the first 8 hex digits of the sha256 of the
+worktree's absolute git dir, runs Setup as every tier does, and starts
+the Local stack command through bash -c as the main process of a
+systemd-run --user --collect transient unit of that name, working in
+the worktree top (systemd-run --working-directory=<worktree top>) with
+FORGE_PORT_OFFSET
+set to the caller's $FORGE_PORT_OFFSET, or 0 when unset, and PATH set to
+the caller's $PATH. It then runs the Stack tests command
+in the worktree top with the same FORGE_PORT_OFFSET exported; that
+command waits for the stack to answer by itself. The output of Setup,
+systemd-run, systemctl and the tests goes to <git dir>/forge-stack.log,
+replaced on each run, which names the unit's journal (journalctl --user
+-u <unit>) holding the stack's own output. The unit is stopped with
+systemctl --user stop whether the tests pass, fail or the run is
+interrupted. It prints "forge: stack tests passed" and exits 0, or
+prints "forge: stack tests failed, log <log>" on stderr and exits with
+the tests' exit code, or 1 when that code is 2, 5 or 75. When
+systemd-run fails it prints "forge: local stack failed to start, log
+<log>" on stderr and exits 1, running no test. --stack takes no run slot
+and records no stamp, and only its Setup has a time limit; with
+--changed, --one, --passed, --base or --force it is a usage error.
+
+Exit codes:
+  0  the command passed or was cached, or every failure of a --changed
+     run was pre-existing on the merge base; with --passed, HEAD's tree
+     has a pass
+  1  not a git worktree, an unknown --base, Setup failed, a bad
+     FORGE_TEST_SLOT_WAIT, FORGE_TEST_MIN_SECS, Memory or Timeout
+     line, an unreadable load average or MemAvailable, an old
+     test snapshot that could not be removed, the command exited 5
+     or 75, with --passed no pass for HEAD's
+     tree or a dirty tree, with --stack the local
+     stack failed to start, or an unreadable or empty /etc/machine-id
+  2  usage, or a FORGE_TEST_RUNS that is not a whole number of at
+     least 1
+  5  .forge/TESTING.md declares "- All tests: none", with --stack no
+     "- Local stack:" or "- Stack tests:" line; nothing ran. A command's own 5 on any tier
+     (full, --changed, --one, --repeat or a fallback) exits 1
+  6  no .forge/TESTING.md, or no "- All tests:" line in it with a
+     backticked command or none; nothing ran
+  75 a second memory kill after its one retry, or a worktree lock wait
+     past FORGE_TEST_SLOT_WAIT, also with --one, --repeat or --stack;
+     never the command's own code
+  124 the run, a --one run or a --repeat iteration hit its time limit
+  *  the command's own exit code
+
+Reads:
+  <worktree top>/.forge/TESTING.md
+  /etc/machine-id
+  <git dir>/forge-setup
+  <main checkout>/.forge/concerns.json
+  S/root, with FORGE_ROOT set
+  /proc/loadavg
+  /proc/meminfo
+  ${FORGE_PROC_ROOT:-/proc}/loadavg
+  ${FORGE_PROC_ROOT:-/proc}/pressure/cpu
+  ${FORGE_PROC_ROOT:-/proc}/self/cgroup
+  ${FORGE_SYS_ROOT:-/sys}/fs/cgroup<scope path>/memory.peak
+
+Writes:
+  <git dir>/forge-test.log
+  <git dir>/forge-test-<pid>.peak
+  <git dir>/forge-test.d/
+  <git dir>/forge-stack.log
+  <git dir>/forge-setup.lock
+  <git common dir>/forge-test/<machine-id>/<tree>
+  <git common dir>/forge-test/<machine-id>/changed/<tree>
+  <git common dir>/forge-test/runs.log
+  <git common dir>/forge-test/failed/<tree>-<tier>.log
+  <git common dir>/forge-test/failed/<tree>-<tier>.d/
+  <git common dir>/forge-test/base/
+  <git common dir>/forge-test/base-fails/<base tree>-<n>.log
+  <main checkout>/.forge/concerns.json
+  <main checkout>/.forge/CONCERNS.md
+  <git common dir>/forge-test/tmp/<pid>/
+  <git dir>/forge-test.lock
+  /tmp/fg-<pid>
+  S/phases/<phase>/events.jsonl
+  S/features/<t>-<f>/events.jsonl
+  S/root, when S is new
+  ${XDG_RUNTIME_DIR:-$HOME/.local/state}/forge/test-runs/
+
+Environment:
+  FORGE_TEST_RUNS       test runs at once on the machine, the run slots
+                        shared by every repo, a whole number of at
+                        least 1, default 2; any other value is a usage
+                        error
+  FORGE_TEST_SLOT_WAIT  minutes to wait for the worktree lock before
+                        giving up with exit 75, a positive integer,
+                        default 30; the run slot wait has no bound
+  FORGE_TEST_POLL_SECS  test-only: the seconds between polls of the run
+                        slot and worktree-lock waits, passed to sleep
+                        as is, default 1
+  FORGE_TEST_SLOT_HELD  set by forge test for its command to its run
+                        slot file; when it names a slot an ancestor
+                        holds, no slot is taken
+  FORGE_TEST_CPUS       set by forge test for its command to its job
+                        count, min(nproc, <n>) with <n> the CPUs one
+                        value, else 2, for --one and --repeat, and with
+                        <n> the CPUs all value, else max(2, floor(nproc
+                        / 4)), for a full or changed run, halved, at
+                        least 1, for a retry after a memory kill; a
+                        value already set is overwritten
+  FORGE_TEST_WT_HELD    set by forge test for its command to <git
+                        dir>/forge-test.lock; when it names the lock of
+                        the same worktree held by an ancestor, no lock
+                        is taken
+  FORGE_TEST_LOG_DIR    set by forge test for a full or changed
+                        command to <git dir>/forge-test.d/, emptied
+                        first, and for the Failed tests command to
+                        failed/<tree>-changed.d/; a value already set
+                        is overwritten
+  TMPDIR                set by forge test for every command it runs,
+                        --stack included, to /tmp/fg-<pid>, a
+                        symlink to <git common
+                        dir>/forge-test/tmp/<pid>, both removed on
+                        exit; a value already set is overwritten
+  GIT_CEILING_DIRECTORIES
+                        set by forge test for every command it runs
+                        with <git common dir>/forge-test/tmp prepended
+                        to any value already set
+  FORGE_TEST_MIN_SECS   test-only: the seconds in one minute of the time
+                        limit, a positive integer, default 60, used for
+                        the timeout duration; the timeout line still
+                        names the limit in minutes
+  FORGE_PROC_ROOT       the directory holding loadavg, pressure/cpu and
+                        the scope's self/cgroup, default /proc
+  FORGE_SYS_ROOT        the sysfs root read for the scope's
+                        memory.peak, default /sys
+  FORGE_ROOT            the forge root whose phase or feature gets a
+                        failing Quarantine run's event and a base-fails
+                        event
+  FORGE_PHASE           the phase number naming that phase directory
+  FORGE_PORT_OFFSET     with --stack, passed to the stack unit and the
+                        Stack tests command, default 0
+
+Example:
+  forge test --changed .claude/worktrees/intake-05

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+log=${STUB_LOG:?}
+mkdir -p "$log"
+d=$(mktemp -d "$log/npm.XXXXXX")
+printf '%s\n' "$@" >"$d/argv"
+dir=$PWD next=
+for a in "$@"; do
+  if [ -n "$next" ]; then dir=$a; next=; continue; fi
+  case $a in
+    --prefix|-C) next=1 ;;
+    --prefix=*) dir=${a#*=} ;;
+  esac
+done
+echo "npm $*" >>"$log/calls"
+if cmp -s "$dir/package-lock.json" "${STUB_LOCK:?}"; then echo same; else echo differs; fi >"$d/lock"
+if grep -qF -- "--remote-debugging-port=9222" "$dir/lib/local-browser.mjs" 2>/dev/null && grep -qF FORGE_JBC_PEER "$dir/lib/hub.mjs" 2>/dev/null; then echo yes; else echo no; fi >"$d/patched"
+mkdir -p "$dir/node_modules/playwright-core"
+: >"$dir/node_modules/playwright-core/package.json"

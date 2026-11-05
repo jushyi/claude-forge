@@ -1,0 +1,94 @@
+Usage: forge replay record <judge> <old-command>
+       forge replay lock <judge>
+       forge replay run <judge> <command>
+
+The judge of a /forge-port run: replay recorded requests against a port
+and compare every answer with the old implementation's recorded answer.
+Runs in any directory; needs python3.
+
+A judge is a directory:
+  requests/<id>   a request fixers may see, fed to the command on stdin
+  holdout/<id>    a request no fixer sees; its mismatches are counted
+                  apart and never printed
+  answers/<id>    the old implementation's answer to that request
+  noise/<id>      the old implementation's second answer to it
+  rules           one rule per line, each ending in its reason:
+                    ignore <path> <reason>
+                    normalize keys|numbers|space <reason>
+  cutover         "<hours> <requests>": the clean shadow window forge
+                  cutover needs, optional
+  shadow.jsonl    live comparisons written by forge shadow
+  lock            the sha256 of rules, cutover, requests/, holdout/ and answers/,
+                  symlinked files hashed by their targets' content, then
+                  the lock time, so every relock is a new generation
+  report.jsonl    the last run's mismatches on requests/
+  holdout.jsonl   the last run's mismatches on holdout/, for the operator
+  got/<id>        the last run's answers
+
+A path joins .key, ["key"] and [] steps, such as .lines[].name; [] is
+any array index. Two answers match when their bytes are equal. When
+both parse as JSON, NaN and Infinity as Python writes them included,
+they also match when they differ only where a rule allows: an ignore rule drops its path and everything under it from both,
+normalize keys allows another object key order, normalize numbers
+compares numbers by decimal value (1.0 is 1) and normalize space allows
+other whitespace between tokens. An answer with a duplicate object key
+is compared as bytes only. String escapes always count ("\u00e9"
+is not "é") and numbers are never rounded to doubles.
+
+record runs <old-command> once per request into answers/, then once
+more into noise/, and prints "forge: recorded <n> answers twice in
+<judge>". It then compares each pair and prints one
+"noise <path> <count> <first id>" line per path where the two old runs
+disagree ("order" or "space" when only key order or whitespace
+differs, "body" for a non-JSON answer), or "noise none". Each line is a
+candidate rule; none is added for you. It refuses a locked judge.
+
+lock checks every rule's form and reason, the cutover gate's form, that every request has an
+answer, that no id is in both requests/ and holdout/ and that both hold
+a request, then writes lock and prints
+"forge: locked <judge>: <n> requests, <h> holdout, <k> rules". Only the
+operator locks; relocking is how a judge change is approved.
+
+run refuses a judge with no lock or one changed since it was locked,
+then runs <command> once per request, with a 60 second limit each. It
+writes one report.jsonl line per mismatch on requests/,
+{id, class, request, want, got, repro}, where class lists the differing
+paths, each under no other listed path and shown by its first and last
+16 steps when longer than 32 ("order", "space" or "body" as above), and
+repro, "bash -c '<command>' < '<request>'", reproduces it, and the same lines for holdout/ to holdout.jsonl. It
+prints "requests=<n> mismatches=<m> classes=<k> holdout=<h>
+holdout_mismatches=<x>", then one "class <paths> <count> <first id>"
+line per requests/ class, largest first. It passes only when m and x
+are both 0.
+
+What the judge cannot judge:
+  - stdout alone is compared; exit status and stderr are not.
+  - each request is replayed alone on a fresh process, so an answer
+    that depends on earlier requests, a database, a cache or a file
+    the command reads is judged only if that state is recorded and
+    restored for each request; a stateful service is out of reach.
+  - the clock, randomness and outbound calls must be frozen or
+    replayed (libfaketime, a seeded generator, vcrpy or WireMock
+    recordings) in both commands, or every answer that holds them is
+    noise or a side effect repeated on each run.
+  - concurrency, streaming, ordering across requests and latency are
+    not exercised.
+
+Exit codes:
+  0  no mismatch, or record and lock succeeded
+  1  mismatches, a failed old command, or a bad judge
+  2  bad arguments
+  3  the judge is unlocked (run) or locked (record), or changed since lock
+
+Reads:
+  <judge>/requests/, <judge>/holdout/, <judge>/answers/, <judge>/rules,
+  <judge>/lock
+
+Writes:
+  <judge>/answers/ and <judge>/noise/ (record), <judge>/lock (lock),
+  <judge>/got/, <judge>/report.jsonl and <judge>/holdout.jsonl (run)
+
+Example:
+  forge replay record ~/.local/state/forge/shop/port/receipts-rust ./old-receipt
+  forge replay lock ~/.local/state/forge/shop/port/receipts-rust
+  forge replay run ~/.local/state/forge/shop/port/receipts-rust 'curl -s --data-binary @- localhost:8081/v1/receipts'

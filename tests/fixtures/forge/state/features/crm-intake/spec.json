@@ -1,0 +1,17 @@
+{
+  "decisions": [
+    "Leads live in one table."
+  ],
+  "spec": [
+    "A lead has name and email.",
+    "Duplicate emails merge."
+  ],
+  "focus": [
+    "security",
+    "pii"
+  ],
+  "pii_fields": [
+    "name",
+    "email"
+  ]
+}

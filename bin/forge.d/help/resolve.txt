@@ -1,0 +1,30 @@
+Usage: forge resolve <track>/<feature> [<repo>=<dir>...]
+       forge resolve --concern <repo>:C-NN [<repo>=<dir>]
+
+Mark resolved every concern that a done requirement of the feature names
+(its "concern", <repo>:C-NN), and re-render that repo's CONCERNS.md, which
+lists open concerns only, so a resolved concern drops out of it and stays
+in concerns.json. A repo's concerns are read from <dir> when given, else
+from the repo's checkout under the project root; a relative <dir> is taken
+from the directory forge was started in. Prints each concern it resolves.
+Commits nothing; ship runs it on the feature branch so the status merges
+with the fix. Fails when a named concern does not exist.
+
+With --concern, mark resolved only the named concern, reading no feature,
+and re-render its repo's CONCERNS.md. Prints "resolved <repo>:C-NN".
+Commits nothing; /forge-quick runs it with <repo>=<its worktree> and
+commits the two files there. Fails when <repo> has no directory or the
+concern does not exist.
+
+Reads:
+  STATE/features/<track>-<feature>/requirements.json (feature form),
+  STATE being the project root's state dir (see forge paths --help)
+  <dir>/.forge/concerns.json
+
+Writes:
+  <dir>/.forge/concerns.json
+  <dir>/.forge/CONCERNS.md
+
+Examples:
+  forge resolve crm/intake acme-hub=../acme-hub-ship
+  forge resolve --concern acme-hub:C-03 acme-hub=../acme-hub-quick

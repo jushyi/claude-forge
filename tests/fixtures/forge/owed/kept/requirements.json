@@ -1,0 +1,8 @@
+{
+  "requirements": [
+    {"id": "INT-01", "text": "The form saves a lead.", "done": false, "owed": {"kind": "moved", "check": "lead save moved to crm/routing", "owner": "operator", "until": "release"}},
+    {"id": "INT-02", "text": "The API returns the lead.", "done": false, "owed": {"kind": "broken", "check": "GET /leads/1 returns 500 on prod", "owner": "octo"}},
+    {"id": "INT-03", "text": "The lead list shows the new lead.", "done": false, "owed": {"kind": "broken", "check": "lead list pagination", "owner": "operator"}},
+    {"id": "INT-04", "text": "The intake page renders on mobile.", "done": false}
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "track": "voice",
+  "goal": "Voice notes on records",
+  "status": "open",
+  "notes": [],
+  "features": [
+    {
+      "feature": "capture",
+      "delivers": "Capture audio",
+      "depends": [
+        "crm/auth"
+      ]
+    },
+    {
+      "feature": "tag",
+      "delivers": "Tag notes",
+      "depends": [
+        "capture",
+        "crm/export"
+      ]
+    }
+  ],
+  "shipped": []
+}

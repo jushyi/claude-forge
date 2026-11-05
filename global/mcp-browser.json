@@ -1,0 +1,3 @@
+{
+  "jbc": {"type": "stdio", "command": "forge-browser", "args": ["mcp"]}
+}

@@ -1,0 +1,131 @@
+Usage: forge <command> [args]
+
+Keeps a project's planning state in .forge/: JSON files checked against
+schemas.
+
+Operator commands:
+  status [<track>/<feature>] print open tracks, features and ready work,
+                             or one feature's view and unmet tasks
+  ready <track>/<feature>    exit 0 when every dependency has shipped
+  implement <track>/<feature>
+                             start the feature's phases, up to
+                             $FORGE_CONCURRENCY at once and
+                             $FORGE_MAX_SESSIONS machine-wide
+  discuss <track>/<feature>  start the feature's discuss session;
+                             --auto <track>/<feature>... starts each
+                             one's auto discuss session as admitted
+  launch [--auto] <track>    start the next discuss, implement, resume
+                             or next of each ready open feature with
+                             no live session
+  resume <N>                 start a fresh session for phase N
+  map [<repo>...]            map repos into their docs and concerns
+  watchdog                   log a stall event for each forge session idle
+                             $FORGE_STALL_MIN minutes, in any directory
+  notify <title> <body>      send a desktop notification through
+                             notify-send, in any directory
+  replay record|lock|run <judge> [<command>]
+                             record, lock or run a /forge-port judge:
+                             recorded requests compared against the old
+                             answers, in any directory
+  shadow <slug> <feed>       compare live old and new answers from a mirror
+                             log with port <slug>'s judge rules
+  cutover <slug>             say go once port <slug> has a clean shadow
+                             window as long as its locked gate
+  doctor                     check the forge units, each forge-run repo's
+                             test and hook commands, trust and credential
+                             files, in any directory
+
+Used by forge sessions (run by hand only after editing JSON yourself):
+  validate [<file>...]       check planning JSON against its schema
+  alloc <track>/<feature>    number a feature's phases, create their dirs
+  repos <track>/<feature>    print the feature's repos, producer first
+  paths <N> | <track>/<feature>
+                             print the absolute R, F, P, W, B, BASE and G
+                             paths of a phase or feature
+  commit <scope> <step>      validate and commit under a lock
+  quick-log <slug> <task> <repo>... | --import
+                             append a quick to the state dir's
+                             STATE/quicks.json under the lock, or import
+                             past PR-merged quicks from git history
+  archive <track>/<feature>  move a shipped feature and its phases to archive/
+  resolve <track>/<feature> | --concern <repo>:C-NN
+                             mark resolved the concerns named by done
+                             requirements, or the one concern named
+  concern add <repo> <area> <severity> <files...> -- <text>
+                             record a new open concern in the repo's
+                             main-checkout concerns.json and commit it
+  check <N>                  check phase N's plan against its spec, wait on file overlaps
+  plan-done <N>              check phase N's plan and commit it
+  task-done <N> <id> [--unmet <reason>]
+                             check task <id>'s record and commit the task,
+                             or record it unmet and commit it as it stands
+  finish <N>                 commit phase N's result, then run forge done
+  merge-check [<record>]     lists the lines an in-progress merge lost,
+                             runs in any git worktree
+  merge <branch> | --continue <record> | --abort
+                             merges a branch in the current worktree,
+                             resolving planning JSON and doc conflicts
+  land <repo> <branch>       merges, tests and lands a branch on a repo's
+                             main through its _land worktree; runs in any
+                             directory
+  golive <repo> <branch>     land a branch, then run the repo's
+                             ./port --apply from its main checkout
+  review <track>/<feature>   review a feature's diff on Codex
+  fixes <track>/<feature>    print open review findings grouped by file,
+                             one JSON line per file
+  owed <track>/<feature>     set each requirement's done and owed from the
+                             feature's verify.json and add owed lines to
+                             .forge/todo.md
+  owed list [<track>/<feature>]
+                             print each owed requirement with its owner
+  ui <track>/<feature>       exit 0 when a feature is UI work
+  event <N> <step> <message>
+                             log an event to phase N's events.jsonl
+  test [--changed | --one <test> | --passed] [<dir>]
+                             run the full, changed-file or one-test
+                             command from TESTING.md, or check HEAD's
+                             tree has a pass
+  perf pull                  read each repo's usage-log metrics into
+                             its .forge/perf.json and commit them
+  done <N>                   merge finished phase N, start what comes
+                             next
+  next <track>/<feature>     after verify: start ship, or retry the gaps
+  clean [--sessions] <track>/<feature>
+                             remove the feature's sessions and worktrees,
+                             or with --sessions only its idle phase and
+                             verify sessions
+  gc [--apply | --confirmed] list, then remove, merged clean worktrees and
+                             forge branches, missing worktrees and
+                             finished sessions of archived features
+  push [<repo>]              push main to origin, when the repo opted in and is on main
+  pr create <branch> <title> <body-file> | checks <url> | merge <url> |
+     close <url> | push [<git push argument>...]
+                             open, merge or close a pull request on
+                             origin's GitHub or Forgejo, wait for its
+                             checks, or run the Pre-push line and push its
+                             branch, in any repo checkout
+
+Run in the project root, the directory holding .forge/.
+Run 'forge <command> --help' for a command's arguments, files and example.
+
+Environment:
+  FORGE_ROOT              project root (default: current directory)
+  FORGE_TEMPLATES         doc and check templates (default
+                          ~/.claude/forge/templates)
+  FORGE_SCHEMAS           JSON schemas (default ~/.claude/forge/schemas)
+  FORGE_PERMISSION_MODE   permission mode of every forge session
+                          (default bypassPermissions)
+  FORGE_CONCURRENCY       phase sessions a feature runs at once (default 10)
+  FORGE_MAX_SESSIONS      live, non-blocked forge sessions of all
+                          projects (phase, Verify, Ship, Discuss, Quick,
+                          Debug and the other forge forms) at which
+                          implement, done, next, resume and discuss
+                          --auto start nothing more (default 12); starts also wait for
+                          MemAvailable of 3 GiB plus 1 GiB per session
+  FORGE_ENV               per-host settings file (default
+                          ${XDG_CONFIG_HOME:-~/.config}/forge/env): each
+                          FORGE_<NAME>=<value> line is exported at start,
+                          over any inherited value such as
+                          global/settings.json's; blank and # lines are
+                          skipped, any other line is ignored with a
+                          warning; a missing file sets nothing

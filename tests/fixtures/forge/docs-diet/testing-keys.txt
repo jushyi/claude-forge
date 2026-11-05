@@ -1,0 +1,4 @@
+- All tests: `tests/forge.test.sh`
+- Test: `t={test}; s=${t%%:*}; "tests/$s.test.sh" "${t:${#s}+1}"`
+- Changed tests: `tests/changed.sh {files}`
+- Failed tests: `awk '$1=="FAIL"{print $2, "tests/"$2".test.sh"}' {log}`

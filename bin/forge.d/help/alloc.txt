@@ -1,0 +1,69 @@
+Usage: forge alloc <track>/<feature>
+
+Give each phase in the feature's split a number, continuing from the
+highest NN under STATE/phases/ and STATE/archive/*/phases/, and create its
+directory under STATE/phases/ with a spec.json derived from the split.
+STATE is the project root's state dir (see forge paths --help); alloc
+writes no record under .forge/. Numbered phases keep their numbers, so a
+rerun only numbers new phases, and a phase already archived under
+STATE/archive/ gets no new directory. Prints the absolute path of each
+directory it creates.
+
+alloc reads each split phase's creates and consumes only to check
+dependencies; a derived spec carries neither.
+
+A derived spec carries the split phase's focus when it has it, the
+feature spec's targets when its focus holds scaling and the feature
+spec's pii_fields when its focus holds pii,
+and its spec starts with one line per other repo the phase depends on
+directly, in producer order:
+  Reference (read-only): <repo> feature worktree <path>/.claude/worktrees/<track>-<feature>
+Lines appended after these, in both spec.json and split.json, keep a rerun
+from seeing a change.
+
+A phase whose derived spec changed gets the new spec.json and loses its
+gaps.json, research, scout.json, plan.json and every later step file, so
+it researches, scouts and plans again from the new spec. Prints each as
+"replan <dir>", with the directory's absolute path.
+
+Refuses, exiting 1 before it numbers or writes anything, when a phase's
+repo resolves to nothing or has no .forge/, when a phase lists a
+requirement whose owner in requirements.json is operator or post-ship
+(a phase takes only agent requirements; an absent owner is agent),
+naming the phase, the id and the owner, when there is a cycle between
+repos, when a phase lists an interface in its consumes that another
+phase lists in its creates (compared after trimming whitespace)
+without depending on that phase directly or transitively, naming both
+phases and the interface,
+when two phases with no dependency path between them (neither depends on
+the other directly or transitively) list the same file of one repo in
+their spec's Files: lines, unless git check-attr gives that file
+merge=union in the repo's main tree, or list the same interface in their
+creates (compared after trimming whitespace), naming both phases in split
+order and the file or interface, or when the feature slug is already taken in another track: open there, or archived
+there (STATE/archive/<track>-<feature>) with its forge/<track>-<feature> branch not merged into main in one
+of this feature's repos. It also refuses, naming the sessions, while a
+phase of the feature has a start event and 'claude agents' lists a working
+or blocked phase or verify session of the feature, the sessions forge
+implement refuses on.
+
+Runs under forge.lock (see forge commit --help), so simultaneous allocs
+never hand out one number twice.
+
+Reads:
+  STATE/features/<track>-<feature>/split.json
+  STATE/features/<track>-<feature>/spec.json   (when present)
+  .forge/repos.json, .forge/tracks/*.json
+  STATE/phases/, STATE/archive/*/phases/
+  STATE/phases/NN-slug/events.jsonl, claude agents --json
+
+Writes:
+  STATE/features/<track>-<feature>/split.json   (adds "number")
+  STATE/phases/NN-slug/spec.json
+  removes gaps.json, research.json, research/, scout.json, plan.json,
+  tasks/, tests/, verify.json, review.json, review/, fixes/ and result.json
+  of each changed phase, and its events.jsonl's "ui" event so the phase
+  session re-derives it from the new spec
+
+Example:
+  forge alloc forge/agents

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+log=${STUB_LOG:?}
+mkdir -p "$log"
+d=$(mktemp -d "$log/curl.XXXXXX")
+printf '%s\n' "$@" >"$d/argv"
+out= url= fmt= next=
+for a in "$@"; do
+  case $next in
+    o) out=$a; next=; continue ;;
+    w) fmt=$a; next=; continue ;;
+  esac
+  case $a in
+    --output) next=o ;;
+    --write-out) next=w ;;
+    --*) ;;
+    -*o) next=o ;;
+    -*o*) out=${a#*o} ;;
+    -*w) next=w ;;
+    *://*|127.0.0.1*|localhost*) url=$a ;;
+  esac
+done
+echo "curl $url" >>"$log/calls"
+if flock -n "${STUB_BROWSER_LOCK:?}" true; then echo free; else echo held; fi >"$d/lock"
+if [ "$url" = "${STUB_TARBALL_URL:?}" ]; then
+  body=${STUB_TARBALL:?}
+else
+  body=$d/body
+  printf '{"Browser":"Chrome/140.0.0.0","Protocol-Version":"1.3","webSocketDebuggerUrl":"ws://127.0.0.1:9222/devtools/browser/stub"}\n' >"$body"
+fi
+if [ -n "$out" ]; then cp "$body" "$out"; else cat "$body"; fi
+[ -z "$fmt" ] || printf 200

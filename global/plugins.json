@@ -1,0 +1,4 @@
+{
+  "codex@openai-codex": {"marketplace": "openai-codex", "version": "1.0.6", "gitCommitSha": "db52e28f4d9ded852ab3942cea316258ae4ef346"},
+  "impeccable@impeccable": {"marketplace": "impeccable", "version": "4.5.2", "gitCommitSha": "d631a8827f99414d2b6daba4ef08b7f8701751d7"}
+}

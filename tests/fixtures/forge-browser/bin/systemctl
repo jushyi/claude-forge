@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+log=${STUB_LOG:?} state=${STUB_STATE:?}
+mkdir -p "$log" "$state"
+d=$(mktemp -d "$log/systemctl.XXXXXX")
+printf '%s\n' "$@" >"$d/argv"
+user= words=()
+for a in "$@"; do
+  case $a in
+    --user) user=1 ;;
+    -*) ;;
+    *) words+=("${a%.service}") ;;
+  esac
+done
+echo "systemctl ${user:+--user }${words[*]}" >>"$log/calls"
+alive() { [ -s "$state/$1.pid" ] && kill -0 -- "-$(cat "$state/$1.pid")" 2>/dev/null; }
+cmd=${words[0]:-}
+s=0
+for u in "${words[@]:1}"; do
+  case $cmd in
+    stop|kill)
+      if alive "$u"; then
+        g=$(cat "$state/$u.pid")
+        kill -TERM -- "-$g" 2>/dev/null || true
+        for _ in $(seq 50); do kill -0 -- "-$g" 2>/dev/null || break; sleep 0.1; done
+        kill -KILL -- "-$g" 2>/dev/null || true
+        rm -f "$state/$u.pid"
+      else
+        rm -f "$state/$u.pid"
+        echo "Failed to $cmd $u.service: Unit $u.service not loaded." >&2
+        s=5
+      fi
+      ;;
+    is-active)
+      if alive "$u"; then echo active; else echo inactive; s=3; fi
+      ;;
+    status)
+      alive "$u" || s=3
+      ;;
+  esac
+done
+exit "$s"

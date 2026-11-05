@@ -1,0 +1,7 @@
+{"focus": "tech", "docs": [
+  {"doc": "STACK", "sections": [
+    {"heading": "Languages and frameworks", "bullets": ["TypeScript on Node, Express in `src/server.ts`"]},
+    {"heading": "Commands", "bullets": ["`npm test`", "`npm run dev`"]}]},
+  {"doc": "INTEGRATIONS", "sections": [
+    {"heading": "Services", "bullets": ["SQS queue, client in `src/queue.ts`"]},
+    {"heading": "Credentials", "bullets": []}]}]}

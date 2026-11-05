@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+set -euo pipefail
+shopt -s nullglob
+
+T=${FORGE_TEMPLATES:-$HOME/.claude/forge/templates}
+S=${FORGE_SCHEMAS:-$HOME/.claude/forge/schemas}
+D=$(dirname "$(readlink -f "$0")")/forge.d
+root=${FORGE_ROOT:-$PWD}
+start=$PWD
+
+help() {
+  cat "$D/help/${1:-forge}.txt" || [ $? -eq 141 ]
+}
+
+for _m in "$D"/*.sh; do
+  . "$_m"
+done
+forge_host_env
+
+cmd=${1:-}
+[ -n "$cmd" ] || usage
+shift
+case $cmd in
+  -h | --help | help) help; exit 0 ;;
+  status | ready | map | validate | alloc | commit | archive | resolve | check | review | event | paths | implement | done | next | resume | clean | repos | push | pr | merge-check | merge | land | golive | gc | test | fixes | ui | watchdog | notify | doctor | discuss | concern | launch | owed | perf | quick-log | plan-done | task-done | finish | replay | shadow | cutover) ;;
+  *) echo "forge: unknown command '$cmd'" >&2; usage ;;
+esac
+case ${1:-} in -h | --help) help "$cmd"; exit 0 ;; esac
+
+if [ "$cmd" = merge-check ]; then
+  [ $# -le 1 ] || usage
+  merge_check "$@"
+  exit
+fi
+if [ "$cmd" = merge ]; then
+  if [ $# -eq 2 ] && [ "$1" = --continue ]; then
+    [[ $2 == /* ]] || set -- "$1" "$start/$2"
+  else
+    [ $# -eq 1 ] && [[ $1 == --abort || $1 != -* ]] || usage
+  fi
+  merge "$@"
+  exit
+fi
+if [ "$cmd" = land ] || [ "$cmd" = golive ]; then
+  [ $# -eq 2 ] || usage
+  "$cmd" "$@"
+  exit
+fi
+if [ "$cmd" = gc ]; then
+  mode=
+  case ${1:-} in --apply | --confirmed) mode=$1; shift ;; esac
+  [ $# -eq 0 ] || usage
+  gc "$mode"
+  exit
+fi
+if [ "$cmd" = test ]; then
+  forge_test "$@"
+  exit
+fi
+if [ "$cmd" = perf ]; then
+  perf "$@"
+  exit
+fi
+if [ "$cmd" = validate ] && [ $# -gt 0 ]; then
+  validate "$@"
+  exit
+fi
+if [ "$cmd" = push ]; then
+  [ $# -le 1 ] || usage
+  push "${1:-$start}"
+  exit
+fi
+if [ "$cmd" = pr ]; then
+  pr "$@"
+  exit
+fi
+if [ "$cmd" = watchdog ]; then
+  if [ $# -eq 0 ]; then
+    watchdog
+  else
+    [ "$*" = --install ] || usage
+    watchdog_install
+  fi
+  exit
+fi
+if [ "$cmd" = notify ]; then
+  [ $# -eq 2 ] || usage
+  notify "$@"
+  exit
+fi
+if [ "$cmd" = replay ]; then
+  replay "$@"
+  exit
+fi
+if [ "$cmd" = doctor ]; then
+  [ $# -eq 0 ] || usage
+  doctor
+  exit
+fi
+[ -d "$root/.forge" ] || die "no .forge in $root"
+root=$(cd "$root" && pwd)
+for _k in archive phases features; do
+  [ ! -d "$root/.forge/$_k" ] || [ -z "$(ls -A "$root/.forge/$_k")" ] || die "$root/.forge still holds planning records; move them to its state dir"
+done
+state=$(state_dir "$root")
+cd "$root/.forge"
+case $cmd in
+  validate)
+    planfiles
+    [ ! -f repos.json ] || files+=(repos.json)
+    [ ${#files[@]} -eq 0 ] || validate "${files[@]}" ;;
+  review)
+    [ $# -ge 1 ] && [[ $1 == */* ]] || usage
+    target=$1 rbase= rprior= rout=
+    shift
+    while [ $# -gt 0 ]; do
+      [ $# -ge 2 ] && [ -n "$2" ] || usage
+      case $1 in
+        --base) [ -z "$rbase" ] || usage; rbase=$2 ;;
+        --prior)
+          [ -z "$rprior" ] || usage
+          rprior=$2
+          [[ $rprior == /* ]] || rprior=$start/$rprior ;;
+        --out)
+          [ -z "$rout" ] || usage
+          rout=$2
+          [[ $rout == /* ]] || rout=$start/$rout ;;
+        *) usage ;;
+      esac
+      shift 2
+    done
+    review "$target" "$rbase" "$rprior" "$rout" ;;
+  shadow) [ $# -eq 2 ] || usage; shadow "$@" ;;
+  cutover) [ $# -eq 1 ] || usage; cutover "$@" ;;
+  paths) [ $# -eq 0 ] || { [ $# -eq 1 ] && [[ $1 =~ ^[0-9]{2,}$ || $1 == */* ]]; } || usage; paths "$@" ;;
+  fixes)
+    [ $# -ge 1 ] && [[ $1 == */* ]] || usage
+    frec=
+    if [ $# -gt 1 ]; then
+      [ $# -eq 3 ] && [ "$2" = --record ] && [ -n "$3" ] || usage
+      frec=$3
+      [[ $frec == /* ]] || frec=$start/$frec
+    fi
+    fixes "$1" "$frec" ;;
+  owed)
+    if [ "${1:-}" = list ]; then
+      shift
+      [ $# -eq 0 ] || { [ $# -eq 1 ] && [[ $1 == ?*/?* ]]; } || usage
+      owed_list "$@"
+    else
+      [ $# -eq 1 ] && [[ $1 == ?*/?* ]] || usage
+      owed "$1"
+    fi ;;
+  ui)
+    [ $# -eq 1 ] && [[ $1 == */* ]] || usage
+    is_ui "$1" ;;
+  ready | alloc | archive | check | implement | next | resume) [ $# -eq 1 ] || usage; "$cmd" "$1" ;;
+  discuss)
+    if [ "${1:-}" = --auto ]; then
+      shift
+      [ $# -ge 1 ] || usage
+      discuss_auto "$@"
+    else
+      [ $# -eq 1 ] || usage
+      discuss "$1"
+    fi ;;
+  launch)
+    a=
+    [ "${1:-}" != --auto ] || { a=--auto; shift; }
+    [ $# -eq 1 ] && [[ $1 != -* ]] || usage
+    launch_track "$1" "$a" ;;
+  clean)
+    confirmed= idle=
+    case ${1:-} in
+      --confirmed) confirmed=1; shift ;;
+      --sessions) idle=1; shift ;;
+    esac
+    [ $# -eq 1 ] || usage
+    clean "$1" ;;
+  done) [ $# -eq 1 ] || usage; finish "$1" ;;
+  status) [ $# -eq 0 ] || { [ $# -eq 1 ] && { [ "$1" = --json ] || [[ $1 == ?*/?* ]]; }; } || usage; status "$@" ;;
+  commit) [ $# -eq 2 ] || usage; commit "$@" ;;
+  quick-log)
+    if [ $# -eq 1 ] && [ "$1" = --import ]; then quick_import; else [ $# -ge 3 ] || usage; quick_log "$@"; fi ;;
+  plan-done) [ $# -eq 1 ] || usage; plan_done "$1" ;;
+  task-done) [[ ${2-} =~ ^T[0-9]+$ ]] && { [ $# -eq 2 ] || { [ $# -eq 4 ] && [ "$3" = --unmet ] && [ -n "$4" ]; }; } || usage; task_done "$@" ;;
+  finish) [ $# -eq 1 ] || usage; phase_finish "$1" ;;
+  map) map "$@" ;;
+  resolve) [ $# -ge 1 ] || usage; resolve "$@" ;;
+  repos) [ $# -eq 1 ] || usage; feature_repos "$1" ;;
+  concern) concern "$@" ;;
+  event)
+    [ $# -eq 3 ] || usage
+    case $2 in check | start | wait | retry | replan) die "forge event refuses step $2; forge logs it itself" ;; esac
+    phase "$1"
+    event "$pd" "$2" "$3"
+    [ "$2" != park ] || note_root "$root" ;;
+esac

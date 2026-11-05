@@ -1,0 +1,6 @@
+$ forge-browser --help
+exit 0
+stdout names start, --headed, stop, mcp: yes yes yes yes
+stdout names waiting for another owner and /clear: yes yes
+stub calls: 0
+key leaked: no

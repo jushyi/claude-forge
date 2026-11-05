@@ -1,0 +1,462 @@
+skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh
+skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh
+.forge/STATE.md	.forge/features/verify-walk-walkthrough/FEATURE.md	.forge/features/verify-walk-walkthrough/requirements.json	.forge/features/verify-walk-walkthrough/research.json	.forge/features/verify-walk-walkthrough/spec.json	.forge/features/verify-walk-walkthrough/split.json	.forge/phases/202-verify-walkthrough/PHASE.md	.forge/phases/202-verify-walkthrough/spec.json	.forge/tracks/verify-walk.json	.forge/tracks/verify-walk.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh
+.forge/STATE.md	.forge/features/verify-walk-walkthrough/FEATURE.md	.forge/features/verify-walk-walkthrough/requirements.json	.forge/features/verify-walk-walkthrough/research.json	.forge/features/verify-walk-walkthrough/spec.json	.forge/features/verify-walk-walkthrough/split.json	.forge/phases/202-verify-walkthrough/PHASE.md	.forge/phases/202-verify-walkthrough/spec.json	.forge/tracks/verify-walk.json	.forge/tracks/verify-walk.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh
+agents/forge-test-writer.md	hooks/forge-agent-write.sh	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/forge-agent-write.test.sh
+skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh
+hooks/forge-session-title.sh	tests/forge-session-title.test.sh
+global/forge/jbc/hub.patch	global/forge/jbc/local-browser.patch	global/forge/jbc/package-lock.json	global/forge/jbc/pin.json	global/forge/jbc/server.patch	tests/fixtures/forge-browser/pin/hub.patch	tests/fixtures/forge-browser/pin/local-browser.patch	tests/fixtures/forge-browser/pin/pin.json	tests/fixtures/forge-browser/pin/server.patch	tests/fixtures/forge-browser/start.txt	tests/fixtures/forge-browser/tarball/package/lib/hub.mjs	tests/fixtures/forge-browser/tarball/package/server.mjs	tests/forge-browser.test.sh
+bin/forge.d/state.sh	tests/forge/state.test.sh
+skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	hooks/forge-guard.sh	tests/forge-guard.test.sh
+global/settings.json	tests/port.test.sh
+templates/repo-CLAUDE.md	templates/todo.md	tests/fixtures/forge-init/rerun.txt	tests/fixtures/forge-init/single.txt	tests/fixtures/forge-init/workspace.txt
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+.forge/ARCHITECTURE.md	.forge/RULES.md	bin/forge.d/help/land.txt	bin/forge.d/land.sh	tests/forge-land.test.sh
+agents/forge-splitter.md	tests/agents.test.sh
+tests/skills.test.sh
+skills/forge-ship/SKILL.md	tests/forge/ship-queue.test.sh	tests/skills.test.sh
+bin/forge.d/state.sh	tests/forge/state.test.sh
+tests/skills.test.sh
+mods/forge-stalls/hooks/alerts.test.ts	mods/forge-stalls/hooks/register.tsx
+.forge/ARCHITECTURE.md	.forge/TESTING.md	hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/run.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+skills/forge-ship/SKILL.md	tests/forge/ship-queue.test.sh	tests/skills.test.sh
+templates/repo-CLAUDE.md	templates/todo.md	tests/fixtures/forge-init/rerun.txt	tests/fixtures/forge-init/single.txt	tests/fixtures/forge-init/workspace.txt
+skills/forge-ship/SKILL.md	tests/forge/ship-queue.test.sh	tests/skills.test.sh
+mods/forge-stalls/hooks/alerts.test.ts	mods/forge-stalls/hooks/register.tsx
+bin/forge	bin/forge.d/concern.sh	bin/forge.d/help/concern.txt	bin/forge.d/help/forge.txt	schemas/concerns.schema.json	templates/CONCERNS.md	templates/render.jq	tests/fixtures/forge/expected/map/CONCERNS.md	tests/forge/concern.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/state.sh	tests/forge/state.test.sh
+bin/forge.d/run.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+agents/forge-escalator.md	tests/agents.test.sh
+hooks/forge-phase-stop.sh	skills/forge-phase/SKILL.md	tests/forge-phase-stop.test.sh
+bin/forge.d/land.sh	tests/forge-land.test.sh
+hooks/forge-phase-stop.sh	skills/forge-phase/SKILL.md	tests/forge-phase-stop.test.sh
+bin/forge.d/help/review.txt	bin/forge.d/review.sh	tests/forge/review.test.sh
+hooks/forge-phase-stop.sh	skills/forge-phase/SKILL.md	tests/forge-phase-stop.test.sh
+bin/forge.d/review.sh	bin/forge.d/watchdog.sh	schemas/events.schema.json	tests/forge-watchdog.test.sh	tests/forge/state-validate.test.sh
+tests/changed.sh
+bin/forge.d/help/review.txt	bin/forge.d/review.sh	tests/forge/review.test.sh
+skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh
+bin/forge.d/help/review.txt	bin/forge.d/review.sh	tests/forge/review.test.sh
+.forge/RULES.md	bin/forge	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/event.txt	bin/forge.d/help/forge.txt	bin/forge.d/run.sh	skills/forge-phase/SKILL.md	tests/forge-commit.test.sh	tests/forge-gates.test.sh
+bin/forge	bin/forge.d/concern.sh	bin/forge.d/help/concern.txt	bin/forge.d/help/forge.txt	schemas/concerns.schema.json	templates/CONCERNS.md	templates/render.jq	tests/fixtures/forge/expected/map/CONCERNS.md	tests/forge/concern.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh
+.forge/ARCHITECTURE.md	.forge/INTEGRATIONS.md	.forge/RULES.md	.forge/STACK.md	.forge/TESTING.md
+.forge/ARCHITECTURE.md	.forge/STACK.md	.forge/TESTING.md	bin/forge-browser	tests/fixtures/forge-browser/owner.txt	tests/forge-browser.test.sh
+global/mcp-projects.json	global/mcp.json	port	tests/fixtures/port/apply-drift.log	tests/fixtures/port/apply.log	tests/fixtures/port/claude.json	tests/port.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/escalation.sh	bin/forge.d/help/escalation.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/settle.txt	bin/forge.d/help/validate.txt	bin/forge.d/settle.sh	bin/forge.d/state.sh	schemas/escalation.schema.json	schemas/settled.schema.json	tests/forge/commit.test.sh	tests/forge/escalation.test.sh	tests/forge/settle.test.sh
+bin/forge.d/review.sh	bin/forge.d/watchdog.sh	schemas/events.schema.json	tests/forge-watchdog.test.sh	tests/forge/state-validate.test.sh
+global/mcp-projects.json	global/mcp.json	port	tests/fixtures/port/apply-drift.log	tests/fixtures/port/apply.log	tests/fixtures/port/claude.json	tests/port.test.sh
+bin/forge.d/commit.sh	bin/forge.d/help/commit.txt	skills/forge-verify/SKILL.md	tests/forge/commit.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/commit.txt	bin/forge.d/help/land.txt	bin/forge.d/help/push.txt	bin/forge.d/run.sh	tests/forge/run-parallel.test.sh
+bin/forge	bin/forge.d/doctor.sh	bin/forge.d/help/doctor.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/watchdog.txt	tests/forge-common.sh	tests/forge-watchdog.test.sh	tests/forge/doctor.test.sh	tests/forge/help.test.sh
+.forge/ARCHITECTURE.md	.forge/STACK.md	.forge/TESTING.md	bin/forge-browser	global/forge/jbc/hub.patch	global/forge/jbc/local-browser.patch	global/forge/jbc/package-lock.json	global/forge/jbc/pin.json	global/forge/jbc/server.patch	hooks/forge-guard.sh	tests/fixtures/forge-browser/owner.txt	tests/fixtures/forge-browser/pin/hub.patch	tests/fixtures/forge-browser/pin/local-browser.patch	tests/fixtures/forge-browser/pin/pin.json	tests/fixtures/forge-browser/pin/server.patch	tests/fixtures/forge-browser/start.txt	tests/fixtures/forge-browser/tarball/package/lib/hub.mjs	tests/fixtures/forge-browser/tarball/package/server.mjs	tests/forge-browser.test.sh	tests/forge-guard.test.sh
+tests/changed.sh
+bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-watchdog.test.sh	tests/skills.test.sh
+bin/forge	bin/forge.d/concern.sh	bin/forge.d/help/concern.txt	bin/forge.d/help/forge.txt	schemas/concerns.schema.json	templates/CONCERNS.md	templates/render.jq	tests/fixtures/forge/expected/map/CONCERNS.md	tests/forge/concern.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh
+bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-watchdog.test.sh	tests/skills.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+.forge/RULES.md	bin/forge	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/event.txt	bin/forge.d/help/forge.txt	bin/forge.d/run.sh	skills/forge-phase/SKILL.md	tests/forge-commit.test.sh	tests/forge-gates.test.sh
+bin/forge.d/review.sh	bin/forge.d/watchdog.sh	schemas/events.schema.json	tests/forge-watchdog.test.sh	tests/forge/state-validate.test.sh
+bin/forge.d/doctor.sh	bin/forge.d/help/doctor.txt	tests/forge/doctor.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/commit.txt	bin/forge.d/help/land.txt	bin/forge.d/help/push.txt	bin/forge.d/run.sh	tests/forge/run-parallel.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/escalation.sh	bin/forge.d/help/escalation.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/settle.txt	bin/forge.d/help/validate.txt	bin/forge.d/settle.sh	bin/forge.d/state.sh	schemas/escalation.schema.json	schemas/settled.schema.json	tests/forge/commit.test.sh	tests/forge/escalation.test.sh	tests/forge/settle.test.sh
+bin/forge	bin/forge.d/doctor.sh	bin/forge.d/help/doctor.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/watchdog.txt	tests/forge-common.sh	tests/forge-watchdog.test.sh	tests/forge/doctor.test.sh	tests/forge/help.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+.forge/ARCHITECTURE.md	.forge/STACK.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md
+.forge/RULES.md	bin/forge	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/event.txt	bin/forge.d/help/forge.txt	bin/forge.d/run.sh	skills/forge-phase/SKILL.md	tests/forge-commit.test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/STACK.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/pr.txt	bin/forge.d/pr.sh	tests/forge-common.sh	tests/forge/pr.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/review.sh	bin/forge.d/run.sh	bin/forge.d/state.sh	bin/forge.d/watchdog.sh	hooks/forge-session-title.sh	schemas/events.schema.json	tests/forge-session-title.test.sh	tests/forge-watchdog.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh	tests/forge/state-validate.test.sh	tests/forge/state.test.sh
+bin/forge	bin/forge.d/help/forge.txt
+global/plugins.json	global/settings.json	port	tests/fixtures/port/apply-drift.log	tests/fixtures/port/apply.log	tests/fixtures/port/installed_plugins.json	tests/port.test.sh
+bin/forge.d/help/status.txt	bin/forge.d/state.sh	schemas/status.schema.json	templates/render.jq	tests/fixtures/forge/expected/status.md	tests/forge/state.test.sh
+bin/forge.d/help/pr.txt	bin/forge.d/pr.sh	tests/forge-common.sh	tests/forge/pr.test.sh
+bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+global/plugins.json	global/settings.json	port	tests/fixtures/port/apply-drift.log	tests/fixtures/port/apply.log	tests/fixtures/port/installed_plugins.json	tests/port.test.sh
+bin/forge	bin/forge.d/help/forge.txt
+.forge/TESTING.md	hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+global/plugins.json	global/settings.json	port	tests/fixtures/port/apply-drift.log	tests/fixtures/port/apply.log	tests/fixtures/port/installed_plugins.json	tests/port.test.sh
+.forge/TESTING.md	hooks/forge-guard.sh	tests/forge-guard.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/escalation.sh	bin/forge.d/help/escalation.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/settle.txt	bin/forge.d/help/validate.txt	bin/forge.d/settle.sh	bin/forge.d/state.sh	schemas/escalation.schema.json	schemas/settled.schema.json	tests/forge/commit.test.sh	tests/forge/escalation.test.sh	tests/forge/settle.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/RULES.md	bin/forge.d/help/commit.txt	bin/forge.d/help/land.txt	bin/forge.d/help/pr.txt	bin/forge.d/help/push.txt	bin/forge.d/land.sh	bin/forge.d/pr.sh	bin/forge.d/run.sh	skills/forge-ship/SKILL.md	tests/forge-common.sh	tests/forge-land.test.sh	tests/forge/pr.test.sh	tests/forge/run-parallel.test.sh	tests/forge/ship-queue.test.sh	tests/skills.test.sh
+bin/forge.d/help/done.txt	bin/forge.d/help/implement.txt	bin/forge.d/help/next.txt	bin/forge.d/help/resume.txt	bin/forge.d/run.sh	tests/forge-commit.test.sh	tests/forge-common.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+bin/forge	bin/forge.d/help/forge.txt
+bin/forge.d/help/done.txt	bin/forge.d/help/implement.txt	bin/forge.d/help/next.txt	bin/forge.d/help/resume.txt	bin/forge.d/run.sh	tests/forge-commit.test.sh	tests/forge-common.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/watchdog.txt
+.forge/ARCHITECTURE.md	bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	mods/forge-stalls/hooks/alerts.test.ts	mods/forge-stalls/hooks/register.tsx	tests/forge-watchdog.test.sh
+skills/forge-discuss/SKILL.md	tests/skills.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+agents/forge-reviewer.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	mods/forge-stalls/hooks/alerts.test.ts	mods/forge-stalls/hooks/register.tsx	tests/forge-watchdog.test.sh
+agents/forge-reviewer.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+agents/forge-reviewer.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/features/audit-261014-todo-intake/FEATURE.md	agents/forge-splitter.md	bin/forge	bin/forge.d/concern.sh	bin/forge.d/help/concern.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/status.txt	bin/forge.d/state.sh	schemas/concerns.schema.json	schemas/status.schema.json	skills/forge-discuss/SKILL.md	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	templates/CONCERNS.md	templates/render.jq	templates/repo-CLAUDE.md	templates/todo.md	tests/agents.test.sh	tests/fixtures/forge-init/rerun.txt	tests/fixtures/forge-init/single.txt	tests/fixtures/forge-init/workspace.txt	tests/fixtures/forge/expected/map/CONCERNS.md	tests/fixtures/forge/expected/status.md	tests/forge/concern.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh	tests/forge/state.test.sh	tests/skills.test.sh
+bin/forge-hosts	bin/forge-sync	port	systemd/forge-sync.service	systemd/forge-sync.timer	tests/changed.sh	tests/fixtures/forge-hosts/add-existing.txt	tests/fixtures/forge-hosts/add.txt	tests/fixtures/forge-hosts/bin/gh	tests/fixtures/forge-hosts/bin/ssh	tests/fixtures/forge-hosts/errors.txt	tests/fixtures/forge-hosts/forge-repo/port	tests/fixtures/forge-hosts/hostbin/apt-get	tests/fixtures/forge-hosts/hostbin/claude	tests/fixtures/forge-hosts/hostbin/dnf	tests/fixtures/forge-hosts/hostbin/git	tests/fixtures/forge-hosts/hostbin/loginctl	tests/fixtures/forge-hosts/hostbin/pacman	tests/fixtures/forge-hosts/hostbin/pipx	tests/fixtures/forge-hosts/hostbin/ssh-keygen	tests/fixtures/forge-hosts/hostbin/sudo	tests/fixtures/forge-hosts/hostbin/systemctl	tests/fixtures/forge-hosts/hosts/alpha/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/beta/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/gamma/local-bin/systemctl	tests/fixtures/forge-hosts/invalid.txt	tests/fixtures/forge-hosts/status.txt	tests/fixtures/forge-hosts/sync.txt	tests/forge-guard.test.sh	tests/forge-hosts.test.sh	tests/forge-sync.test.sh	tests/port.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	agents/forge-escalator.md	agents/forge-reviewer.md	agents/forge-verifier.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/escalation.sh	bin/forge.d/help/escalation.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/review.txt	bin/forge.d/help/settle.txt	bin/forge.d/help/validate.txt	bin/forge.d/review.sh	bin/forge.d/settle.sh	bin/forge.d/state.sh	hooks/forge-phase-stop.sh	schemas/escalation.schema.json	schemas/settled.schema.json	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-phase-stop.test.sh	tests/forge-session-title.test.sh	tests/forge/commit.test.sh	tests/forge/escalation.test.sh	tests/forge/review.test.sh	tests/forge/settle.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/STACK.md	agents/forge-test-writer.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	hooks/forge-agent-write.sh	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/forge-agent-write.test.sh	tests/forge-gates.test.sh
+bin/forge-hosts	bin/forge-sync	port	systemd/forge-sync.service	systemd/forge-sync.timer	tests/changed.sh	tests/fixtures/forge-hosts/add-existing.txt	tests/fixtures/forge-hosts/add.txt	tests/fixtures/forge-hosts/bin/gh	tests/fixtures/forge-hosts/bin/ssh	tests/fixtures/forge-hosts/errors.txt	tests/fixtures/forge-hosts/forge-repo/port	tests/fixtures/forge-hosts/hostbin/apt-get	tests/fixtures/forge-hosts/hostbin/claude	tests/fixtures/forge-hosts/hostbin/dnf	tests/fixtures/forge-hosts/hostbin/git	tests/fixtures/forge-hosts/hostbin/loginctl	tests/fixtures/forge-hosts/hostbin/pacman	tests/fixtures/forge-hosts/hostbin/pipx	tests/fixtures/forge-hosts/hostbin/ssh-keygen	tests/fixtures/forge-hosts/hostbin/sudo	tests/fixtures/forge-hosts/hostbin/systemctl	tests/fixtures/forge-hosts/hosts/alpha/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/beta/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/gamma/local-bin/systemctl	tests/fixtures/forge-hosts/invalid.txt	tests/fixtures/forge-hosts/status.txt	tests/fixtures/forge-hosts/sync.txt	tests/forge-guard.test.sh	tests/forge-hosts.test.sh	tests/forge-sync.test.sh	tests/port.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	agents/forge-escalator.md	agents/forge-reviewer.md	agents/forge-verifier.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/escalation.sh	bin/forge.d/help/escalation.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/review.txt	bin/forge.d/help/settle.txt	bin/forge.d/help/validate.txt	bin/forge.d/review.sh	bin/forge.d/settle.sh	bin/forge.d/state.sh	hooks/forge-phase-stop.sh	schemas/escalation.schema.json	schemas/settled.schema.json	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-phase-stop.test.sh	tests/forge-session-title.test.sh	tests/forge/commit.test.sh	tests/forge/escalation.test.sh	tests/forge/review.test.sh	tests/forge/settle.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/INTEGRATIONS.md	.forge/RULES.md	.forge/STACK.md	.forge/TESTING.md	bin/forge	bin/forge-hosts	bin/forge-sync	bin/forge.d/doctor.sh	bin/forge.d/help/doctor.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/watchdog.txt	global/mcp-projects.json	global/mcp.json	global/plugins.json	global/settings.json	port	systemd/forge-sync.service	systemd/forge-sync.timer	tests/changed.sh	tests/fixtures/forge-hosts/add-existing.txt	tests/fixtures/forge-hosts/add.txt	tests/fixtures/forge-hosts/bin/gh	tests/fixtures/forge-hosts/bin/ssh	tests/fixtures/forge-hosts/errors.txt	tests/fixtures/forge-hosts/forge-repo/port	tests/fixtures/forge-hosts/hostbin/apt-get	tests/fixtures/forge-hosts/hostbin/claude	tests/fixtures/forge-hosts/hostbin/dnf	tests/fixtures/forge-hosts/hostbin/git	tests/fixtures/forge-hosts/hostbin/loginctl	tests/fixtures/forge-hosts/hostbin/pacman	tests/fixtures/forge-hosts/hostbin/pipx	tests/fixtures/forge-hosts/hostbin/ssh-keygen	tests/fixtures/forge-hosts/hostbin/sudo	tests/fixtures/forge-hosts/hostbin/systemctl	tests/fixtures/forge-hosts/hosts/alpha/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/beta/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/gamma/local-bin/systemctl	tests/fixtures/forge-hosts/invalid.txt	tests/fixtures/forge-hosts/status.txt	tests/fixtures/forge-hosts/sync.txt	tests/fixtures/port/apply-drift.log	tests/fixtures/port/apply.log	tests/fixtures/port/claude.json	tests/fixtures/port/installed_plugins.json	tests/forge-common.sh	tests/forge-guard.test.sh	tests/forge-hosts.test.sh	tests/forge-sync.test.sh	tests/forge-watchdog.test.sh	tests/forge/doctor.test.sh	tests/forge/help.test.sh	tests/port.test.sh
+.forge/ARCHITECTURE.md	.forge/INTEGRATIONS.md	.forge/RULES.md	.forge/STACK.md	.forge/TESTING.md	bin/forge	bin/forge-hosts	bin/forge-sync	bin/forge.d/doctor.sh	bin/forge.d/help/doctor.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/watchdog.txt	global/mcp-projects.json	global/mcp.json	global/plugins.json	global/settings.json	port	systemd/forge-sync.service	systemd/forge-sync.timer	tests/changed.sh	tests/fixtures/forge-hosts/add-existing.txt	tests/fixtures/forge-hosts/add.txt	tests/fixtures/forge-hosts/bin/gh	tests/fixtures/forge-hosts/bin/ssh	tests/fixtures/forge-hosts/errors.txt	tests/fixtures/forge-hosts/forge-repo/port	tests/fixtures/forge-hosts/hostbin/apt-get	tests/fixtures/forge-hosts/hostbin/claude	tests/fixtures/forge-hosts/hostbin/dnf	tests/fixtures/forge-hosts/hostbin/git	tests/fixtures/forge-hosts/hostbin/loginctl	tests/fixtures/forge-hosts/hostbin/pacman	tests/fixtures/forge-hosts/hostbin/pipx	tests/fixtures/forge-hosts/hostbin/ssh-keygen	tests/fixtures/forge-hosts/hostbin/sudo	tests/fixtures/forge-hosts/hostbin/systemctl	tests/fixtures/forge-hosts/hosts/alpha/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/beta/local-bin/systemctl	tests/fixtures/forge-hosts/hosts/gamma/local-bin/systemctl	tests/fixtures/forge-hosts/invalid.txt	tests/fixtures/forge-hosts/status.txt	tests/fixtures/forge-hosts/sync.txt	tests/fixtures/port/apply-drift.log	tests/fixtures/port/apply.log	tests/fixtures/port/claude.json	tests/fixtures/port/installed_plugins.json	tests/forge-common.sh	tests/forge-guard.test.sh	tests/forge-hosts.test.sh	tests/forge-sync.test.sh	tests/forge-watchdog.test.sh	tests/forge/doctor.test.sh	tests/forge/help.test.sh	tests/port.test.sh
+bin/forge.d/help/golive.txt	bin/forge.d/land.sh	skills/forge-ship/SKILL.md	tests/forge-land.test.sh
+.forge/RULES.md	.forge/TESTING.md	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	bin/forge.d/test.sh	skills/forge-phase/SKILL.md	templates/TESTING.md	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge/doctor.test.sh
+bin/forge.d/help/done.txt	bin/forge.d/help/implement.txt	bin/forge.d/help/next.txt	bin/forge.d/help/resume.txt	bin/forge.d/run.sh	tests/forge-commit.test.sh	tests/forge-common.sh	tests/forge-gates.test.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+bin/forge.d/help/alloc.txt	bin/forge.d/plan.sh	tests/forge/plan.test.sh
+bin/forge.d/help/alloc.txt	bin/forge.d/plan.sh	tests/forge/plan.test.sh
+schemas/feature-spec.schema.json	tests/forge/state-focus.test.sh
+tests/forge/run.test.sh
+.forge/RULES.md	.forge/TESTING.md	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	bin/forge.d/test.sh	skills/forge-phase/SKILL.md	templates/TESTING.md	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge/doctor.test.sh
+schemas/feature-spec.schema.json	tests/forge/state-focus.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	schemas/perf.schema.json	tests/forge/help.test.sh	tests/forge/perf.test.sh
+templates/checks/performance.md	tests/forge/state-outputs.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/pr.sh	tests/forge/help.test.sh
+templates/checks/performance.md	tests/forge/state-outputs.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	schemas/perf.schema.json	tests/forge/help.test.sh	tests/forge/perf.test.sh
+.forge/RULES.md	.forge/TESTING.md	.forge/features/perf-perf-adopt/FEATURE.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/gate.sh	bin/forge.d/help/commit.txt	bin/forge.d/help/done.txt	bin/forge.d/help/event.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	bin/forge.d/run.sh	bin/forge.d/test.sh	hooks/forge-guard.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	templates/TESTING.md	tests/forge-commit.test.sh	tests/forge-gates.test.sh	tests/forge-guard.test.sh	tests/forge-land.test.sh	tests/forge/commit.test.sh	tests/forge/doctor.test.sh	tests/skills.test.sh
+tests/forge-gates.test.sh	tests/forge/run-launch.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/pr.sh	tests/forge/help.test.sh
+bin/forge.d/help/alloc.txt	bin/forge.d/plan.sh	schemas/feature-spec.schema.json	skills/forge-discuss/SKILL.md	templates/checks/performance.md	tests/forge/plan.test.sh	tests/forge/state-focus.test.sh	tests/forge/state-outputs.test.sh
+bin/forge.d/doctor.sh	bin/forge.d/help/doctor.txt	bin/forge.d/help/done.txt	bin/forge.d/help/implement.txt	bin/forge.d/help/next.txt	bin/forge.d/help/resume.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/run.sh	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/changed.sh	tests/forge-commit.test.sh	tests/forge-common.sh	tests/forge-gates.test.sh	tests/forge-watchdog.test.sh	tests/forge/doctor.test.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh	tests/skills.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/pr.sh	tests/forge/help.test.sh
+.forge/RULES.md	.forge/TESTING.md	.forge/features/perf-perf-adopt/FEATURE.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/gate.sh	bin/forge.d/help/commit.txt	bin/forge.d/help/done.txt	bin/forge.d/help/event.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	bin/forge.d/run.sh	bin/forge.d/test.sh	hooks/forge-guard.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	templates/TESTING.md	tests/forge-commit.test.sh	tests/forge-gates.test.sh	tests/forge-guard.test.sh	tests/forge-land.test.sh	tests/forge/commit.test.sh	tests/forge/doctor.test.sh	tests/skills.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/pr.sh	tests/forge/help.test.sh
+.forge/RULES.md	.forge/TESTING.md	.forge/features/perf-perf-adopt/FEATURE.md	bin/forge	bin/forge.d/commit.sh	bin/forge.d/gate.sh	bin/forge.d/help/commit.txt	bin/forge.d/help/done.txt	bin/forge.d/help/event.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	bin/forge.d/run.sh	bin/forge.d/test.sh	hooks/forge-guard.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	templates/TESTING.md	tests/forge-commit.test.sh	tests/forge-gates.test.sh	tests/forge-guard.test.sh	tests/forge-land.test.sh	tests/forge/commit.test.sh	tests/forge/doctor.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	schemas/perf.schema.json	tests/forge/help.test.sh	tests/forge/perf.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	schemas/perf.schema.json	tests/forge/help.test.sh	tests/forge/perf.test.sh
+agents/forge-fixer.md	tests/agents.test.sh
+skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh
+bin/forge.d/help/pr.txt	bin/forge.d/pr.sh	tests/forge/pr.test.sh
+.forge/RULES.md	tests/forge-land.test.sh
+schemas/feature-verify.schema.json	tests/forge/state-outputs.test.sh
+bin/forge.d/help/pr.txt	bin/forge.d/pr.sh	tests/forge/pr.test.sh
+.forge/TESTING.md	templates/TESTING.md	tests/forge-gates.test.sh
+bin/forge.d/help/pr.txt	bin/forge.d/pr.sh	tests/forge/pr.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+agents/forge-verifier.md	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/forge-phase-parallel.test.sh
+.forge/TESTING.md	bin/forge.d/test.sh	templates/TESTING.md	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+schemas/feature-verify.schema.json	tests/forge/state-outputs.test.sh
+skills/forge-ship/SKILL.md
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+agents/forge-verifier.md	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/forge-phase-parallel.test.sh
+.forge/TESTING.md	bin/forge.d/test.sh	templates/TESTING.md	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/TESTING.md	bin/forge.d/test.sh	templates/TESTING.md	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	agents/forge-verifier.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	skills/forge-verify/SKILL.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+bin/forge.d/check.sh	bin/forge.d/help/check.txt	schemas/plan.schema.json	tests/forge-gates.test.sh	tests/forge/check.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/pr.sh	tests/forge/help.test.sh
+.forge/TESTING.md	bin/forge.d/test.sh	templates/TESTING.md	tests/forge-gates.test.sh
+bin/forge.d/check.sh	bin/forge.d/help/check.txt	schemas/plan.schema.json	tests/forge-gates.test.sh	tests/forge/check.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+.forge/ARCHITECTURE.md	agents/forge-verifier.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh
+bin/forge.d/help/check.txt	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	agents/forge-verifier.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh
+.forge/RULES.md	.forge/TESTING.md	bin/forge.d/help/pr.txt	bin/forge.d/pr.sh	bin/forge.d/test.sh	skills/forge-ship/SKILL.md	templates/TESTING.md	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge/pr.test.sh
+agents/forge-verifier.md	tests/agents.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/features/fastpath-base-fails/FEATURE.md	agents/forge-verifier.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh
+.forge/TESTING.md	bin/forge.d/help/check.txt	bin/forge.d/help/test.txt	bin/forge.d/test.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	templates/TESTING.md	tests/forge-gates.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/pr.sh	tests/forge/help.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/pr.sh	tests/forge/help.test.sh
+.forge/ARCHITECTURE.md	.forge/features/fastpath-base-fails/FEATURE.md	agents/forge-verifier.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/test.sh	bin/forge.d/watchdog.sh	tests/forge-gates.test.sh	tests/forge-watchdog.test.sh
+.forge/TESTING.md	skills/forge-new/SKILL.md	tests/skills.test.sh
+templates/checks/performance.md	tests/forge/state-outputs.test.sh
+schemas/result.schema.json	tests/forge/state-validate.test.sh
+.forge/TESTING.md	skills/forge-new/SKILL.md	tests/skills.test.sh
+schemas/result.schema.json	tests/forge/state-validate.test.sh
+schemas/result.schema.json	tests/forge/state-validate.test.sh
+agents/forge-planner.md	agents/forge-splitter.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	tests/agents.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+skills/forge-verify/SKILL.md	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	agents/forge-planner.md	agents/forge-splitter.md	agents/forge-verifier.md	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	schemas/result.schema.json	skills/forge-new/SKILL.md	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	templates/checks/performance.md	tests/agents.test.sh	tests/forge/perf.test.sh	tests/forge/state-outputs.test.sh	tests/forge/state-validate.test.sh	tests/skills.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge/help.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge/help.test.sh	tests/forge/perf.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge/help.test.sh	tests/forge/perf.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+tests/changed.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	bin/forge.d/pr.sh	tests/forge/perf.test.sh
+bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	bin/forge.d/pr.sh	tests/forge/perf.test.sh
+bin/forge.d/help/golive.txt	bin/forge.d/help/land.txt	bin/forge.d/land.sh	tests/forge-land.test.sh
+bin/forge.d/help/golive.txt	bin/forge.d/help/land.txt	bin/forge.d/land.sh	tests/forge-land.test.sh
+.forge/ARCHITECTURE.md	.forge/INTEGRATIONS.md	.forge/STACK.md	.forge/TESTING.md
+.forge/ARCHITECTURE.md	.forge/INTEGRATIONS.md	.forge/STACK.md	.forge/TESTING.md	bin/forge.d/help/forge.txt	bin/forge.d/help/golive.txt	bin/forge.d/help/land.txt	bin/forge.d/help/perf.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	bin/forge.d/perf.sh	bin/forge.d/pr.sh	bin/forge.d/test.sh	tests/changed.sh	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge/help.test.sh	tests/forge/perf.test.sh
+.forge/ARCHITECTURE.md	.forge/INTEGRATIONS.md	.forge/STACK.md	.forge/TESTING.md	bin/forge.d/help/forge.txt	bin/forge.d/help/golive.txt	bin/forge.d/help/land.txt	bin/forge.d/help/perf.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	bin/forge.d/perf.sh	bin/forge.d/pr.sh	bin/forge.d/test.sh	hooks/forge-guard.sh	tests/changed.sh	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge/help.test.sh	tests/forge/perf.test.sh
+schemas/phase-verify.schema.json
+
+bin/forge.d/gate.sh	bin/forge.d/help/done.txt	tests/forge-gates.test.sh
+schemas/feature-spec.schema.json	schemas/phase-spec.schema.json	tests/forge/plan.test.sh	tests/forge/state-focus.test.sh
+agents/forge-verifier.md	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/forge-phase-parallel.test.sh
+skills/forge-phase/SKILL.md
+schemas/feature-spec.schema.json	schemas/phase-spec.schema.json	tests/forge/plan.test.sh	tests/forge/state-focus.test.sh
+bin/forge.d/gate.sh	bin/forge.d/help/done.txt	tests/forge-gates.test.sh
+bin/forge.d/gate.sh	bin/forge.d/help/done.txt	tests/forge-gates.test.sh
+agents/forge-verifier.md	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	schemas/phase-verify.schema.json	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-phase-parallel.test.sh
+skills/forge-debug/SKILL.md	tests/skills.test.sh
+skills/forge-new/SKILL.md	tests/skills.test.sh
+skills/forge-new/SKILL.md
+bin/forge.d/state.sh	schemas/debugs.schema.json	tests/forge/state-debug.test.sh
+tests/skills.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/quick-log.txt	bin/forge.d/quick-log.sh	schemas/quicks.schema.json	tests/forge-quick-log.test.sh
+bin/forge.d/help/status.txt	bin/forge.d/state.sh	templates/render.jq	tests/fixtures/forge/expected/status.md	tests/forge/state.test.sh
+bin/forge.d/state.sh	schemas/debugs.schema.json	tests/forge/state-debug.test.sh
+bin/forge.d/quick-log.sh	tests/forge-quick-log.test.sh
+skills/forge-quick/SKILL.md	tests/skills.test.sh
+bin/forge.d/state.sh	schemas/debugs.schema.json	tests/forge/state-debug.test.sh
+bin/forge.d/help/status.txt	bin/forge.d/state.sh	templates/render.jq	tests/fixtures/forge/expected/status.md	tests/forge/state.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/quick-log.txt	bin/forge.d/quick-log.sh	tests/forge-quick-log.test.sh
+bin/forge.d/help/status.txt	bin/forge.d/state.sh	templates/render.jq	tests/fixtures/forge/expected/status.md	tests/forge/state.test.sh
+bin/forge-init	templates/seeds.md	tests/fixtures/forge-init/errors.txt	tests/fixtures/forge-init/rerun.txt	tests/fixtures/forge-init/single.txt	tests/fixtures/forge-init/workspace.txt	tests/forge-init.test.sh
+bin/forge.d/quick-log.sh	tests/forge-quick-log.test.sh
+bin/forge-init	templates/seeds.md	tests/fixtures/forge-init/errors.txt	tests/fixtures/forge-init/rerun.txt	tests/fixtures/forge-init/single.txt	tests/fixtures/forge-init/workspace.txt	tests/forge-init.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/quick-log.txt	bin/forge.d/quick-log.sh	tests/forge-quick-log.test.sh
+bin/forge-init	bin/forge.d/help/status.txt	bin/forge.d/state.sh	skills/forge-new/SKILL.md	templates/render.jq	templates/seeds.md	tests/fixtures/forge-init/errors.txt	tests/fixtures/forge-init/rerun.txt	tests/fixtures/forge-init/single.txt	tests/fixtures/forge-init/workspace.txt	tests/fixtures/forge/expected/status.md	tests/forge-init.test.sh	tests/forge/state.test.sh	tests/skills.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/quick-log.txt	bin/forge.d/quick-log.sh	schemas/quicks.schema.json	skills/forge-quick/SKILL.md	tests/forge-quick-log.test.sh	tests/skills.test.sh
+skills/forge-verify/SKILL.md	tests/skills.test.sh
+skills/forge-verify/SKILL.md
+bin/forge.d/help/next.txt	bin/forge.d/run.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh
+schemas/requirements.schema.json	tests/forge/state-validate.test.sh
+hooks/output-style-reinforce.sh	tests/output-style-reinforce.test.sh
+bin/forge.d/plan.sh	bin/forge.d/run.sh	bin/forge.d/state.sh	hooks/forge-guard.sh	tests/forge-guard.test.sh	tests/forge/run.test.sh	tests/forge/state-validate.test.sh
+port	tests/port.test.sh
+bin/forge	bin/forge.d/help/review.txt	bin/forge.d/review.sh	tests/forge/review.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	tests/forge-watchdog.test.sh	tests/forge/help.test.sh
+templates/render.jq
+bin/forge.d/help/review.txt	bin/forge.d/review.sh	tests/forge/review.test.sh
+.forge/ARCHITECTURE.md
+port	tests/port.test.sh
+bin/forge.d/plan.sh	bin/forge.d/run.sh	bin/forge.d/state.sh	hooks/forge-guard.sh	tests/forge-guard.test.sh	tests/forge/run.test.sh	tests/forge/state-validate.test.sh
+agents/forge-implementer.md	agents/forge-test-writer.md	skills/forge-ship/SKILL.md	tests/agents.test.sh
+schemas/requirements.schema.json	tests/forge/state-validate.test.sh
+bin/forge.d/run.sh	tests/forge-watchdog.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+bin/forge	bin/forge.d/help/finish.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/plan-done.txt	bin/forge.d/help/task-done.txt	tests/forge/help.test.sh
+port	tests/port.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+agents/forge-planner.md	agents/forge-splitter.md	tests/agents.test.sh
+.forge/ARCHITECTURE.md	global/settings.json	hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/run.sh	tests/forge-watchdog.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+skills/forge-phase/SKILL.md	skills/forge-phase/ask.md	skills/forge-phase/contracts.md	skills/forge-phase/escalate.md	skills/forge-phase/resolver-loop.md	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh	tests/skills.test.sh
+bin/forge.d/help/plan-done.txt	bin/forge.d/plan-done.sh	tests/forge/plan-done.test.sh
+bin/forge	bin/forge.d/help/review.txt	bin/forge.d/review.sh	tests/forge/review.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/help/task-done.txt	bin/forge.d/task-done.sh	tests/forge/task-done.test.sh
+skills/forge-phase/SKILL.md	skills/forge-phase/ask.md	skills/forge-phase/contracts.md	skills/forge-phase/escalate.md	skills/forge-phase/resolver-loop.md	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	global/settings.json	hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/test.sh	tests/forge-gates.test.sh
+port	tests/port.test.sh
+bin/forge.d/task-done.sh	tests/forge/task-done.test.sh
+bin/forge.d/help/task-done.txt	bin/forge.d/task-done.sh	tests/forge/task-done.test.sh
+skills/forge-phase/SKILL.md	skills/forge-phase/ask.md	skills/forge-phase/contracts.md	skills/forge-phase/escalate.md	skills/forge-phase/resolver-loop.md	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh	tests/skills.test.sh
+
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/finish.sh	bin/forge.d/help/finish.txt	tests/forge/finish.test.sh
+bin/forge.d/check.sh	bin/forge.d/help/check.txt	schemas/plan.schema.json	tests/forge/check.test.sh
+
+bin/forge.d/finish.sh	bin/forge.d/help/finish.txt	tests/forge/finish.test.sh
+
+
+bin/forge.d/help/validate.txt	bin/forge.d/state.sh	schemas/requirements.schema.json	tests/forge/commit.test.sh	tests/forge/state-validate.test.sh
+bin/forge.d/test.sh	tests/forge-gates.test.sh
+
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/owed.txt	bin/forge.d/owed.sh	tests/fixtures/forge/owed/agent-run/requirements.json	tests/fixtures/forge/owed/agent-run/verify.json	tests/fixtures/forge/owed/gaps/requirements.json	tests/fixtures/forge/owed/gaps/verify.json	tests/fixtures/forge/owed/kept/requirements.json	tests/fixtures/forge/owed/kept/verify.json	tests/fixtures/forge/owed/tags/requirements.json	tests/fixtures/forge/owed/tags/verify.json	tests/forge/help.test.sh	tests/forge/owed.test.sh
+bin/forge.d/help/alloc.txt	bin/forge.d/plan.sh	tests/fixtures/forge/alloc-deps/creates-shared.split.json	tests/fixtures/forge/alloc-deps/files-shared.split.json	tests/fixtures/forge/alloc-deps/files-union.split.json	tests/forge/plan.test.sh
+
+agents/forge-planner.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/skills.test.sh
+scripts/step-turns.py	tests/changed.sh	tests/changed.test.sh	tests/fixtures/step-turns/projects/-home-u-proj/other.jsonl	tests/fixtures/step-turns/projects/-home-u-proj/phase-a.jsonl	tests/fixtures/step-turns/projects/-home-u-proj/phase-b.jsonl	tests/fixtures/step-turns/tok2/meta.json	tests/fixtures/step-turns/tok2/turns.jsonl	tests/step-turns.test.sh
+skills/forge-ship/SKILL.md	tests/skills.test.sh
+bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/review.sh	bin/forge.d/run.sh	schemas/events.schema.json	tests/forge-gates.test.sh
+scripts/step-turns.py	tests/step-turns.test.sh
+bin/forge.d/help/golive.txt	bin/forge.d/land.sh	tests/forge-land.test.sh
+bin/forge.d/check.sh	bin/forge.d/help/check.txt	schemas/plan.schema.json	tests/forge/check.test.sh
+skills/forge-ship/SKILL.md
+skills/forge-verify/SKILL.md	skills/forge-verify/browser-pass.md	skills/forge-verify/escalate.md	skills/forge-verify/fix-reruns.md	skills/forge-verify/resolver-loop.md	skills/forge-verify/walkthrough.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+bin/forge.d/help/alloc.txt	bin/forge.d/plan.sh	tests/fixtures/forge/alloc-deps/creates-shared.split.json	tests/fixtures/forge/alloc-deps/files-shared.split.json	tests/fixtures/forge/alloc-deps/files-union.split.json	tests/forge/plan.test.sh
+skills/forge-verify/SKILL.md
+bin/forge.d/help/golive.txt	bin/forge.d/land.sh	tests/forge-land.test.sh
+skills/forge-phase/SKILL.md	tests/forge-phase-parallel.test.sh
+bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/review.sh	bin/forge.d/run.sh	schemas/events.schema.json	tests/forge-gates.test.sh
+agents/forge-planner.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	tests/agents.test.sh	tests/skills.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+skills/forge-phase/SKILL.md
+skills/forge-verify/SKILL.md
+scripts/step-turns.py	tests/changed.sh	tests/changed.test.sh	tests/fixtures/step-turns/projects/-home-u-proj/other.jsonl	tests/fixtures/step-turns/projects/-home-u-proj/phase-a.jsonl	tests/fixtures/step-turns/projects/-home-u-proj/phase-b.jsonl	tests/fixtures/step-turns/tok2/meta.json	tests/fixtures/step-turns/tok2/turns.jsonl	tests/step-turns.test.sh
+bin/forge.d/help/validate.txt	bin/forge.d/state.sh	schemas/requirements.schema.json	tests/forge/commit.test.sh	tests/forge/state-validate.test.sh
+bin/forge	bin/forge.d/finish.sh	bin/forge.d/help/finish.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/plan-done.txt	bin/forge.d/help/task-done.txt	bin/forge.d/plan-done.sh	bin/forge.d/task-done.sh	scripts/step-turns.py	skills/forge-phase/SKILL.md	tests/changed.sh	tests/changed.test.sh	tests/fixtures/step-turns/projects/-home-u-proj/other.jsonl	tests/fixtures/step-turns/projects/-home-u-proj/phase-a.jsonl	tests/fixtures/step-turns/projects/-home-u-proj/phase-b.jsonl	tests/fixtures/step-turns/tok2/meta.json	tests/fixtures/step-turns/tok2/turns.jsonl	tests/forge-phase-parallel.test.sh	tests/forge/finish.test.sh	tests/forge/help.test.sh	tests/forge/plan-done.test.sh	tests/forge/task-done.test.sh	tests/step-turns.test.sh
+bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/golive.txt	bin/forge.d/help/owed.txt	bin/forge.d/help/validate.txt	bin/forge.d/land.sh	bin/forge.d/owed.sh	bin/forge.d/state.sh	schemas/requirements.schema.json	skills/forge-ship/SKILL.md	tests/fixtures/forge/owed/agent-run/requirements.json	tests/fixtures/forge/owed/agent-run/verify.json	tests/fixtures/forge/owed/gaps/requirements.json	tests/fixtures/forge/owed/gaps/verify.json	tests/fixtures/forge/owed/kept/requirements.json	tests/fixtures/forge/owed/kept/verify.json	tests/fixtures/forge/owed/tags/requirements.json	tests/fixtures/forge/owed/tags/verify.json	tests/forge-land.test.sh	tests/forge/commit.test.sh	tests/forge/help.test.sh	tests/forge/owed.test.sh	tests/forge/state-validate.test.sh	tests/skills.test.sh
+.forge/TESTING.md
+.forge/ARCHITECTURE.md	.forge/TESTING.md	agents/forge-planner.md	agents/forge-splitter.md	bin/forge.d/check.sh	bin/forge.d/help/alloc.txt	bin/forge.d/help/check.txt	bin/forge.d/plan.sh	schemas/plan.schema.json	templates/render.jq	tests/agents.test.sh	tests/fixtures/forge/alloc-deps/creates-shared.split.json	tests/fixtures/forge/alloc-deps/files-shared.split.json	tests/fixtures/forge/alloc-deps/files-union.split.json	tests/forge/check.test.sh	tests/forge/plan.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/golive.txt	bin/forge.d/help/next.txt	bin/forge.d/help/owed.txt	bin/forge.d/help/validate.txt	bin/forge.d/land.sh	bin/forge.d/owed.sh	bin/forge.d/run.sh	bin/forge.d/state.sh	schemas/requirements.schema.json	skills/forge-ship/SKILL.md	tests/fixtures/forge/owed/agent-run/requirements.json	tests/fixtures/forge/owed/agent-run/verify.json	tests/fixtures/forge/owed/gaps/requirements.json	tests/fixtures/forge/owed/gaps/verify.json	tests/fixtures/forge/owed/kept/requirements.json	tests/fixtures/forge/owed/kept/verify.json	tests/fixtures/forge/owed/tags/requirements.json	tests/fixtures/forge/owed/tags/verify.json	tests/forge-land.test.sh	tests/forge/commit.test.sh	tests/forge/help.test.sh	tests/forge/owed.test.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/state-validate.test.sh	tests/skills.test.sh
+bin/forge.d/test.sh	tests/forge-gates.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge	bin/forge.d/gate.sh	bin/forge.d/help/archive.txt	bin/forge.d/help/deferred.txt	bin/forge.d/help/done.txt	bin/forge.d/help/fixes.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/owner.txt	bin/forge.d/help/review.txt	bin/forge.d/plan.sh	bin/forge.d/review.sh	schemas/review.schema.json	tests/forge-gates.test.sh	tests/forge-review.test.sh	tests/forge/help.test.sh	tests/forge/review.test.sh	tests/forge/state-validate.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+hooks/forge-guard.sh	tests/forge-guard.test.sh
+bin/forge.d/help/review.txt	bin/forge.d/review.sh	tests/forge/review.test.sh
+.forge/TESTING.md	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/review.sh	bin/forge.d/run.sh	hooks/forge-guard.sh	schemas/events.schema.json	tests/forge-gates.test.sh	tests/forge-guard.test.sh
+agents/forge-fixer.md	agents/forge-reviewer.md	skills/forge-phase/SKILL.md	skills/forge-quick/SKILL.md	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/skills.test.sh
+skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md
+skills/forge-verify/SKILL.md
+agents/forge-fixer.md	agents/forge-reviewer.md	skills/forge-phase/SKILL.md	skills/forge-quick/SKILL.md	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/skills.test.sh
+bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/review.sh	bin/forge.d/run.sh	hooks/forge-guard.sh	schemas/events.schema.json	tests/forge-gates.test.sh	tests/forge-guard.test.sh
+bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge-watchdog.test.sh	tests/forge/help.test.sh
+agents/forge-fixer.md	agents/forge-reviewer.md	bin/forge	bin/forge.d/gate.sh	bin/forge.d/help/archive.txt	bin/forge.d/help/deferred.txt	bin/forge.d/help/done.txt	bin/forge.d/help/fixes.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/owner.txt	bin/forge.d/help/review.txt	bin/forge.d/plan.sh	bin/forge.d/review.sh	schemas/review.schema.json	skills/forge-phase/SKILL.md	skills/forge-phase/fix-recording.md	skills/forge-quick/SKILL.md	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	skills/forge-verify/fix-recording.md	skills/forge-verify/gap-rules.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-review.test.sh	tests/forge/help.test.sh	tests/forge/review.test.sh	tests/forge/state-validate.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge-watchdog.test.sh	tests/forge/help.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge-watchdog.test.sh	tests/forge/help.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge-watchdog.test.sh	tests/forge/help.test.sh
+.forge/TESTING.md	bin/forge.d/state.sh	schemas/history.schema.json	tests/forge/state-history.test.sh
+schemas/debugs.schema.json	schemas/quicks.schema.json	tests/forge-quick-log.test.sh	tests/forge/state-debug.test.sh
+schemas/debugs.schema.json	schemas/quicks.schema.json	tests/forge-quick-log.test.sh	tests/forge/state-debug.test.sh
+.forge/TESTING.md	bin/forge.d/help/perf.txt	bin/forge.d/perf.sh	tests/forge/perf.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/status.txt	bin/forge.d/state.sh	schemas/status.schema.json	templates/render.jq	tests/forge/state.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/status.txt	bin/forge.d/state.sh	schemas/status.schema.json	templates/render.jq	tests/forge/state.test.sh
+agents/forge-implementer.md	tests/agents.test.sh
+skills/forge-phase/SKILL.md
+skills/forge-ship/SKILL.md	tests/skills.test.sh
+.forge/TESTING.md	skills/forge-phase/SKILL.md	tests/skills.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/test.txt	tests/forge/help.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/run.sh	skills/forge-verify/SKILL.md	tests/forge-commit.test.sh	tests/forge/run.test.sh
+bin/forge.d/help/forge.txt	tests/forge/ship-queue.test.sh
+.forge/TESTING.md	tests/fixtures/one-case/suite.sh	tests/forge-common.sh	tests/one-case.test.sh
+tests/agents.test.sh	tests/forge-guard.test.sh	tests/skills.test.sh
+tests/forge-land.test.sh
+tests/mods.test.sh	tests/port.test.sh
+bin/forge.d/run.sh	skills/forge-verify/SKILL.md	tests/forge-commit.test.sh	tests/forge/run.test.sh
+.forge/TESTING.md	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+tests/agents.test.sh	tests/forge-guard.test.sh	tests/skills.test.sh
+.forge/TESTING.md	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+tests/changed.sh	tests/forge-gates-common.sh	tests/forge-gates-lint.test.sh	tests/forge-gates-resources.test.sh	tests/forge-gates-setup.test.sh	tests/forge-gates-tiers.test.sh	tests/forge-gates.test.sh
+tests/forge-land.test.sh
+.forge/TESTING.md	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/test.sh	tests/forge-gates.test.sh
+tests/forge-land.test.sh
+tests/changed.sh	tests/forge-gates-common.sh	tests/forge-gates-lint.test.sh	tests/forge-gates-resources.test.sh	tests/forge-gates-setup.test.sh	tests/forge-gates-tiers.test.sh	tests/forge-gates.test.sh
+tests/forge/concern.test.sh	tests/forge/owed.test.sh	tests/forge/review.test.sh	tests/forge/wait.test.sh
+tests/forge/state-debug.test.sh	tests/forge/state-flags.test.sh	tests/forge/state-focus.test.sh	tests/forge/state-outputs.test.sh	tests/forge/state-repos.test.sh	tests/forge/state-validate.test.sh	tests/forge/state.test.sh
+tests/forge/concern.test.sh	tests/forge/owed.test.sh	tests/forge/review.test.sh	tests/forge/wait.test.sh
+tests/forge/check.test.sh	tests/forge/commit.test.sh	tests/forge/env.test.sh	tests/forge/escalation.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh	tests/forge/merge.test.sh	tests/forge/pr.test.sh	tests/forge/settle.test.sh	tests/forge/task-done.test.sh
+tests/forge/state-debug.test.sh	tests/forge/state-flags.test.sh	tests/forge/state-focus.test.sh	tests/forge/state-outputs.test.sh	tests/forge/state-repos.test.sh	tests/forge/state-validate.test.sh	tests/forge/state.test.sh
+tests/forge/check.test.sh	tests/forge/commit.test.sh	tests/forge/env.test.sh	tests/forge/escalation.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh	tests/forge/merge.test.sh	tests/forge/pr.test.sh	tests/forge/settle.test.sh	tests/forge/task-done.test.sh
+tests/forge/finish.test.sh	tests/forge/plan-done.test.sh	tests/forge/plan.test.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh	tests/forge/ship-queue.test.sh
+tests/forge/finish.test.sh	tests/forge/plan-done.test.sh	tests/forge/plan.test.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh	tests/forge/ship-queue.test.sh
+.forge/ARCHITECTURE.md	.forge/RULES.md	.forge/TESTING.md
+skills/forge-verify/SKILL.md	tests/skills.test.sh
+bin/forge.d/help/land.txt	bin/forge.d/land.sh	tests/forge-land.test.sh
+agents/forge-fixer.md	tests/agents.test.sh
+skills/forge-verify/SKILL.md	tests/skills.test.sh
+agents/forge-fixer.md	tests/agents.test.sh
+bin/forge.d/help/land.txt	bin/forge.d/land.sh	tests/forge-land.test.sh
+tests/skills.test.sh
+tests/skills.test.sh
+bin/forge.d/help/forge.txt	tests/forge/ship-queue.test.sh
+agents/forge-merger.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	skills/forge-phase/contracts.md	skills/forge-phase/resolver-loop.md	tests/agents.test.sh	tests/forge-phase-parallel.test.sh
+.forge/TESTING.md	tests/changed.sh	tests/changed.test.sh
+agents/forge-merger.md	agents/forge-verifier.md	skills/forge-phase/SKILL.md	skills/forge-phase/contracts.md	skills/forge-phase/resolver-loop.md	tests/agents.test.sh	tests/forge-phase-parallel.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/test.txt	bin/forge.d/test.sh	skills/forge-ship/SKILL.md	tests/forge-gates.test.sh	tests/forge/ship-queue.test.sh	tests/skills.test.sh
+.forge/TESTING.md	tests/changed.sh	tests/changed.test.sh
+bin/forge.d/help/forge.txt	bin/forge.d/help/test.txt	tests/forge-gates.test.sh	tests/forge/help.test.sh
+bin/forge.d/help/resume.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/run.sh	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh	tests/forge/run.test.sh
+bin/forge.d/finish.sh	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/finish.txt	bin/forge.d/help/test.txt	tests/forge-gates.test.sh	tests/forge/finish.test.sh	tests/forge/run-parallel.test.sh
+bin/forge.d/help/resume.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/run.sh	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh	tests/forge/run.test.sh
+bin/forge.d/finish.sh	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/finish.txt	bin/forge.d/help/test.txt	tests/forge-gates.test.sh	tests/forge/finish.test.sh	tests/forge/run-parallel.test.sh
+bin/forge.d/help/resume.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/run.sh	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh	tests/forge/run.test.sh
+skills/forge-ship/SKILL.md	tests/skills.test.sh
+skills/forge-ship/SKILL.md	tests/skills.test.sh
+.forge/TESTING.md	bin/forge.d/help/resume.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/run.sh	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	tests/forge-watchdog.test.sh	tests/forge/run.test.sh	tests/skills.test.sh
+tests/forge-browser.test.sh	tests/forge-init.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh	tests/output-style-reinforce.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+tests/mods.test.sh	tests/port.test.sh
+tests/forge-browser.test.sh	tests/forge-init.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh	tests/output-style-reinforce.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md
+tests/forge-agent-write.test.sh	tests/forge-commit.test.sh	tests/forge-phase-stop.test.sh	tests/forge-review.test.sh
+tests/forge/doctor.test.sh	tests/forge/perf.test.sh
+tests/forge-browser.test.sh	tests/forge-init.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-session-title.test.sh	tests/output-style-reinforce.test.sh
+tests/forge-agent-write.test.sh	tests/forge-commit.test.sh	tests/forge-phase-stop.test.sh	tests/forge-review.test.sh
+tests/forge/doctor.test.sh	tests/forge/perf.test.sh
+.forge/TESTING.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md
+tests/changed.test.sh	tests/forge-quick-log.test.sh	tests/forge-watchdog.test.sh	tests/step-turns.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+.forge/TESTING.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/changed.sh	tests/changed.test.sh	tests/forge-gates.test.sh
+tests/changed.test.sh	tests/forge-quick-log.test.sh	tests/forge-watchdog.test.sh	tests/step-turns.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	.forge/features/audit-261026-lean-tests/FEATURE.md	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/skills.test.sh
+bin/forge.d/run.sh	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-commit.test.sh	tests/forge-watchdog.test.sh	tests/forge/run.test.sh
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/test.txt	tests/forge-gates.test.sh	tests/forge/help.test.sh
+.forge/features/audit-261026-lean-tests/FEATURE.md	bin/forge.d/run.sh	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-commit.test.sh	tests/forge-watchdog.test.sh	tests/forge/run.test.sh
+
+.forge/TESTING.md
+bin/forge	bin/forge.d/help/forge.txt	bin/forge.d/help/test.txt	tests/forge-gates.test.sh	tests/forge/help.test.sh
+.forge/TESTING.md	bin/forge.d/help/test.txt	tests/forge/help.test.sh
+.forge/features/audit-261026-lean-tests/FEATURE.md	bin/forge.d/help/watchdog.txt	bin/forge.d/run.sh	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	skills/forge-verify/SKILL.md	tests/forge-commit.test.sh	tests/forge-watchdog.test.sh	tests/forge/run.test.sh
+.forge/TESTING.md	.forge/features/audit-261026-lean-tests/FEATURE.md	tests/agents.test.sh	tests/changed.sh	tests/changed.test.sh	tests/fixtures/one-case/suite.sh	tests/forge-agent-write.test.sh	tests/forge-browser.test.sh	tests/forge-commit.test.sh	tests/forge-common.sh	tests/forge-gates-common.sh	tests/forge-gates-lint.test.sh	tests/forge-gates-resources.test.sh	tests/forge-gates-setup.test.sh	tests/forge-gates-tiers.test.sh	tests/forge-gates.test.sh	tests/forge-guard.test.sh	tests/forge-init.test.sh	tests/forge-land.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-phase-stop.test.sh	tests/forge-quick-log.test.sh	tests/forge-review.test.sh	tests/forge-session-title.test.sh	tests/forge-watchdog.test.sh	tests/forge/check.test.sh	tests/forge/commit.test.sh	tests/forge/concern.test.sh	tests/forge/doctor.test.sh	tests/forge/env.test.sh	tests/forge/escalation.test.sh	tests/forge/finish.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh	tests/forge/merge.test.sh	tests/forge/owed.test.sh	tests/forge/perf.test.sh	tests/forge/plan-done.test.sh	tests/forge/plan.test.sh	tests/forge/pr.test.sh	tests/forge/review.test.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh	tests/forge/settle.test.sh	tests/forge/ship-queue.test.sh	tests/forge/state-debug.test.sh	tests/forge/state-flags.test.sh	tests/forge/state-focus.test.sh	tests/forge/state-outputs.test.sh	tests/forge/state-repos.test.sh	tests/forge/state-validate.test.sh	tests/forge/state.test.sh	tests/forge/task-done.test.sh	tests/forge/wait.test.sh	tests/mods.test.sh	tests/one-case.test.sh	tests/output-style-reinforce.test.sh	tests/port.test.sh	tests/skills.test.sh	tests/step-turns.test.sh
+.forge/ARCHITECTURE.md	.forge/RULES.md	.forge/TESTING.md	.forge/features/audit-261026-lean-tests/FEATURE.md	agents/forge-fixer.md	agents/forge-merger.md	agents/forge-verifier.md	bin/forge	bin/forge.d/finish.sh	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/finish.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	skills/forge-phase/SKILL.md	skills/forge-phase/contracts.md	skills/forge-phase/resolver-loop.md	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge-phase-parallel.test.sh	tests/forge/finish.test.sh	tests/forge/help.test.sh	tests/forge/run-parallel.test.sh	tests/skills.test.sh
+.forge/TESTING.md
+.forge/TESTING.md	.forge/features/audit-261026-lean-tests/FEATURE.md	tests/agents.test.sh	tests/changed.sh	tests/changed.test.sh	tests/fixtures/one-case/suite.sh	tests/forge-agent-write.test.sh	tests/forge-browser.test.sh	tests/forge-commit.test.sh	tests/forge-common.sh	tests/forge-gates-common.sh	tests/forge-gates-lint.test.sh	tests/forge-gates-resources.test.sh	tests/forge-gates-setup.test.sh	tests/forge-gates-tiers.test.sh	tests/forge-gates.test.sh	tests/forge-guard.test.sh	tests/forge-init.test.sh	tests/forge-land.test.sh	tests/forge-phase-parallel.test.sh	tests/forge-phase-stop.test.sh	tests/forge-quick-log.test.sh	tests/forge-review.test.sh	tests/forge-session-title.test.sh	tests/forge-watchdog.test.sh	tests/forge/check.test.sh	tests/forge/commit.test.sh	tests/forge/concern.test.sh	tests/forge/doctor.test.sh	tests/forge/env.test.sh	tests/forge/escalation.test.sh	tests/forge/finish.test.sh	tests/forge/help.test.sh	tests/forge/map.test.sh	tests/forge/merge.test.sh	tests/forge/owed.test.sh	tests/forge/perf.test.sh	tests/forge/plan-done.test.sh	tests/forge/plan.test.sh	tests/forge/pr.test.sh	tests/forge/review.test.sh	tests/forge/run-launch.test.sh	tests/forge/run-parallel.test.sh	tests/forge/run.test.sh	tests/forge/settle.test.sh	tests/forge/ship-queue.test.sh	tests/forge/state-debug.test.sh	tests/forge/state-flags.test.sh	tests/forge/state-focus.test.sh	tests/forge/state-outputs.test.sh	tests/forge/state-repos.test.sh	tests/forge/state-validate.test.sh	tests/forge/state.test.sh	tests/forge/task-done.test.sh	tests/forge/wait.test.sh	tests/mods.test.sh	tests/one-case.test.sh	tests/output-style-reinforce.test.sh	tests/port.test.sh	tests/skills.test.sh	tests/step-turns.test.sh
+.forge/TESTING.md	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/RULES.md	.forge/TESTING.md	.forge/features/audit-261026-lean-tests/FEATURE.md	agents/forge-fixer.md	agents/forge-merger.md	agents/forge-verifier.md	bin/forge	bin/forge.d/finish.sh	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/finish.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	skills/forge-phase/SKILL.md	skills/forge-phase/contracts.md	skills/forge-phase/resolver-loop.md	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge-phase-parallel.test.sh	tests/forge/finish.test.sh	tests/forge/help.test.sh	tests/forge/run-parallel.test.sh	tests/skills.test.sh
+.forge/TESTING.md	.forge/features/audit-261026-lean-tests/FEATURE.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge/help.test.sh
+.forge/ARCHITECTURE.md	.forge/RULES.md	.forge/STACK.md	.forge/TESTING.md	agents/forge-fixer.md	agents/forge-merger.md	agents/forge-verifier.md	bin/forge	bin/forge.d/finish.sh	bin/forge.d/gate.sh	bin/forge.d/help/done.txt	bin/forge.d/help/finish.txt	bin/forge.d/help/forge.txt	bin/forge.d/help/land.txt	bin/forge.d/help/test.txt	bin/forge.d/land.sh	skills/forge-phase/SKILL.md	skills/forge-phase/contracts.md	skills/forge-phase/resolver-loop.md	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	templates/render.jq	tests/agents.test.sh	tests/forge-gates.test.sh	tests/forge-land.test.sh	tests/forge-phase-parallel.test.sh	tests/forge/finish.test.sh	tests/forge/help.test.sh	tests/forge/run-parallel.test.sh	tests/skills.test.sh
+.forge/TESTING.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh	tests/forge/help.test.sh
+bin/forge.d/help/task-done.txt	bin/forge.d/task-done.sh	skills/forge-phase/SKILL.md	tests/forge/task-done.test.sh	tests/skills.test.sh
+bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/task-done.txt	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/task-done.sh	bin/forge.d/test.sh	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	tests/forge-gates-common.sh	tests/forge-gates-lint.test.sh	tests/forge-gates-resources.test.sh	tests/forge-gates-tiers.test.sh	tests/forge-watchdog.test.sh	tests/forge/task-done.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/TESTING.md	bin/forge.d/help/task-done.txt	bin/forge.d/help/test.txt	bin/forge.d/help/watchdog.txt	bin/forge.d/task-done.sh	bin/forge.d/test.sh	bin/forge.d/watchdog.sh	skills/forge-phase/SKILL.md	tests/forge-gates-common.sh	tests/forge-gates-lint.test.sh	tests/forge-gates-resources.test.sh	tests/forge-gates-tiers.test.sh	tests/forge-watchdog.test.sh	tests/forge/task-done.test.sh	tests/skills.test.sh
+.forge/STATE.md	.forge/features/overlap-discuss-overlap/FEATURE.md	.forge/features/overlap-discuss-overlap/requirements.json	.forge/features/overlap-discuss-overlap/research.json	.forge/features/overlap-discuss-overlap/spec.json	.forge/features/overlap-review-par/FEATURE.md	.forge/features/overlap-review-par/requirements.json	.forge/features/overlap-review-par/spec.json	.forge/features/overlap-ship-docs-par/FEATURE.md	.forge/features/overlap-ship-docs-par/requirements.json	.forge/features/overlap-ship-docs-par/research.json	.forge/features/overlap-ship-docs-par/spec.json	.forge/features/overlap-ship-docs-par/split.json	.forge/features/overlap-verify-tests-par/FEATURE.md	.forge/features/overlap-verify-tests-par/requirements.json	.forge/features/overlap-verify-tests-par/research.json	.forge/features/overlap-verify-tests-par/spec.json	.forge/features/overlap-verify-tests-par/split.json	.forge/phases/401-verify-test-stage/PHASE.md	.forge/phases/401-verify-test-stage/spec.json	.forge/phases/402-ship-docs-par/PHASE.md	.forge/phases/402-ship-docs-par/spec.json	.forge/tracks/overlap.json	.forge/tracks/overlap.md	skills/forge-ship/SKILL.md	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/STATE.md	.forge/features/overlap-discuss-overlap/FEATURE.md	.forge/features/overlap-discuss-overlap/requirements.json	.forge/features/overlap-discuss-overlap/research.json	.forge/features/overlap-discuss-overlap/spec.json	.forge/features/overlap-discuss-overlap/split.json	.forge/features/overlap-review-par/FEATURE.md	.forge/features/overlap-review-par/requirements.json	.forge/features/overlap-review-par/spec.json	.forge/features/overlap-ship-docs-par/FEATURE.md	.forge/features/overlap-ship-docs-par/requirements.json	.forge/features/overlap-ship-docs-par/research.json	.forge/features/overlap-ship-docs-par/spec.json	.forge/features/overlap-ship-docs-par/split.json	.forge/features/overlap-verify-tests-par/FEATURE.md	.forge/features/overlap-verify-tests-par/requirements.json	.forge/features/overlap-verify-tests-par/research.json	.forge/features/overlap-verify-tests-par/spec.json	.forge/features/overlap-verify-tests-par/split.json	.forge/phases/401-verify-test-stage/PHASE.md	.forge/phases/401-verify-test-stage/spec.json	.forge/phases/402-ship-docs-par/PHASE.md	.forge/phases/402-ship-docs-par/spec.json	.forge/phases/403-discuss-research-overlap/PHASE.md	.forge/phases/403-discuss-research-overlap/spec.json	.forge/phases/404-discuss-overlap-docs/PHASE.md	.forge/phases/404-discuss-overlap-docs/spec.json	.forge/tracks/overlap.json	.forge/tracks/overlap.md	skills/forge-discuss/SKILL.md	tests/skills.test.sh
+.forge/STATE.md	.forge/features/overlap-discuss-overlap/FEATURE.md	.forge/features/overlap-discuss-overlap/requirements.json	.forge/features/overlap-discuss-overlap/research.json	.forge/features/overlap-discuss-overlap/spec.json	.forge/features/overlap-review-par/FEATURE.md	.forge/features/overlap-review-par/requirements.json	.forge/features/overlap-review-par/spec.json	.forge/features/overlap-ship-docs-par/FEATURE.md	.forge/features/overlap-ship-docs-par/requirements.json	.forge/features/overlap-ship-docs-par/research.json	.forge/features/overlap-ship-docs-par/spec.json	.forge/features/overlap-ship-docs-par/split.json	.forge/features/overlap-verify-tests-par/FEATURE.md	.forge/features/overlap-verify-tests-par/requirements.json	.forge/features/overlap-verify-tests-par/research.json	.forge/features/overlap-verify-tests-par/spec.json	.forge/features/overlap-verify-tests-par/split.json	.forge/phases/401-verify-test-stage/PHASE.md	.forge/phases/401-verify-test-stage/spec.json	.forge/phases/402-ship-docs-par/PHASE.md	.forge/phases/402-ship-docs-par/spec.json	.forge/tracks/overlap.json	.forge/tracks/overlap.md	skills/forge-verify/SKILL.md	skills/forge-verify/fix-reruns.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/ARCHITECTURE.md	.forge/STATE.md	.forge/features/overlap-discuss-overlap/FEATURE.md	.forge/features/overlap-discuss-overlap/requirements.json	.forge/features/overlap-discuss-overlap/research.json	.forge/features/overlap-discuss-overlap/spec.json	.forge/features/overlap-discuss-overlap/split.json	.forge/features/overlap-review-par/FEATURE.md	.forge/features/overlap-review-par/requirements.json	.forge/features/overlap-review-par/research.json	.forge/features/overlap-review-par/research/R1.json	.forge/features/overlap-review-par/spec.json	.forge/features/overlap-review-par/split.json	.forge/features/overlap-ship-docs-par/FEATURE.md	.forge/features/overlap-ship-docs-par/requirements.json	.forge/features/overlap-ship-docs-par/research.json	.forge/features/overlap-ship-docs-par/spec.json	.forge/features/overlap-ship-docs-par/split.json	.forge/features/overlap-verify-tests-par/FEATURE.md	.forge/features/overlap-verify-tests-par/requirements.json	.forge/features/overlap-verify-tests-par/research.json	.forge/features/overlap-verify-tests-par/spec.json	.forge/features/overlap-verify-tests-par/split.json	.forge/phases/401-verify-test-stage/PHASE.md	.forge/phases/401-verify-test-stage/events.jsonl	.forge/phases/401-verify-test-stage/gaps.json	.forge/phases/401-verify-test-stage/plan.json	.forge/phases/401-verify-test-stage/research.json	.forge/phases/401-verify-test-stage/scout.json	.forge/phases/401-verify-test-stage/spec.json	.forge/phases/402-ship-docs-par/PHASE.md	.forge/phases/402-ship-docs-par/events.jsonl	.forge/phases/402-ship-docs-par/gaps.json	.forge/phases/402-ship-docs-par/plan.json	.forge/phases/402-ship-docs-par/research.json	.forge/phases/402-ship-docs-par/scout.json	.forge/phases/402-ship-docs-par/spec.json	.forge/phases/402-ship-docs-par/tasks/T1.json	.forge/phases/402-ship-docs-par/tests/T1.json	.forge/phases/403-discuss-research-overlap/PHASE.md	.forge/phases/403-discuss-research-overlap/events.jsonl	.forge/phases/403-discuss-research-overlap/gaps.json	.forge/phases/403-discuss-research-overlap/plan.json	.forge/phases/403-discuss-research-overlap/research.json	.forge/phases/403-discuss-research-overlap/scout.json	.forge/phases/403-discuss-research-overlap/spec.json	.forge/phases/403-discuss-research-overlap/tasks/T1.json	.forge/phases/403-discuss-research-overlap/tests/T1.json	.forge/phases/404-discuss-overlap-docs/PHASE.md	.forge/phases/404-discuss-overlap-docs/events.jsonl	.forge/phases/404-discuss-overlap-docs/gaps.json	.forge/phases/404-discuss-overlap-docs/plan.json	.forge/phases/404-discuss-overlap-docs/research.json	.forge/phases/404-discuss-overlap-docs/result.json	.forge/phases/404-discuss-overlap-docs/review.json	.forge/phases/404-discuss-overlap-docs/scout.json	.forge/phases/404-discuss-overlap-docs/spec.json	.forge/phases/404-discuss-overlap-docs/tasks/T1.json	.forge/phases/404-discuss-overlap-docs/verify.json	.forge/phases/405-review-cli/PHASE.md	.forge/phases/405-review-cli/spec.json	.forge/phases/406-verify-par/PHASE.md	.forge/phases/406-verify-par/spec.json	.forge/phases/407-ship-par/PHASE.md	.forge/phases/407-ship-par/spec.json	.forge/tracks/overlap.json	.forge/tracks/overlap.md	agents/forge-fixer.md	bin/forge	bin/forge.d/gate.sh	bin/forge.d/help/archive.txt	bin/forge.d/help/fixes.txt	bin/forge.d/help/owner.txt	bin/forge.d/help/review.txt	bin/forge.d/review.sh	hooks/forge-guard.sh	skills/forge-ship/SKILL.md	skills/forge-verify/SKILL.md	skills/forge-verify/fix-reruns.md	skills/forge-verify/reviewer-fallback.md	skills/forge-verify/walkthrough.md	tests/forge-gates.test.sh	tests/forge-guard.test.sh	tests/forge-session-title.test.sh	tests/forge/review.test.sh	tests/skills.test.sh
+.forge/TESTING.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	tests/forge-gates-resources.test.sh	tests/forge-gates-tiers.test.sh
+.forge/ARCHITECTURE.md	.forge/REJECTED.md	.forge/TESTING.md	.forge/tracks/perf.json	.forge/tracks/perf.md	bin/forge.d/help/pr.txt	bin/forge.d/perf.sh	bin/forge.d/pr.sh	skills/forge-ship/SKILL.md	tests/forge/perf.test.sh	tests/forge/pr.test.sh
+bin/forge.d/watchdog.sh	tests/forge-watchdog.test.sh
+.forge/TESTING.md	skills/forge-ship/SKILL.md	tests/skills.test.sh
+skills/forge-ship/SKILL.md	tests/skills.test.sh
+.forge/ARCHITECTURE.md	bin/forge.d/help/watchdog.txt	bin/forge.d/watchdog.sh	hooks/forge-guard.sh	tests/forge-guard.test.sh	tests/forge-watchdog.test.sh
+skills/forge-ship/SKILL.md	tests/forge/ship-queue.test.sh	tests/skills.test.sh
+skills/forge-ship/SKILL.md	tests/forge/ship-queue.test.sh	tests/skills.test.sh
+.forge/STATE.md	.forge/features/test-speed-ci-full/FEATURE.md	.forge/features/test-speed-ci-full/requirements.json	.forge/features/test-speed-ci-full/spec.json	.forge/features/test-speed-cpu-share/FEATURE.md	.forge/features/test-speed-cpu-share/requirements.json	.forge/features/test-speed-cpu-share/research.json	.forge/features/test-speed-cpu-share/spec.json	.forge/features/test-speed-narrow-rerun/FEATURE.md	.forge/features/test-speed-narrow-rerun/requirements.json	.forge/features/test-speed-narrow-rerun/research.json	.forge/features/test-speed-narrow-rerun/research/R1.json	.forge/features/test-speed-narrow-rerun/research/R2.json	.forge/features/test-speed-narrow-rerun/spec.json	.forge/features/test-speed-narrow-rerun/split.json	.forge/features/test-speed-resync-skip/FEATURE.md	.forge/features/test-speed-resync-skip/requirements.json	.forge/features/test-speed-resync-skip/research.json	.forge/features/test-speed-resync-skip/research/R1.json	.forge/features/test-speed-resync-skip/research/R2.json	.forge/features/test-speed-resync-skip/spec.json	.forge/features/test-speed-resync-skip/split.json	.forge/features/test-speed-suite-speed/FEATURE.md	.forge/features/test-speed-suite-speed/requirements.json	.forge/features/test-speed-suite-speed/spec.json	.forge/phases/421-resync-flag/PHASE.md	.forge/phases/421-resync-flag/spec.json	.forge/phases/422-shared-paths/PHASE.md	.forge/phases/422-shared-paths/spec.json	.forge/phases/423-ship-resync/PHASE.md	.forge/phases/423-ship-resync/spec.json	.forge/phases/424-verify-narrow-rerun/PHASE.md	.forge/phases/424-verify-narrow-rerun/spec.json	.forge/tracks/audit-261027.json	.forge/tracks/audit-261027.md	.forge/tracks/test-speed.json	.forge/tracks/test-speed.md	skills/forge-verify/SKILL.md	skills/forge-verify/walkthrough.md	tests/forge-session-title.test.sh	tests/skills.test.sh
+.forge/STATE.md	.forge/TESTING.md	.forge/features/test-speed-ci-full/FEATURE.md	.forge/features/test-speed-ci-full/requirements.json	.forge/features/test-speed-ci-full/spec.json	.forge/features/test-speed-cpu-share/FEATURE.md	.forge/features/test-speed-cpu-share/requirements.json	.forge/features/test-speed-cpu-share/research.json	.forge/features/test-speed-cpu-share/spec.json	.forge/features/test-speed-narrow-rerun/FEATURE.md	.forge/features/test-speed-narrow-rerun/requirements.json	.forge/features/test-speed-narrow-rerun/research.json	.forge/features/test-speed-narrow-rerun/research/R1.json	.forge/features/test-speed-narrow-rerun/research/R2.json	.forge/features/test-speed-narrow-rerun/spec.json	.forge/features/test-speed-narrow-rerun/split.json	.forge/features/test-speed-resync-skip/FEATURE.md	.forge/features/test-speed-resync-skip/requirements.json	.forge/features/test-speed-resync-skip/research.json	.forge/features/test-speed-resync-skip/research/R1.json	.forge/features/test-speed-resync-skip/research/R2.json	.forge/features/test-speed-resync-skip/spec.json	.forge/features/test-speed-resync-skip/split.json	.forge/features/test-speed-suite-speed/FEATURE.md	.forge/features/test-speed-suite-speed/requirements.json	.forge/features/test-speed-suite-speed/spec.json	.forge/phases/421-resync-flag/PHASE.md	.forge/phases/421-resync-flag/spec.json	.forge/phases/422-shared-paths/PHASE.md	.forge/phases/422-shared-paths/spec.json	.forge/phases/423-ship-resync/PHASE.md	.forge/phases/423-ship-resync/spec.json	.forge/phases/424-verify-narrow-rerun/PHASE.md	.forge/phases/424-verify-narrow-rerun/spec.json	.forge/tracks/audit-261027.json	.forge/tracks/audit-261027.md	.forge/tracks/test-speed.json	.forge/tracks/test-speed.md	bin/forge.d/help/test.txt	bin/forge.d/test.sh	skills/forge-ship/SKILL.md	templates/TESTING.md	tests/forge/help.test.sh	tests/forge/test-resync.test.sh	tests/skills.test.sh

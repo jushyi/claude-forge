@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^T[0-9]+$"
+    },
+    "status": {
+      "enum": [
+        "done",
+        "failed",
+        "unmet"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "commit": {
+      "type": "string"
+    },
+    "deviation": {
+      "type": "string"
+    },
+    "deviation_kind": {
+      "type": "string",
+      "enum": ["interface", "note"]
+    },
+    "command": {
+      "type": "string"
+    },
+    "exit": {
+      "type": "integer"
+    },
+    "tree": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+    }
+  }
+}

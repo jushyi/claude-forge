@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "split",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phases"
+  ],
+  "properties": {
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slug",
+          "goal",
+          "spec",
+          "requirements",
+          "depends"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "number": {
+            "type": "string",
+            "pattern": "^[0-9]{2,}$"
+          },
+          "repo": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          },
+          "goal": {
+            "type": "string"
+          },
+          "spec": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z]+-[0-9]{2,}$"
+            }
+          },
+          "focus": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "security",
+                "rate-limit",
+                "scaling",
+                "performance",
+                "pii"
+              ]
+            }
+          },
+          "depends": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            }
+          },
+          "creates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "\\S"
+            }
+          },
+          "consumes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "\\S"
+            }
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}

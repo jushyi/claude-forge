@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings"
+  ],
+  "properties": {
+    "pending": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tree": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "line",
+          "severity",
+          "summary",
+          "fixed"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "severity": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "fixed": {
+            "type": "boolean"
+          },
+          "dismissed": {
+            "type": "string"
+          },
+          "deferred": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "reason"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string",
+                "pattern": "^(phase [0-9]{2,}|todo)$"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "source": {
+            "enum": [
+              "codex",
+              "reviewer",
+              "detect",
+              "audit"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

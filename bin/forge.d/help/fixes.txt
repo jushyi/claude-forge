@@ -1,0 +1,62 @@
+Usage: forge fixes <track>/<feature> [--record <path>]
+
+Print the open review findings of a feature, grouped by file, so a
+session spawns exactly one forge-fixer per file and no two fixers edit
+the same file at once.
+
+Findings come from the session-owned review records: review.json and
+review/<repo>.json in the feature directory
+(STATE/features/<track>-<feature>). Raw agent output, review/reviewer.json,
+review/reviewer-<repo>.json and review/audit.json, is never read: the
+session appends it to review.json. A finding copied into several records of one repo with
+the same file, line and summary is printed once, from the first record
+holding it, and is closed when any copy is: fixed is true, deferred holds
+a valid owner, or dismissed is non-empty. The only valid owner is
+"todo": a feature record has no valid phase owner. A finding is
+security-class when its title (the summary before the first ": ")
+starts [security], [pii] or [auth], or the spec.json beside the record
+has security or pii in focus; a high
+security-class finding is closed by dismissed only when it starts
+"settled: " (a "settled: <operator's words>" dismissal written after
+asking the operator) and cannot be deferred to todo.
+A Codex-only medium (every copy has source codex and severity medium) is
+advisory: it is skipped here and never blocks forge done or archive.
+
+With --record <path>, findings come from that one record only, such as
+a ship record review-<repo>.json, and review.json and review/*.json are
+not read. <path> is absolute or relative to the current directory, and
+review in each printed finding is that path. Closure and security-class still come from the feature
+directory as the review context (its spec.json focus), not from the
+record's own directory.
+
+Prints one JSON line per repo and file, sorted by repo (null, the
+review.json record, first) then file, findings sorted by line:
+  {"repo": null | "<repo>" (from review/<repo>.json), "file": "<path
+  relative to that repo's worktree>", "findings": [{"index": <position in
+  the record's findings array>, "severity": "high" | "medium" | "low",
+  "line": <line>, "summary": "<summary>", "review": "<absolute path of the
+  record>", "security": true | false (security-class)}, ...]}
+Nothing is printed when no finding is open. Mark a fixed finding by
+setting fixed at that index of that record.
+
+It refuses, printing each "  review: pending <part>: <cause> in
+<record>", while a record it reads (with --record, that record only) has
+a non-empty pending array: a review part failed and the session has not yet appended its fallback forge-reviewer's
+findings and deleted pending.
+
+Exit codes:
+  0  printed, possibly nothing
+  1  no such feature directory, an unreadable or missing record, or a
+     pending review part
+  2  usage, a phase number, or an empty --record
+
+STATE is the project's state dir that forge paths prints as STATE.
+
+Reads:
+  STATE/features/<track>-<feature>/review.json, review/<repo>.json,
+  spec.json
+  <path>                               (with --record, instead of the records)
+
+Examples:
+  forge fixes crm/export
+  forge fixes crm/export --record "$STATE/features/crm-export/review-api.json"

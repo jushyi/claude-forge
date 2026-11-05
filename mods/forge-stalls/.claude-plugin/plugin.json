@@ -1,0 +1,14 @@
+{
+  "name": "forge-stalls",
+  "version": "0.1.0",
+  "description": "Toasts and notifies when a forge session blocks on the operator or stops making progress",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "stallMinutes": {
+      "type": "number",
+      "title": "Stall minutes",
+      "description": "Minutes a working forge session may go without writing to its transcript before it counts as stalled",
+      "default": 20
+    }
+  }
+}

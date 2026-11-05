@@ -1,0 +1,15 @@
+{
+  "manual_test": [
+    "[agent] E/s1/out.txt INT-01: submit the intake form and see the lead saved",
+    "[agent][carried] E/s2/resp.json INT-02: GET /leads/1 returns the lead",
+    "[operator] INT-02 and INT-03: open the lead list and see the new lead",
+    "[watched] INT-04: the intake page on a phone-sized window",
+    "[skipped] INT-05 run the leads migration on staging (deferred by phase 02: needs the staging database)",
+    "[agent] E/s6/mail.log INT-07: the confirmation email is queued",
+    "[skipped] INT-07 the confirmation email reaches a real inbox (deferred by phase 03: needs the mail provider)",
+    "[note] app: INT-06 merge rule left for a later phase"
+  ],
+  "result": "pass",
+  "gaps": [],
+  "operator_ran": true
+}

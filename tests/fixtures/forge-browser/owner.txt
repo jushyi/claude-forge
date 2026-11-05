@@ -1,0 +1,121 @@
+$ forge-browser start (session a, no owner)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session b in the background, a owns and is working)
+session b wait message names: Verify 99-browser-owner
+session b still waiting: yes
+session b systemd-run calls: 0
+session a unit still running: yes
+$ forge-browser start --headed (session a restarts headed while b waits)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+owner JBC_HEADLESS=0
+session b still waiting: yes
+$ forge-browser stop (session a stops)
+exit 0
+unit stopped by a: yes
+session b exit once a stopped: 0
+session b systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session a while b owns and is working)
+exit non-zero
+wait message names: Discuss mockup
+gave up after waiting, within the bound: yes
+stderr names Discuss mockup outside the wait message: yes
+systemd-run calls: 0
+unit running: yes
+$ forge-browser start (empty session id while b owns and is working)
+exit non-zero
+stderr names CLAUDE_CODE_SESSION_ID: yes
+wait message names: none
+systemd-run calls: 0
+unit running: yes
+$ forge-browser start (session a, owner b done)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session b while a owns, idle awaiting input in the background)
+exit non-zero
+wait message names: Verify 99-browser-owner
+gave up after waiting, within the bound: yes
+stderr names Verify 99-browser-owner outside the wait message: yes
+systemd-run calls: 0
+unit running: yes
+$ forge-browser start (session b while a owns, interactive with no state)
+exit non-zero
+wait message names: Verify 99-browser-owner
+gave up after waiting, within the bound: yes
+stderr names Verify 99-browser-owner outside the wait message: yes
+systemd-run calls: 0
+unit running: yes
+$ forge-browser start (session b, owner a failed)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session a, owner b stopped)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session b, owner a absent from claude agents)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session a, owner b's unit inactive)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session b while a owns, idle and interactive with a pid)
+exit non-zero
+wait message names: Verify 99-browser-owner
+gave up after waiting, within the bound: yes
+stderr names Verify 99-browser-owner outside the wait message: yes
+systemd-run calls: 0
+unit running: yes
+$ forge-browser stop (empty session id)
+exit 0
+unit running: no
+$ forge-browser start (empty session id, no owner)
+exit non-zero
+stderr names CLAUDE_CODE_SESSION_ID: yes
+wait message names: none
+systemd-run calls: 0
+unit running: no
+$ forge-browser start (session b, unit stopped)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session a while b owns and is working)
+exit non-zero
+wait message names: Discuss mockup
+gave up after waiting, within the bound: yes
+stderr names Discuss mockup outside the wait message: yes
+systemd-run calls: 0
+unit running: yes
+$ forge-browser stop (session a, not the owner)
+exit 0
+unit running: no
+$ forge-browser start (session a without a name, unit stopped)
+exit 0
+wait message names: none
+systemd-run calls: 1
+unit running: yes
+$ forge-browser start (session b while unnamed a owns and is working)
+exit non-zero
+wait message names: sess-a
+gave up after waiting, within the bound: yes
+stderr names sess-a outside the wait message: yes
+systemd-run calls: 0
+unit running: yes
+$ forge-browser stop (session a)
+exit 0
+unit running: no

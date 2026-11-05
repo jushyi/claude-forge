@@ -1,0 +1,36 @@
+Usage: forge event <N> <step> <message>
+
+Append {time, step, message} to phase N's events.jsonl, the time in UTC.
+Commits nothing; the session's next forge commit records it.
+
+Steps:
+  ui        logged by the phase session before forge review from forge
+            ui N's exit: message exactly "yes" or "no"
+  fallback  logged by forge review for each part that needs an agent
+            fallback; message "<part>: <cause>"
+  park      logged by the phase session that stops for another phase
+            or feature; message the condition "wait <ref>", <ref> being
+            <N> (a phase of this project), <abs-root>:<N> (a phase of the
+            project at <abs-root>), <track>/<feature> (cleared once that
+            feature is in the shipped list of .forge/tracks/<track>.json)
+            or "branch <name>" (cleared once <name> is an ancestor of the
+            repo's main); forge watchdog resumes the phase once the
+            condition clears, as forge watchdog --help says. It also appends
+            the project root to ~/.local/state/forge/watchdog-roots, under
+            the flock watchdog-roots.lock, so forge watchdog finds the
+            phase even when its session is removed before a scan sees it;
+            a failed append warns and still exits 0
+
+Refuses, exit 1, the steps forge logs itself and its gates read: check,
+start, wait, retry and replan.
+
+STATE is the project's state dir that forge paths prints as STATE.
+
+Reads: nothing
+
+Writes:
+  STATE/phases/NN-slug/events.jsonl; for park,
+  ~/.local/state/forge/watchdog-roots
+
+Example:
+  forge event 09 ui yes

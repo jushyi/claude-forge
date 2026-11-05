@@ -1,0 +1,90 @@
+Usage: forge validate [<file>...]
+
+Check each file against the JSON schema its path selects, and print every
+failure. A path no schema covers is only parse-checked: a .jsonl file
+fails, as <path>: not JSON lines, unless every line is a JSON value, and
+any other file fails, as <path>: not JSON, unless it holds exactly one
+JSON value. With no files, check .forge/tracks/*.json and the planning
+JSON under the state dir STATE (see forge paths --help) except archive/,
+plus .forge/repos.json and .forge/release.json when present. Exits 1 when
+any file fails; a linked-doc warning alone exits 0.
+
+The checks below key on the path, so they run whether or not a schema
+covers it.
+
+A linked doc, .forge/{PROJECT,RULES,REJECTED,ARCHITECTURE,STACK,
+CONVENTIONS,TESTING,INTEGRATIONS}.md at the project root or under any
+<dir>/.forge/, is checked against three limits instead of a schema: the
+file is at most 8 KB (8192 bytes), each bullet (a `- ` line plus its
+more-indented continuation lines, joined) is at most 300 characters, and
+no bullet holds now, no longer, was, previously or used to at a word
+start outside backtick code spans. Each violation is a warning, not a
+failure: it prints one line on stderr,
+forge: warning: <path>:<line>: <rule>, where the rule is over 8 KB
+(<n> bytes) at line 1, bullet over 300 characters (<n>) or
+history phrase "<phrase>" at the bullet's first line, and the doc still passes
+with exit 0. Only an unreadable linked doc fails. Any other .md path,
+such as STATE.md, CONCERNS.md, todo.md or seeds.md, is parse-checked
+and fails as <path>: not JSON.
+
+repos.json also fails when two entries share a basename (a trailing slash
+ignored), and split.json when a phase's repo resolves to nothing or its
+focus has a tag missing from the focus of the sibling spec.json. A
+phase spec.json fails when its focus has a tag missing from the focus of
+its feature's spec.json, under features/ or, for an archived phase,
+archive/.
+
+A features/*/requirements.json or archive/*/requirements.json also
+fails, when ship.json sits beside it, for each requirement that is not
+done and has no owed, or is done and has an owed, reported as
+<path>: requirement <id> is not done and has no owed or <path>:
+requirement <id> is done and has an owed. Without ship.json the check
+adds nothing.
+
+A features/*/verify.json also fails when its result is pass with gaps
+listed or gaps with none, every listed gap counting as open; both
+forge commit <track>/<feature> verify and forge validate report the
+mismatch as <path>: result pass with <n> gaps or <path>: result gaps
+with no gaps.
+
+For a named file under a state dir (the nearest parent holding a root
+file and the phases/, features/ or archive/ dir on the file's path), the
+project root is the path in STATE/root and the feature specs are read
+from that STATE; for any other named file it is the directory holding
+its .forge/. Name a quick/*/ or debug/*/ file by its absolute path, as
+the agent write hook does.
+
+Path                             Schema
+tracks/<track>.json               track
+features/*/requirements.json      requirements
+archive/*/requirements.json       requirements
+features/*/spec.json              feature-spec
+features/*/split.json             split
+features/*/verify.json            feature-verify
+features/*/ship.json              ship
+features/*/review.json            review
+features/*/review/*.json          review
+phases/*/plan.json                plan
+phases/*/tasks/*.json             task
+phases/*/review.json              review
+phases/*/review.prev.json         review
+phases/*/review/*.json            review
+phases/*/result.json              result
+quick/*/spec.json                 feature-spec
+quick/*/plan.json                 plan
+quick/*/tasks/*.json              task
+quick/*/review.json               review
+debug/*/plan.json                 plan
+debug/*/review.json               review
+anything else                     none (parse-checked only)
+
+Reads:
+  the files named, or .forge/tracks/, STATE/features/, STATE/phases/,
+  .forge/repos.json and .forge/release.json
+  STATE/root of a named file under STATE
+  $FORGE_SCHEMAS/<schema>.schema.json
+
+Writes: nothing
+
+Example:
+  forge validate "$P/plan.json"

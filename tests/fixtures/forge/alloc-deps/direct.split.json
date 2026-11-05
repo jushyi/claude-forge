@@ -1,0 +1,6 @@
+{
+  "phases": [
+    {"slug": "export-core", "goal": "Serve leads", "spec": [], "requirements": [], "depends": [], "creates": ["lead-api", "core-types"], "consumes": ["core-types", "billing-api"]},
+    {"slug": "export-ui", "goal": "Show leads", "spec": [], "requirements": [], "depends": ["export-core"], "consumes": ["lead-api"]}
+  ]
+}

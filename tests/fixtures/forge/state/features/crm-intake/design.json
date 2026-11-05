@@ -1,0 +1,23 @@
+{
+  "brief": [
+    "Owners triage new leads fast",
+    "Dense table, no cards"
+  ],
+  "mockups": [
+    {
+      "surface": "intake-form",
+      "path": "mockups/intake-form.html",
+      "approved": true,
+      "notes": [
+        "Larger submit button",
+        "Email field first"
+      ]
+    },
+    {
+      "surface": "lead-list",
+      "path": "mockups/lead-list.html",
+      "approved": false,
+      "notes": []
+    }
+  ]
+}

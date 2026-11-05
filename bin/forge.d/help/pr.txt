@@ -1,0 +1,290 @@
+Usage: forge pr create <branch> <title> <body-file>
+       forge pr checks <url>
+       forge pr checks --full <url>
+       forge pr merge <url>
+       forge pr close <url>
+       forge pr state <url>
+       forge pr push [<git push argument>...]
+
+Open, merge or close a pull request against main, wait for its checks
+or print its state, on the origin remote of the git checkout holding
+the current directory, or push a pull request's branch. Runs in any
+repo checkout, whatever FORGE_ROOT says, with or without .forge/.
+
+An ssh or scp-style origin's host is the hostname `ssh -G <host>` gives,
+so an ssh alias such as github.com-forge resolves to github.com.
+
+When origin's host is github.com, runs gh:
+  create  gh pr create --head <branch> --base main --title <title>
+          --body-file <body-file> [--label <label>...]
+  checks  gh pr view <url> --json statusCheckRollup,headRefOid, polled;
+          with --full, read once more after the wait
+  merge   the checks wait, then the Merge ready command, then the
+          origin/main freshness check, then
+          gh pr merge <url> --merge --match-head-commit <head sha>
+  close   gh pr close <url>
+  state   gh pr view <url> --json state,mergeable,mergeStateStatus
+
+checks waits for the checks on the pull request's head commit to finish,
+polling every $FORGE_PR_CHECK_INTERVAL seconds for at most
+$FORGE_PR_CHECK_WAIT minutes (0 looks once without waiting), then prints
+one stdout line per check:
+  <state>\t<name>\t<link>
+<state> is pass (success, skipped, neutral), fail (failure, error,
+cancelled, timed out, action required, startup failure, stale) or
+pending (anything else). A check re-run keeps only its newest run,
+per check name and workflow. Each failed check is named on stderr as
+"forge: check failed: <name>" and the run exits 3; otherwise each check
+still pending when the wait ends is named as "forge: check still
+pending: <name>" and the run exits 4. GitHub may not have registered a
+new pull request's checks yet, so no checks is final only after
+$FORGE_PR_CHECK_GRACE seconds of seeing none; then checks exits 0 and
+merge merges without waiting. When the wait ends inside the grace with
+no checks, it prints "forge: no checks reported yet on <url>" and exits
+4. A pull request whose base moved after its checks ran is still judged
+on its head commit's checks.
+
+checks --full, run from the checkout holding the pull request's head,
+lets a passing CI job stand in for a full local forge test: a GitHub
+Actions check run on a GitHub origin, a Forgejo Actions task on a
+Forgejo origin. It needs the line
+  - CI full suite: `<check name>`
+in <checkout top>/.forge/TESTING.md, <check name> being the exact
+runtime job name, a job's name: or the id of a job without name:, the
+name checks prints on GitHub. With no such line, a TESTING.md that differs from
+the one in HEAD, or a <url> other than a pull request of origin's
+<owner>/<repo>, https://github.com/<owner>/<repo>/pull/<n> on GitHub
+or https://<host>/<owner>/<repo>/pulls/<n> on Forgejo, it exits 6
+before any gh or Forgejo call.
+
+On GitHub it then runs the checks wait, printing the same lines with
+the same exits 3, 4 and 1. When the wait exits 0 it reads gh pr view
+<url> --json statusCheckRollup,headRefOid once more and accepts only
+when, on that view, the newest row named exactly <check name> is a
+GitHub Actions check run (type CheckRun with a non-empty workflowName)
+with status COMPLETED and conclusion SUCCESS, and headRefOid equals
+the checkout's HEAD. A status context, or a check run from outside
+GitHub Actions, never counts, since any token with status write could
+post one.
+
+On Forgejo it reads the pull request's head from GET .../pulls/<n>
+(.head.sha), the head's runs from GET .../actions/runs?head_sha=<sha>
+and the Forgejo Actions tasks from GET .../actions/tasks, 50 per page,
+keeping the tasks named exactly <check name> on that head. A head that
+is not the checkout's HEAD exits 6 at once. It judges the newest such
+task once its run is done; when that run holds other tasks of the name
+(a rerun, or matrix legs or jobs sharing the name), a success counts
+only when every one of them or the run itself succeeded. While the task
+or its run is pending (unknown, waiting, running or blocked), no such
+task exists yet but a run of the head is pending, or the head has no
+run yet within $FORGE_PR_CHECK_GRACE seconds, it polls again every
+$FORGE_PR_CHECK_INTERVAL seconds for at most $FORGE_PR_CHECK_WAIT
+minutes; a check still pending when the wait ends prints "forge: check
+still pending: <name>" and exits 4. A task with status failure prints
+"forge: check failed: <name>" on stderr and one stdout line
+  fail\t<name>\t<task url>
+and exits 3. A Forgejo API error, such as a token without access to
+/actions/tasks, prints Forgejo's message and exits 1. It accepts only a
+task with status success, and only when the head equals the
+checkout's HEAD. It never reads a commit status: a status of that name
+never counts, since any token with write access could post one.
+
+On accept it writes the empty stamp file
+  <git common dir>/forge-test/<machine-id>/<tree>
+for HEAD's tree, the same file a full local forge test pass writes, so
+forge land reuses it; it prints "forge: tests passed (<short tree>), CI
+check <name>" on stderr and exits 0. Every other case writes nothing,
+prints one stderr line "forge: CI full suite: <reason>; run forge test"
+and exits 6: no line, an uncommitted TESTING.md, a pull request not of
+origin, or a head that is not HEAD; on GitHub no row of that name, a
+skipped, neutral or any other conclusion than success, a status
+context of that name, or an empty or missing workflowName; on Forgejo
+no task of that name on the head once every run of the head is done,
+a task skipped or cancelled (cancelled covers a timeout, a manual
+cancel and a run superseded by a newer push), any other status than
+success, failure or pending, such as neutral, tasks of that name
+on the head from more than one workflow, a passed newest task beside a
+task of that name in its run that did not pass while the run did not
+pass, or a name that jobs of more
+than one file of .github/workflows and .forgejo/workflows in the
+checkout define, checked before any API call.
+
+create reads the optional line
+  - PR labels: `<command>`
+in <checkout top>/.forge/TESTING.md. On GitHub forge runs the command
+with bash from the top of the git checkout holding the current
+directory, stdin /dev/null and its stderr passed through, and passes
+each non-empty line it prints as one --label <line> to gh pr create. A
+non-zero exit prints "forge: PR labels command failed (exit <s>):
+<command>" and exits 1 before any gh call, opening nothing. On a
+Forgejo origin forge runs nothing, prints "forge: warning: <host> is
+not GitHub; PR labels not applied" on stderr and creates without
+labels. No file or no line means no labels.
+
+push is the one command the skills use to push a pull request branch.
+It reads the optional line
+  - Pre-push: `<command>`
+in <checkout top>/.forge/TESTING.md, the top of the git checkout holding
+the current directory. With the line forge runs the command with bash
+from the checkout top, stdin /dev/null and its stdout and stderr passed
+through; a non-zero exit prints "forge: Pre-push failed (exit <s>);
+nothing pushed" on stderr and exits 3 without pushing. It then runs
+git push <git push argument>... from the current directory, a failed
+push exiting 1. No file or no line means a plain git push. push looks
+up no origin host, so it works the same on GitHub and Forgejo, and
+calls neither gh nor the Forgejo API.
+
+merge runs the same wait without printing the check lines, merging
+nothing on exit 3 or 4. When every check passed and <checkout top>/.forge/TESTING.md has the optional line
+  - Merge ready: `<command with {sha}>`
+forge replaces {sha} with the shell-quoted full head SHA and runs the
+command with bash from the top of the git checkout holding the current
+directory. A non-zero exit prints its output on stderr, then "forge:
+Merge ready refused head <sha>", and exits 3 merging nothing; on exit 0
+its output is not shown and forge merges. --match-head-commit makes
+GitHub refuse the merge when a head was pushed after the checks. No
+file or no line means no Merge ready step. The line's first backticked
+span is the command, as for the other TESTING.md lines described in
+'forge test --help'.
+
+merge then checks the head is fresh against origin main, on GitHub and
+Forgejo. From the checkout top it runs
+  git fetch -q origin +refs/heads/main:refs/remotes/origin/main
+and needs the head commit in the checkout, so run it from the worktree
+that pushed the branch; a failed fetch or a missing head exits 1
+merging nothing. It lists the paths changed between the merge base of
+the head and origin/main and origin/main itself. When any of them is
+outside .forge/, or is .forge/TESTING.md, it prints
+  forge: origin/main moved outside .forge/ since head <sha7>: <path>;
+  merge origin/main into the branch and retest
+on one line, naming the first such path, and exits 5 merging nothing.
+A head containing origin/main, or a main that moved only in .forge/,
+merges. A push to main between the check and the merge call is not
+caught here.
+
+state prints exactly one stdout line
+  <state> <merge state>
+On GitHub <state> is OPEN, MERGED or CLOSED and <merge state> is gh's
+mergeStateStatus: DIRTY a merge conflict, BEHIND a branch behind main
+under a required up-to-date rule, BLOCKED a policy or check refusal, or
+CLEAN, HAS_HOOKS, UNSTABLE, UNKNOWN or DRAFT; an empty mergeStateStatus
+prints UNKNOWN. GitHub computes it asynchronously, so a just-pushed head
+can read UNKNOWN.
+
+On GitHub, checks, merge and state retry a gh transport error: each
+gh pr view (the checks poll and state) and the gh pr merge call. A
+transport error is recognised from gh's stderr only: connection reset,
+timeout or timed out, EOF, or HTTP 5 followed by two digits (HTTP 5xx).
+After the first failure the call is retried 3 times, sleeping a fixed
+10, 30 and 90 seconds before them, and each retry prints one stderr line
+  forge: gh transport error (<error>); retry <n>/3 in <s> s
+gh's stderr is passed through on every attempt. After the third failed
+retry the call fails as without the retry, exit 1, with gh's last stderr
+shown. Any other gh failure exits at once with no retry. After a
+transport failure of gh pr merge, forge first reads
+gh pr view <url> --json state (retried the same way); when it reads
+MERGED, the merge went through before the connection dropped and merge
+exits 0 without retrying. create and close never retry, since a
+repeated create could open a second pull request.
+
+A Forgejo merge that gets HTTP 405 first GETs .../pulls/<n>: when merged
+is true the pull was already merged, forge says so on stderr and merge
+exits 0; when its state is not open, merge fails naming the state. A 405
+whose message is exactly "Please try again later", which Forgejo returns
+while it rechecks a pull after its base branch moved, is retried up to 3
+times, $FORGE_FORGEJO_MERGE_DELAYS seconds (default 3 10 30) before
+them, and each retry prints one stderr line
+  forge: Forgejo merge HTTP 405 (Please try again later); retry <n>/3 in <s> s
+then GETs the pull as above before it posts the merge again. After the
+third failed retry the merge fails, exit 1, with Forgejo's last message.
+Any other 405 or HTTP error, and every other Forgejo call, fails at once.
+
+Otherwise origin is a Forgejo remote, its URL one of
+  ssh://git@<host>:<port>/<owner>/<repo>.git
+  git@<host>:<owner>/<repo>.git
+  https://<host>/<owner>/<repo>.git
+forge takes <owner>/<repo> from that URL, reads FORGEJO_URL and
+FORGEJO_TOKEN from $FORGE_FORGEJO_ENV (default ~/.config/forgejo/forge.env) and calls
+$FORGEJO_URL/api/v1/repos/<owner>/<repo>/pulls with the header
+"Authorization: token <FORGEJO_TOKEN>":
+  create  POST .../pulls {head, base: "main", title, body}, the body read
+          from <body-file>
+  checks  no call; prints "forge: warning: <host> is not GitHub; no
+          checks to wait for" on stderr and exits 0. checks --full
+          GETs .../pulls/<n>, .../actions/runs and .../actions/tasks
+          and judges the Forgejo Actions task as described above
+  merge   after printing "forge: warning: <host> is not GitHub;
+          merging without waiting for checks" on stderr, GETs
+          .../pulls/<n>, runs the Merge ready command, when there is
+          a line, and the origin/main freshness check on its .head.sha
+          as on GitHub, then POSTs .../pulls/<n>/merge
+          {"Do": "merge", "head_commit_id": <sha>}
+  close   PATCH .../pulls/<n> {"state": "closed"}
+  state   GET .../pulls/<n>; <state> is MERGED when merged is true, else
+          the upper-cased state, OPEN or CLOSED; <merge state> is DIRTY
+          when the pull is open, not merged and mergeable is false, else
+          UNKNOWN
+The env file is parsed, not sourced: only FORGEJO_URL=<value> and
+FORGEJO_TOKEN=<value> lines count, taken literally with one pair of
+surrounding quotes stripped, and a group- or other-readable file is
+refused.
+<url> is https://<host>/<owner>/<repo>/pulls/<n>. FORGEJO_URL must be
+https. create refuses, exit 1, when origin's host is not FORGEJO_URL's;
+merge, close and state refuse when <owner>/<repo> is not origin's or <host> is
+not FORGEJO_URL's.
+
+create prints only the pull request's URL on stdout, and nothing when a
+2xx response has no html_url. A missing env file, a missing key, a
+missing html_url or a non-2xx response prints the error on stderr, for a
+response Forgejo's message and the HTTP code, and exits 1. The token is
+never printed, and errors strip any user:token@ from the URLs they name.
+
+Exit codes:
+  0  done; for checks, every check passed or the repo reports none
+  1  gh failed (for a transport error, after the third failed retry), a
+     Forgejo error, the PR labels command failed, git push failed,
+     merge could not fetch origin main or find the head commit, or a
+     FORGE_PR_CHECK_* or FORGE_FORGEJO_MERGE_DELAYS value is not a number
+  2  usage
+  3  a check failed, or the Merge ready command refused the head; nothing
+     merged. For push, the Pre-push command failed; nothing pushed
+  4  checks still pending, or none reported yet, when the wait ended;
+     nothing merged
+  5  merge only: origin/main moved outside .forge/, or in
+     .forge/TESTING.md, since the head's merge base; nothing merged
+  6  checks --full only: no CI full suite line, or the declared check
+     did not pass as a GitHub Actions check run or a Forgejo Actions
+     task on HEAD; no stamp written, run forge test
+
+Reads:
+  the origin remote's URL
+  ssh -G <host>                                   (ssh origins only)
+  $FORGE_FORGEJO_ENV or ~/.config/forgejo/forge.env   (Forgejo only)
+  <body-file>
+  <checkout top>/.forge/TESTING.md                (create, merge,
+                                                  checks --full, push)
+  the pull request on GitHub or Forgejo           (checks, merge, state)
+  origin's main branch, fetched                   (merge)
+
+Writes:
+  the pull request on GitHub or Forgejo
+  refs/remotes/origin/main                        (merge)
+  <git common dir>/forge-test/<machine-id>/<tree>  (checks --full only)
+
+Environment:
+  FORGE_PR_CHECK_WAIT      minutes checks and merge wait for checks to
+                           finish, default 150; 0 looks once
+  FORGE_PR_CHECK_GRACE     seconds of seeing no checks before no checks
+                           is final, default 60
+  FORGE_PR_CHECK_INTERVAL  seconds between polls, default 10
+  FORGE_FORGEJO_MERGE_DELAYS
+                           three whole numbers of seconds to wait before
+                           each Forgejo merge retry, default "3 10 30"
+
+Example:
+  forge pr create forge/intake "Intake form" /tmp/pr-body.md
+  forge pr checks https://github.com/op/forge/pull/7
+  forge pr checks --full https://github.com/op/forge/pull/7
+  forge pr merge https://git.example.com/op/forge/pulls/12
+  forge pr state https://github.com/op/forge/pull/7
+  forge pr push -u origin forge/intake

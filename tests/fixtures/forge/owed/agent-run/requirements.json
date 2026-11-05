@@ -1,0 +1,7 @@
+{
+  "requirements": [
+    {"id": "INT-01", "text": "The form saves a lead.", "done": false},
+    {"id": "INT-02", "text": "The API returns the lead.", "done": false},
+    {"id": "INT-03", "text": "The leads migration runs.", "done": false}
+  ]
+}

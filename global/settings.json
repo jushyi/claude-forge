@@ -1,0 +1,30 @@
+{
+  "env": {
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/.claude/forge/mods/forge-runs:~/.claude/forge/mods/forge-stalls"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|NotebookEdit|ScheduleWakeup|CronCreate|ReadNotifications",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/forge-guard.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/forge-session-title.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

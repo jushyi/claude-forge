@@ -1,0 +1,33 @@
+Usage: forge concern add <repo> <area> <severity> <files...> -- <text>
+
+Record a new open concern in <repo>'s .forge/concerns.json, with the given
+area, files, severity (high, medium or low) and text, no evidence, and
+today's date as YYYY-MM-DD. Its id is the next C-NN: the highest existing
+id number plus one, at least two digits, so C-01 in an empty or missing
+concerns.json and C-100 after C-99. A missing concerns.json is created.
+Re-renders CONCERNS.md, which lists open concerns only, and commits both
+files as "docs(concerns): add <repo>:C-NN" under the repo's <git common
+dir>/forge.lock, leaving any other staged change uncommitted. Prints
+"added <repo>:C-NN".
+
+<repo> resolves as forge resolve resolves it: a child directory of the
+project root holding .git, else the project root under its basename. The
+concern is always written to that repo's main checkout, never to the
+worktree forge runs in, so a concern found in a phase worktree is not lost
+with its branch. Record new concerns with this command, never by editing
+CONCERNS.md. CONCERNS.md lists open concerns only; a resolved concern stays
+in concerns.json and drops out of CONCERNS.md when it is re-rendered.
+
+Exits 2 on bad usage: no add, no --, no file, an empty area or text, or a
+severity outside high, medium and low. Fails, writing nothing, on an
+unknown repo or a concerns.json that is not valid JSON.
+
+Reads:
+  <main checkout>/.forge/concerns.json
+
+Writes:
+  <main checkout>/.forge/concerns.json
+  <main checkout>/.forge/CONCERNS.md
+
+Example:
+  forge concern add acme-hub intake high src/intake.ts src/form.ts -- 'Intake trusts the client email unchecked'

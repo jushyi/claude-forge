@@ -1,0 +1,67 @@
+Usage: forge owed <track>/<feature>
+       forge owed list [<track>/<feature>]
+
+Settle each requirement of the feature from its feature verify record,
+STATE/features/<track>-<feature>/verify.json, STATE being the project
+root's state dir (see forge paths --help). Each manual_test step
+starts with a tag naming who ran it: [agent], [agent][carried],
+[operator], [watched] or [skipped]. Trailing [note] lines are not steps.
+A step names a requirement when its text contains the requirement ID.
+
+A requirement is done when result is pass, at least one step names it
+and every step naming it is tagged [agent], [agent][carried], [operator]
+or [watched]. With operator_ran false, the accepted agent run still
+counts its [agent] steps. A done requirement gets done true and loses
+any owed that forge owed wrote.
+
+Any other requirement gets done false and an owed of {kind, check,
+owner}: a requirement whose owner is post-ship gets kind deferred with
+check its own text, whether or not a step names it, since it is
+measurable only after golive; otherwise kind deferred with check the
+text of the [skipped] step naming it, or kind bookkeeping with check
+"no manual-test step names <ID>" when no step names it. owner keeps an
+existing owner, else operator; an existing until is kept. An owed of kind moved or broken, written by a
+discuss or the operator, is kept as it is and never set done.
+
+Each owed requirement adds one line to .forge/todo.md, created when
+missing:
+  - <track>/<feature> <ID> owes <kind>: <check>
+A line already present is not added again, so a rerun on unchanged
+inputs gives the same files and output. forge owed makes no commit.
+
+Prints one line per requirement, in file order:
+  <ID> done
+  <ID> owed <kind>: <check>
+
+forge owed list prints each owed requirement of the named feature, read
+from STATE/features/<track>-<feature>/ or, once shipped,
+STATE/archive/<track>-<feature>/, in file order:
+  <ID> (<owner>) owed <kind> by <owed owner>: <check>
+<owner> the requirement's owner (agent when the record has none) and
+<owed owner> the owed's. With no feature it prints the owed requirements
+of every feature of every track, open or shipped, each line prefixed
+with "<track>/<feature> ", the tracks read from .forge/tracks/*.json.
+It writes nothing and takes no lock.
+
+Exit codes:
+  0  settled
+  1  no such feature, verify.json or requirements.json missing, or a
+     verify.json result that is not pass, writing nothing; or a write
+     to requirements.json or .forge/todo.md that failed; for list, a
+     named feature with no requirements.json
+  2  usage
+
+Reads:
+  STATE/features/<track>-<feature>/verify.json
+  STATE/features/<track>-<feature>/requirements.json
+  STATE/archive/<track>-<feature>/requirements.json (list)
+  .forge/tracks/*.json (list)
+  .forge/todo.md
+
+Writes:
+  STATE/features/<track>-<feature>/requirements.json
+  .forge/todo.md
+
+Example:
+  forge owed audit-261016/req-owed
+  forge owed list

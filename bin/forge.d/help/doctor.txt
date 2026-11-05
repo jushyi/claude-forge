@@ -1,0 +1,75 @@
+Usage: forge doctor
+
+Checks this host's forge setup and prints one line per problem, each
+naming its fix: "forge doctor: <problem>; fix: <fix>". Runs in any
+directory and changes nothing but removing dead lock-holder files: it
+never enables a unit and never creates a file.
+
+PATH: it first sets PATH as forge watchdog does (fnm's default Node, the
+fnm dir and ~/.cargo/bin in front), so a command resolves for doctor
+exactly when it resolves for the watchdog's sessions.
+
+Repos: the forge-run repos are each ~/Projects/*/ and ~/Projects/*/*/
+directory holding .forge/, plus each line of
+~/.local/state/forge/watchdog-roots naming an existing directory holding
+.forge/, each once.
+
+Checks, in the order their problems print:
+  units        systemctl --user is-enabled forge-watchdog.timer (fix:
+               forge watchdog --install)
+  TESTING.md   the first word of each simple command (split on &&, ||, ;
+               and |, NAME=value words skipped) of the backticked
+               command of each line forge runs in a repo's .forge/
+               TESTING.md "## Commands" section (All tests, Test,
+               Changed tests, Setup, Quarantine and Perf log) must
+               resolve through command -v, run from the repo; other
+               lines such as Memory, and a command that is wholly a
+               <...> placeholder, are not checked
+  CI           a repo with a TESTING.md has CI when .github/workflows/
+               or .forgejo/workflows/ holds a *.yml or *.yaml file other
+               than the forge perf templates (perf*.yml) with a
+               pull_request (or pull_request_target) trigger: a
+               "pull_request:" key or "- pull_request" item on a line of
+               its own, or "pull_request" listed on its "on:" line; a
+               workflow run only on push, release, schedule or dispatch
+               is not PR CI, since no check of it reaches a PR head; such
+               a repo's TESTING.md must have a line starting
+               "- CI full suite:" (fix: add one naming its full-suite job)
+  hooks        each string command of a repo's .claude/settings.json
+               hooks: its first words are checked as above, and each word
+               starting with /, ~/, $HOME/, ${HOME}/ or
+               $CLAUDE_PROJECT_DIR/ is a script path that must exist; a
+               settings file jq cannot parse is a problem
+  credentials  each ~/, $HOME/ or ${NAME:-<default>} backticked path on a
+               key, token, secret, credential, password or netrc line of a
+               repo's .forge/INTEGRATIONS.md must exist; only its existence
+               is tested
+  holders      after the checks above, each *.lock.holder in each repo's
+               git common dir (skipped when the repo is not a git repo)
+               and in its .forge/, each directory once; a holder is dead
+               when its first field is not a number or names no live
+               process; a dead holder whose lock (the path without
+               .holder) flock -n can take is removed, printing "forge
+               doctor: removed dead lock holder <path> (pid <pid>)" on
+               stdout, which is no problem and never changes the exit; a
+               dead holder whose lock is held or missing stays with a
+               "forge: warning: ..." line; a live holder stays silently
+
+Warnings print on stderr as "forge: warning: ..." lines and are no
+problem.
+
+Exits 0 printing "forge doctor: ok" when it finds no problem, 1 when it
+finds any, and 2 on any argument.
+
+Reads:
+  ~/Projects, ~/.local/state/forge/watchdog-roots, each repo's
+  .forge/TESTING.md, .forge/INTEGRATIONS.md and .claude/settings.json,
+  each repo's .github/workflows/ and .forgejo/workflows/,
+  systemctl --user is-enabled, each *.lock.holder in each repo's git
+  common dir and .forge/
+
+Writes:
+  nothing but removing each dead *.lock.holder whose lock is free
+
+Example:
+  forge doctor

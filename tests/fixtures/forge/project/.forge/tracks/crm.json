@@ -1,0 +1,43 @@
+{
+  "track": "crm",
+  "goal": "Customer records from intake to export",
+  "status": "open",
+  "notes": [
+    "Leads arrive by web form."
+  ],
+  "features": [
+    {
+      "feature": "intake",
+      "delivers": "Intake form",
+      "depends": []
+    },
+    {
+      "feature": "routing",
+      "delivers": "Route leads",
+      "depends": [
+        "intake"
+      ]
+    },
+    {
+      "feature": "export",
+      "delivers": "Export JSON",
+      "depends": []
+    },
+    {
+      "feature": "audit",
+      "delivers": "Audit trail",
+      "depends": [
+        "voice/capture"
+      ]
+    }
+  ],
+  "shipped": [
+    {
+      "feature": "auth",
+      "phases": [
+        "01"
+      ],
+      "date": "2026-09-01"
+    }
+  ]
+}

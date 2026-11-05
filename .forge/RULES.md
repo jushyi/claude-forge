@@ -1,0 +1,34 @@
+# Rules
+
+## Invariants
+- `./port --apply` runs only from R on a clean `main`, directly or through `forge golive`, after its preflight passes — `port` refuses otherwise.
+- `port` copies, never symlinks — `port`.
+- `port` backs up before it changes anything, merges settings so a user's value wins except forge's own hook entries, and records what it added; `./port --uninstall` removes only those — `port`.
+- Code reaches `main` only through `forge land` or `forge golive`, except a `/forge-fast` commit made on `main` under `flock` of `forge.lock`, and in-repo `.forge` files only through `forge commit` — `bin/forge.d/land.sh`, `bin/forge.d/commit.sh`.
+- `forge land`, `forge golive`, `forge commit` and a `/forge-fast` commit all serialize on `<git common dir>/forge.lock`, and lands also on `<git common dir>/forge-land.lock` — `bin/forge.d/land.sh`, `bin/forge.d/commit.sh`.
+- R's main checkout never changes branch, stashes, rebases or merges by hand; other-branch work goes in a worktree under `.claude/worktrees/` or a job tmp dir; `main` moves only through `forge commit`, `forge land` and `forge golive` — `hooks/forge-guard.sh`.
+- The guard denies any `reset`, `restore` and `clean` in R, and `branch -f|-m|-D main`, `update-ref refs/heads/main` or `--stdin`, `update-ref HEAD` when HEAD is main or with `--no-deref`, and a `symbolic-ref` write or delete of HEAD or `refs/heads/main` in any worktree — `hooks/forge-guard.sh`.
+- Live forge files (each path in `~/.local/state/forge/port.manifest` except `~/.claude/settings.json`, and `~/.claude/forge/`) change only through `port` — `hooks/forge-guard.sh`.
+- A session never copies, writes or runs a copy of a forge script (`~/.local/bin/forge*`, `~/.claude/forge/`, `bin/forge.d/*`) outside the forge repo and its worktrees; a copy is matched by its content or source, never by a file's name alone — `hooks/forge-guard.sh`.
+- A session never sources forge's `forge.d` files or redefines a gate function with a body (`name() {`, `function name {`); prose that names `forge done` or a gate function before a `(` or a sentence-ending dot is not that — `hooks/forge-guard.sh`.
+- A session never adds `- All tests: none` to a `TESTING.md`; only the operator declares it — `hooks/forge-guard.sh`.
+- A phase is never left on a blocker: `forge watchdog` resumes a phase whose `result.json` is `blocked` or whose turn ended on a `needs input:` or `failed:` line with the self-heal prompt, at most 3 times per phase, then alerts once — `bin/forge.d/watchdog.sh`.
+- A `blocked` result for a running peer session is never resumed — `bin/forge.d/watchdog.sh`.
+- A phase parks only on `wait <ref>`, `<ref>` a phase, a `<track>/<feature>` until its track lists it shipped or a `branch <name>` until it is an ancestor of `main`, and `forge watchdog` resumes it once the condition clears — `bin/forge.d/watchdog.sh`, `skills/forge-phase`.
+- A `Quarantine` line older than 7 days never fails `forge check`; it becomes one open `quarantine` concern in the repo's `.forge/concerns.json` — `bin/forge.d/check.sh`.
+- `tracks/` is written only under the project root's `.forge/`, and phase, feature, archive, quick, debug and history records only in the state dir S (`${XDG_STATE_HOME:-$HOME/.local/state}/forge/<repo>/`), never under any repo's or worktree's `.forge/` — `hooks/forge-guard.sh`.
+- A phase is done only once every planned task is committed through `forge task-done` and its branch merges cleanly into BASE, and a feature archives only once landed — `bin/forge.d/gate.sh`.
+- A phase takes only `agent` requirements (`owner` absent or `agent`); `operator` and `post-ship` ones are shown at verify or settled by `forge owed`, never by a phase — `bin/forge.d/plan.sh`, `bin/forge.d/run.sh`, `bin/forge.d/owed.sh`.
+- A feature `verify.json` with `result: pass` commits only with a `review_trees` entry for every repo of `forge repos` — `bin/forge.d/commit.sh`.
+- A feature lands only with a full-suite pass of the landed tree, run in `_land` or reused from any full stamp of this host whose tree differs from the landed tree only under `.forge/` — `bin/forge.d/land.sh`.
+- A reused full stamp may be one written by `forge pr checks --full` for the tree of a PR head whose declared GitHub Actions check run or Forgejo Actions task succeeded; a commit status never counts — `bin/forge.d/land.sh`.
+- A changed-tests pass lands code only when a changed stamp of this host chains the landed tree to a full stamp of this host whose tree is a tree in the landed commit's history — `bin/forge.d/land.sh`.
+- A feature lands without that full-suite pass, untested, only when the landed tree's `.forge/TESTING.md` declares `- All tests: none` (a missing `- All tests:` line, exit 6, or a test command's own exit 5 fails the land) — `bin/forge.d/land.sh`.
+- A session's main agent never edits an agent's record under S; a phase session's main agent never edits code — `hooks/forge-guard.sh`.
+- The router `.claude/rules/forge.md` is rendered by `forge-init`, never hand-edited; forge never creates, changes, rejects or deletes any `CLAUDE.md` — `forge-init`, `port`.
+- Planning artifacts are limited to `templates/` plus `.forge/` `tracks/` and `repos.json`, and the records in S — operator review.
+- `.forge/quick/` and `.forge/debug/` are transient `/forge-quick` and `/forge-debug` scratch, never committed and deleted at run end — operator review.
+- An agent's system prompt stays within 150 lines — `tests/agents.test.sh`.
+- `forge replay run` refuses a judge whose requests, holdout, answers or rules changed since `forge replay lock`; a `/forge-port` session locks only right after the operator approves the change — `bin/forge.d/replay.sh`, `skills/forge-port`.
+- A forge agent never writes under a `/forge-port` judge, `STATE/port/`, nor runs `forge replay` or `forge shadow` — `hooks/forge-guard.sh`.
+- `forge cutover` says go only after a clean shadow window, under the current lock, as long as the judge's locked `cutover` gate — `bin/forge.d/replay.py`.

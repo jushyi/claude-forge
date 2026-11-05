@@ -1,0 +1,71 @@
+Usage: forge archive <track>/<feature>
+
+Move a shipped feature and its phases to STATE/archive/<track>-<feature>/
+and record it in the track's shipped list. The feature must have ship.json.
+STATE is the project root's state dir (see forge paths --help); the moves
+are renames inside STATE, and archive writes nothing under .forge/ except
+.forge/tracks/<track>.json. It commits nothing itself: forge commit
+<track>/<feature> archive then commits only .forge/tracks/<track>.json,
+and prints "forge: recorded <track>/<feature> archive" when that is
+already committed.
+
+Archive runs only after land. It refuses, moving nothing, while
+STATE/features/<track>-<feature>/review.json or review/<repo>.json (not
+the raw review/reviewer.json, review/reviewer-<repo>.json or
+review/audit.json) holds a non-empty pending array (a failed review part whose fallback findings have not
+replaced it) or an open high or medium finding, listing each, or while,
+in any repo of the feature's phases, the feature branch
+forge/<track>-<feature> (else forge/<feature>) is not an ancestor of
+main, or is missing while main's history has no land merge "Merge branch
+'forge/<track>-<feature>'" (a branch deleted after land still archives).
+A finding is closed when a copy of it (same repo, file, line and
+summary) has fixed true, a deferred owner of todo (a feature record has
+no valid phase owner) or a non-empty dismissed; a high security-class
+finding (title, the summary before the first ": ", starting [security],
+[pii] or [auth], or the feature spec.json's focus holding security or
+pii) is closed by dismissed only when it starts "settled: " (a
+"settled: <operator's words>" dismissal written after asking the
+operator) and cannot be deferred to todo. A Codex-only medium
+(every copy has source codex and severity medium) is advisory and never
+blocks. A feature shipped through a PR archives once the PR has merged
+into the local main. After moving the feature, it deletes each repo's
+merged forge/<track>-<feature> branch with git branch -d (a branch
+checked out in a worktree is kept, with a warning).
+
+It ends by checking each repo of the feature for what shipping should
+have removed, printing one warning line on stderr per leftover, and still
+exits 0:
+  forge: leftover: branch forge/<track>-<feature>[-<N>] in <repo>
+  forge: leftover: worktree <path>     (.claude/worktrees/<track>-<feature>[-<N>])
+  forge: leftover: origin branch forge/<track>-<feature>[-<N>] in <repo>
+                                       (only with forge.pushMain, via git ls-remote)
+  forge: leftover: uncommitted <path> in <repo>
+                                       (a changed tracked file outside .forge/)
+An origin it cannot list prints "forge: warning: cannot list the forge
+branches on origin in <repo>" instead.
+
+Last, it runs FORGE_ROOT=<repo> forge gc --apply in each repo of the
+feature, with the cwd left as the caller's, so gc keeps the caller's own
+worktree and every working session's (see forge gc --help). gc's list
+goes to stdout and its warnings to stderr. A gc that fails only warns,
+and archive still exits 0:
+  forge: warning: forge gc failed in <repo>: <cause>
+
+Reads:
+  STATE/features/<track>-<feature>/{spec,split,ship,review}.json, review/<repo>.json
+  STATE/phases/NN-slug/
+  each phase repo's feature branch and main
+  each phase repo's forge branches, worktrees, status and, with
+  forge.pushMain, origin's forge branches
+  .forge/tracks/<track>.json
+
+Writes:
+  STATE/archive/<track>-<feature>/          (the feature directory)
+  STATE/archive/<track>-<feature>/phases/   (its phase directories)
+  .forge/tracks/<track>.json                 (feature moves to shipped)
+  each phase repo's forge/<track>-<feature> branch (deleted)
+  what forge gc --apply collects in each phase repo
+  <git common dir>/forge.lock   (held throughout; see forge commit --help)
+
+Example:
+  forge archive forge/state

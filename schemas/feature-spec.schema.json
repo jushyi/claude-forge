@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "feature-spec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decisions",
+    "spec"
+  ],
+  "properties": {
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "spec": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "focus": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "security",
+          "rate-limit",
+          "scaling",
+          "performance",
+          "pii"
+        ]
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "rps": {
+          "type": "integer"
+        },
+        "max_rows": {
+          "type": "integer"
+        },
+        "max_fanout": {
+          "type": "integer"
+        }
+      }
+    },
+    "pii_fields": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "build": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "focus"
+        ],
+        "properties": {
+          "focus": {
+            "contains": {
+              "enum": [
+                "scaling"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "targets"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "focus"
+        ],
+        "properties": {
+          "focus": {
+            "contains": {
+              "const": "pii"
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "pii_fields"
+        ]
+      }
+    }
+  ]
+}

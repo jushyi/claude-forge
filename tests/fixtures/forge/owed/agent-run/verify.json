@@ -1,0 +1,10 @@
+{
+  "manual_test": [
+    "[agent] E/s1/out.txt INT-01: submit the intake form and see the lead saved",
+    "[agent][carried] E/s2/resp.json INT-02: GET /leads/1 returns the lead",
+    "[skipped] INT-03 run the leads migration on staging (deferred by phase 02: needs the staging database)"
+  ],
+  "result": "pass",
+  "gaps": [],
+  "operator_ran": false
+}

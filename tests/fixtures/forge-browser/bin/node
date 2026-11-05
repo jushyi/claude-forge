@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+case ${1:-} in --version|-v) echo v22.0.0; exit 0 ;; esac
+log=${STUB_LOG:?}
+mkdir -p "$log"
+role=owner
+[ -z "${FORGE_JBC_PEER+x}" ] || role=peer
+d=$(mktemp -d "$log/node.XXXXXX")
+echo "node $role" >>"$log/calls"
+printf '%s\n' "$@" >"$d/argv"
+echo $$ >"$d/pid"
+{
+  echo "FORGE_JBC_PEER=${FORGE_JBC_PEER-<unset>}"
+  echo "JBC_HEADLESS=${JBC_HEADLESS-<unset>}"
+  echo "JBC_HOME=${JBC_HOME-<unset>}"
+  echo "JBC_CONFIRM_IRREVERSIBLE=${JBC_CONFIRM_IRREVERSIBLE-<unset>}"
+  echo "JBC_PROVIDER=${JBC_PROVIDER-<unset>}"
+  if [ -n "${OPENROUTER_API_KEY+x}" ]; then
+    echo "OPENROUTER_API_KEY_SHA256=$(printf %s "$OPENROUTER_API_KEY" | sha256sum | cut -d' ' -f1)"
+  else
+    echo "OPENROUTER_API_KEY_SHA256=<unset>"
+  fi
+} >"$d/env"
+echo "$role" >"$d/role"
+: >"$d/requests"
+result='{"protocolVersion":"2025-06-18","capabilities":{"tools":{}},"serverInfo":{"name":"jbc-stub","version":"0.3.0"},"content":[{"type":"text","text":"ok"}]}'
+handle() {
+  local m id
+  m=$(jq -r '.method // empty' <<<"$1" 2>/dev/null) || m='<unparseable>'
+  [ "$m" != tools/call ] || m="$m $(jq -r '.params.name // empty' <<<"$1")"
+  echo "$m" >>"$d/requests"
+  id=$(jq -c '.id // empty' <<<"$1" 2>/dev/null) || id=
+  [ -z "$id" ] || printf '{"jsonrpc":"2.0","id":%s,"result":%s}\n' "$id" "$result"
+}
+s=0
+IFS= read -r -t 1 line || s=$?
+if [ "$s" = 0 ]; then
+  echo data >"$d/stdin"
+  handle "$line"
+elif [ "$s" -gt 128 ]; then
+  echo open >"$d/stdin"
+else
+  echo eof >"$d/stdin"
+  exit 0
+fi
+while IFS= read -r line; do handle "$line"; done

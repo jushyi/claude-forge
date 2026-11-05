@@ -1,0 +1,21 @@
+{
+  "track": "crm",
+  "feature": "intake",
+  "number": "02",
+  "slug": "intake-form",
+  "goal": "The form saves a lead",
+  "spec": [
+    "Form posts to /leads."
+  ],
+  "requirements": [
+    "INT-01"
+  ],
+  "depends": [],
+  "focus": [
+    "pii"
+  ],
+  "pii_fields": [
+    "name",
+    "email"
+  ]
+}

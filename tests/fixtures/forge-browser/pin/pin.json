@@ -1,0 +1,10 @@
+{
+  "url": "https://jbc.test/downloads/jev-browser-control-mcp-0.3.0.tgz",
+  "version": "0.3.0",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "patches": [
+    "local-browser.patch",
+    "hub.patch",
+    "server.patch"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "phases": [
+    {
+      "slug": "intake-form",
+      "number": "02",
+      "goal": "The form saves a lead",
+      "spec": [
+        "Form posts to /leads."
+      ],
+      "requirements": [
+        "INT-01"
+      ],
+      "depends": [],
+      "focus": [
+        "pii"
+      ]
+    },
+    {
+      "slug": "intake-api",
+      "number": "03",
+      "goal": "The API returns the lead",
+      "spec": [],
+      "requirements": [
+        "INT-02"
+      ],
+      "depends": [
+        "intake-form"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "track": "old",
+  "goal": "Retired line",
+  "status": "closed",
+  "notes": [],
+  "features": [
+    {
+      "feature": "legacy",
+      "delivers": "Legacy import",
+      "depends": []
+    }
+  ],
+  "shipped": [
+    {
+      "feature": "seed",
+      "phases": [
+        "00"
+      ],
+      "date": "2026-08-01"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+Usage: forge gc [--apply | --confirmed]
+
+Collects finished git state in the repo holding the current directory (or
+FORGE_ROOT), whatever .forge/ says. With no flag it is a dry run: it lists
+the targets, one per line, and removes nothing.
+
+Targets:
+  prune <name>        a worktree entry whose directory is gone, as
+                      git worktree prune would remove it
+  worktree <path> <branch>
+                      a worktree under <repo>/.claude/worktrees/ (except
+                      _land) or ~/.claude/jobs/*/tmp/ whose branch
+                      is merged into main and whose status is clean,
+                      untracked files included, and which holds no
+                      ignored file other than the tool caches .serena/,
+                      .impeccable/ and node_modules/ (anywhere in it)
+  branch <name>       a local forge/* branch merged into main with no
+                      worktree, or whose worktree gc removes
+  remote <name>       a forge/* branch on origin whose tip is merged into
+                      origin's main (not just local main) and is not on
+                      its first-parent history, after git fetch origin;
+                      deleted with a --force-with-lease on that tip, so
+                      a branch pushed to since the fetch is kept
+  stale <ref>         a remote-tracking ref whose branch origin no longer
+                      has, as git remote prune origin would remove it;
+                      a repo with no origin remote has no remote or
+                      stale target, is judged against local main only
+                      and gets no remote warning
+  session <id> <name> a Claude session named as forge names a phase,
+                      verify or ship session, "<project> P<N>[R<k>]
+                      <track>/<feature>", "<project> verify
+                      <track>/<feature>" or "<project> ship
+                      <track>/<feature>", or by the legacy names
+                      "<project> <track>-<feature> Phase <N>[ retry
+                      <k>]", "... Verify" or "... Ship",
+                      <project> being the main checkout's directory name,
+                      that is not working or blocked and whose feature is
+                      archived: archive/<track>-<feature>/ exists and
+                      features/<track>-<feature>/ does not in the main
+                      checkout's state dir STATE;
+                      removed with claude rm, after listing the sessions
+                      again, so one that started working since the scan
+                      is kept
+
+Never a target: a detached, locked or dirty worktree, one holding other
+ignored files (.env, local config, build output), the one holding the
+current directory, one holding the cwd of a working or blocked Claude
+session, a working or blocked session, a branch not merged into main (locally or on origin), and the branch forge/<name> (and
+its worktree) of a feature not yet archived, that is while
+features/<name>/ exists in the state dir of <root> or of <repo>.
+STATE is the state dir of a root (see forge paths --help); gc reads it
+only for a root or repo that has a .forge/ directory.
+Worktrees are removed with git worktree remove, never --force, so one
+that changed since the scan is kept. Sessions in other states, interactive
+sessions and sessions whose cwd is elsewhere are not seen. A branch whose tip is on main's
+first-parent history (created from main, no commits of its own yet) counts
+as unmerged. An unreachable origin only warns and skips the remote
+targets.
+
+  --apply       remove the targets
+  --confirmed   remove the targets, as --apply does
+
+Prints "forge: nothing to collect" when there are no targets.
+
+Reads:
+  git worktree list, git worktree prune -n, local forge/* branches
+  claude agents --json --all, STATE/features/, STATE/archive/
+
+Writes:
+  the worktrees, branches and sessions it removes
+
+Example:
+  forge gc
+  forge gc --confirmed

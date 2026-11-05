@@ -1,0 +1,5 @@
+{"focus": "quality", "docs": [
+  {"doc": "CONVENTIONS", "sections": [
+    {"heading": "Patterns", "bullets": ["Handlers return `Result`"]}]},
+  {"doc": "TESTING", "sections": [
+    {"heading": "Commands", "bullets": ["`npm test`"]}]}]}

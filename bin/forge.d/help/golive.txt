@@ -1,0 +1,67 @@
+Usage: forge golive <repo> <branch>
+
+Lands <branch> on <repo>'s main with forge land (which pushes main to
+origin when the repo has git config forge.pushMain true), then, when <repo>
+has an executable ./port, runs './port --apply' from <repo>'s main
+checkout, its output on stderr. Runs in any directory, with or without
+.forge/. After forge land returns, golive takes forge-land.lock again and
+holds it to the end, so the watchdog applies no queued port meanwhile.
+
+Before './port --apply', golive counts the other forge sessions that
+'claude agents --json' lists as working (a forge session name, not the
+caller's CLAUDE_CODE_SESSION_ID; blocked and done sessions do not count).
+Only sessions of <repo>'s project count: those whose cwd is <repo>'s top,
+inside it or a parent of it, or that list no cwd. A repo with
+'git config forge.liveInstall true' (forge itself, whose port replaces the
+install every session uses) counts every working forge session.
+When any are working, or the list fails, takes FORGE_AGENTS_TIMEOUT
+seconds or more (default 30) or is not a JSON array, golive
+installs only the bin part at once and queues the rest: when <repo>'s
+top has a bin/ directory it first runs './port --apply --only bin' there,
+unless <repo>'s templates/ or schemas/ differ between main and the
+"rest" commit in ~/.local/state/forge/port.json (the last full port; a
+missing or unknown commit counts as differing), since bin reads the
+installed templates and schemas; then it writes one JSON line per repo,
+{"repo": <repo's top>, "commit": <main's full sha>, "time": <UTC
+YYYY-MM-DDTHH:MM:SSZ>, "root": <the project root, FORGE_ROOT else the
+current directory>, "branches": [<branch>]}, to
+~/.local/state/forge/port.pending, replacing that repo's older line. A
+repo already queued keeps its line's time, the time it was first queued
+since its last applied port, and its branches, adding the new ones;
+commit and root change. A repo without bin/
+queues without running port. The forge watchdog applies the queued port
+later.
+
+Ends with these stdout lines:
+  forge: landed <branch> as <sha> on main
+  forge: pushed <sha> to origin, or forge: not pushed: forge.pushMain
+    unset, or forge: not pushed: nothing to push (origin's main already
+    matched main), or forge: not pushed: pushing main to origin failed
+  forge: deleted origin/<branch>
+  forge: ported <sha> (the sha port prints on its "ported <sha>" line,
+    else <repo>'s HEAD), or forge: no port, or forge: port queued: <n>
+    forge sessions working, or forge: port queued: cannot list Claude
+    sessions, the queued lines after forge: ported bin <sha> (the sha
+    './port --apply --only bin' prints on its "ported <sha>" line, else
+    <repo>'s HEAD) when golive applied the bin part, or after forge: bin
+    held: templates/ or schemas/ changed since the last full port when
+    it held the bin part
+
+Exit codes are forge land's; a failing port exits 1 after the landed
+lines, the landing kept. A queued port exits 0; failing to write
+port.pending exits 1 after the landed lines. When './port --apply --only
+bin' fails, golive still queues the port and prints its port queued line,
+then exits 1 with "forge: ./port --apply --only bin failed in <top>; port
+queued" on stderr, the landing kept.
+
+Reads:
+  <repo>'s git state, git config forge.pushMain, <repo>/port,
+  claude agents --json, CLAUDE_CODE_SESSION_ID, FORGE_AGENTS_TIMEOUT
+
+Writes:
+  what forge land writes, and what <repo>'s ./port --apply writes, or
+  what './port --apply --only bin' writes and
+  ~/.local/state/forge/port.pending when the port is queued
+
+Example:
+  forge golive . forge/forge-land

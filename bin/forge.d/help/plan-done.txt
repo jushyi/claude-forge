@@ -1,0 +1,40 @@
+Usage: forge plan-done <N>
+
+Close phase N's Plan step in one call: check the plan against its spec,
+then record the plan step, in place of the session's separate forge check
+and forge commit <N> plan calls.
+
+It runs forge check N. When the check fails (exit 1) it prints the
+check's failures and exits 1, logging and committing nothing; any other
+check exit than 0, 1 or 3 exits 1 the same way. When the check passes
+(exit 0) or waits (exit 3) it logs each deferred entry of P/plan.json,
+{check, reason}, that has no deferred event with the same check in
+P/events.jsonl, once, as forge event N deferred with the compact JSON
+{"check":...,"reason":...,"plan":true}, then runs forge commit N plan,
+which validates and gates P/plan.json and P/events.jsonl in place in
+STATE and, with no in-repo change, commits nothing and prints
+"forge: recorded N plan". A rerun logs no deferred entry twice. Each
+step runs as its own forge subprocess, so their gates, locks and exit
+codes are unchanged; plan-done holds no lock itself. It ends with one
+status line, "forge: plan committed for phase N".
+
+Exit codes:
+  0  plan recorded
+  1  forge check failed or another step failed; nothing recorded
+  2  usage
+  3  plan recorded and the phase waits; check's "waits on <M>[, <M>...]"
+     line is printed
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  STATE/phases/NN-slug/plan.json      (P/plan.json, its deferred entries)
+  STATE/phases/NN-slug/events.jsonl   (P/events.jsonl, deferred events)
+
+Writes:
+  STATE/phases/NN-slug/events.jsonl   (P/events.jsonl, deferred events)
+  no git commit for the plan step: its records stay in STATE
+  <git common dir>/forge.lock          (through forge check and forge commit)
+
+Example:
+  forge plan-done 09

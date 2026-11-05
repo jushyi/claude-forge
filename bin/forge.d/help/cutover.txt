@@ -1,0 +1,24 @@
+Usage: forge cutover <slug>
+
+Say whether port <slug>'s new code may take all traffic. J/cutover,
+locked with the judge, holds "<hours> <requests>". The clean window
+starts at the last shadow mismatch, or the first shadow request when
+there is none, and ends at the latest clean one; only J/shadow.jsonl
+records made under the current lock count, so any relock restarts it.
+It prints
+"cutover: go|wait: <h>h and <n> requests clean since <time>; needs
+<hours>h and <requests>" and says go only when the window spans at
+least <hours> of request time and holds at least <requests> clean
+requests. Moving traffic over, and back, stays with the operator.
+
+Exit codes:
+  0  go
+  1  wait, or a missing judge or gate
+  2  bad arguments
+  3  the judge is unlocked or changed since lock
+
+Reads:
+  J/lock, J/cutover, J/shadow.jsonl
+
+Example:
+  forge cutover receipts-rust

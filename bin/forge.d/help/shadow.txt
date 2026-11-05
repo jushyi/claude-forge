@@ -1,0 +1,35 @@
+Usage: forge shadow <slug> <feed>
+
+Judge live shadow traffic after a /forge-port run. <slug> names the
+port's judge, J = <state dir>/port/<slug>/; it must be locked, unchanged
+since, and hold a cutover gate. <feed> is a file, or - for stdin, of
+JSONL lines your mirror writes (Envoy request mirroring, GoReplay or the
+service's own logging), one per live request answered by both the old
+and the new code with the new code's side effects cut off:
+  {"id": "<unique>", "at": "<ISO-8601 time with offset>",
+   "request": "<text>", "old": "<old answer>", "new": "<new answer>"}
+
+Each line whose id J has not recorded under the current lock is
+compared as forge replay run compares, with J's locked rules, and
+appended to J/shadow.jsonl as {id, at, lock, class}, a mismatch also
+keeping request, old and new for the operator. A feed with a bad line
+records nothing. It prints "shadow: <n> compared, <m> mismatches, <k>
+already seen", one "class <paths> <count> <first id>" line per new
+mismatch class, then the "window: ..." line forge cutover prints.
+
+Exit codes:
+  0  no new mismatch
+  1  a new mismatch, a bad feed, a missing judge or gate
+  2  bad arguments
+  3  the judge is unlocked or changed since lock
+
+Reads:
+  <feed>, J/rules, J/lock, J/cutover, J/shadow.jsonl
+
+Runs serialize on J/shadow.lock.
+
+Writes:
+  J/shadow.jsonl
+
+Example:
+  forge shadow receipts-rust /var/log/receipts/mirror.jsonl

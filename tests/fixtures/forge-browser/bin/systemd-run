@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+log=${STUB_LOG:?} state=${STUB_STATE:?}
+mkdir -p "$log" "$state"
+d=$(mktemp -d "$log/systemd-run.XXXXXX")
+printf '%s\n' "$@" >"$d/argv"
+env >"$d/env"
+echo systemd-run >>"$log/calls"
+if flock -n "${STUB_BROWSER_LOCK:?}" true; then echo free; else echo held; fi >"$d/lock"
+user= unit= wd=/ envs=()
+addenv() {
+  case $1 in
+    *=*) envs+=("$1") ;;
+    *) envs+=("$1=${!1-}") ;;
+  esac
+}
+addprop() {
+  local w
+  case $1 in
+    Environment=*)
+      read -ra w <<<"${1#Environment=}"
+      for e in "${w[@]}"; do addenv "$e"; done
+      ;;
+    WorkingDirectory=*) wd=${1#WorkingDirectory=} ;;
+  esac
+}
+while [ $# -gt 0 ]; do
+  case $1 in
+    --) shift; break ;;
+    --user) user=1 ;;
+    --unit=*) unit=${1#*=} ;;
+    --unit|-u) unit=$2; shift ;;
+    -u*) unit=${1#-u} ;;
+    --setenv=*) addenv "${1#*=}" ;;
+    --setenv|-E) addenv "$2"; shift ;;
+    -E*) addenv "${1#-E}" ;;
+    --property=*) addprop "${1#*=}" ;;
+    --property|-p) addprop "$2"; shift ;;
+    -p*) addprop "${1#-p}" ;;
+    --working-directory=*) wd=${1#*=} ;;
+    --working-directory) wd=$2; shift ;;
+    --same-dir|-d) wd=$PWD ;;
+    --description|--slice|--service-type|--uid|--gid|--nice|-M|--machine|-H|--host|--on-active|--on-boot|--on-startup|--on-unit-active|--on-unit-inactive|--on-calendar|--timer-property|--path-property|--socket-property) shift ;;
+    -*) ;;
+    *) break ;;
+  esac
+  shift
+done
+unit=${unit%.service}
+[ -z "$user" ] || : >"$d/user"
+printf '%s\n' "$unit" >"$d/unit"
+pidf=$state/$unit.pid
+if [ -s "$pidf" ] && kill -0 -- "-$(cat "$pidf")" 2>/dev/null; then
+  echo "Failed to start transient service unit: Unit $unit.service was already loaded or has a fragment file." >&2
+  exit 1
+fi
+[ $# -gt 0 ] || { echo "systemd-run stub: no command" >&2; exit 1; }
+cd "$wd"
+setsid env -i HOME="$HOME" PATH="$PATH" STUB_LOG="$log" STUB_STATE="$state" "${envs[@]}" "$@" </dev/null >>"$state/$unit.out" 2>&1 &
+echo $! >"$pidf"
+echo $! >>"$state/pids"
+echo "Running as unit: $unit.service; invocation ID: 0000000000000000" >&2

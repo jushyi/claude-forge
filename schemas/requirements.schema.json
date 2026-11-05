@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "requirements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requirements"
+  ],
+  "properties": {
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text",
+          "done"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z]+-[0-9]{2,}$"
+          },
+          "text": {
+            "type": "string"
+          },
+          "done": {
+            "type": "boolean"
+          },
+          "owner": {
+            "enum": [
+              "agent",
+              "operator",
+              "post-ship"
+            ]
+          },
+          "accepted": {
+            "type": "string",
+            "minLength": 1
+          },
+          "concern": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:C-[0-9]{2,}$"
+          },
+          "owed": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "check",
+              "owner"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "bookkeeping",
+                  "deferred",
+                  "moved",
+                  "broken"
+                ]
+              },
+              "check": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "until": {
+                "enum": [
+                  "release"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

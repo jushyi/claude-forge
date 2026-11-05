@@ -1,0 +1,91 @@
+$ forge-browser start
+exit 0
+tarball fetched from the pin url: yes
+npm calls: 1
+npm ci: yes
+npm --ignore-scripts: yes
+npm lockfile: same as the pin's
+npm ran on patched sources: yes
+npm ran before systemd-run: yes
+prefix server.mjs: yes
+prefix local-browser.mjs patched: yes
+prefix hub.mjs patched: yes
+prefix server.mjs patched: yes
+prefix server.mjs peer wording names forge-browser start, --headed, stop: yes yes yes
+prefix server.mjs owner wording kept: yes
+prefix hub.mjs reconnect error names forge-browser start, --headed: yes yes
+prefix hub.mjs owner reconnect error kept: yes
+prefix local-browser.mjs ozone wayland when headed under Wayland: yes
+prefix node_modules: yes
+prefix .orig or .rej files: 0
+systemd-run calls: 1
+systemd-run --user: yes
+systemd-run unit: forge-jbc
+systemd-run caller env holds the key: no
+systemd-run under the start lock: held
+owner processes: 1
+owner argv: <prefix>/server.mjs
+owner FORGE_JBC_PEER=<unset>
+owner JBC_HEADLESS=1
+owner JBC_CONFIRM_IRREVERSIBLE=1
+owner JBC_PROVIDER=openrouter
+owner OPENROUTER_API_KEY: the key file
+owner stdin: open
+peer processes: 1
+peer argv: <prefix>/server.mjs
+peer FORGE_JBC_PEER=1
+peer tools/call: browser_status
+peer still running: no
+peer JBC_HOME same as owner: yes
+peer started after systemd-run: yes
+devtools 127.0.0.1:9222 probed after systemd-run: yes
+devtools probes under the start lock: held
+unit running: yes
+start lock free once start returns: yes
+key leaked: no
+$ forge-browser start --headed
+exit 0
+previous unit running: no
+systemd-run calls: 1
+systemd-run --user: yes
+systemd-run unit: forge-jbc
+systemd-run caller env holds the key: no
+systemd-run under the start lock: held
+owner processes: 1
+owner argv: <prefix>/server.mjs
+owner FORGE_JBC_PEER=<unset>
+owner JBC_HEADLESS=0
+owner JBC_CONFIRM_IRREVERSIBLE=1
+owner JBC_PROVIDER=openrouter
+owner OPENROUTER_API_KEY: the key file
+owner stdin: open
+peer processes: 1
+peer argv: <prefix>/server.mjs
+peer FORGE_JBC_PEER=1
+peer tools/call: browser_status
+peer still running: no
+peer JBC_HOME same as owner: yes
+peer started after systemd-run: yes
+devtools 127.0.0.1:9222 probed after systemd-run: yes
+devtools probes under the start lock: held
+unit running: yes
+start lock free once start returns: yes
+key leaked: no
+$ forge-browser mcp
+exit 0
+{"jsonrpc":"2.0","id":7,"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{}},"serverInfo":{"name":"jbc-stub","version":"0.3.0"},"content":[{"type":"text","text":"ok"}]}}
+node processes: 1
+mcp node argv: <prefix>/server.mjs
+mcp node FORGE_JBC_PEER=1
+mcp node requests: tools/list
+mcp node JBC_HOME same as owner: yes
+systemd-run calls: 0
+unit running: yes
+key leaked: no
+$ forge-browser stop
+exit 0
+systemctl --user stop forge-jbc: yes
+systemd-run calls: 0
+node processes: 0
+unit running: no
+key leaked: no

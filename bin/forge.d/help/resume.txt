@@ -1,0 +1,101 @@
+Usage: forge resume <N>
+
+Start a fresh session for phase N in its worktree, under the same name,
+after a crash, a blocked result or a park after a done result (it
+removes either result). It first
+claude rm's the project's finished sessions of archived features, as
+forge implement does, and the old session of that name, and logs a start
+event. The
+session resumes from the last step whose file exists. Fails with
+"phase <N> is done; nothing to resume" only when the phase is merged:
+its result.json says done and forge/<track>-<feature>-<N> is an
+ancestor of forge/<track>-<feature>. A phase whose result.json says
+done but whose branch is not merged has not finished, so resume removes
+that result.json and starts it, and the session reruns Result and
+Finish. When any session of phase N, "<repo> P<N>[R<k>]
+<track>/<feature>" or the legacy "<repo> <track>-<feature> Phase <N>[
+retry <k>]", is live (state working or blocked), it launches nothing,
+since one phase never has two sessions, and refuses the start as below,
+the reason naming the session. Before that live-session check and before
+it removes result.json, under sessions.lock, it claude rm's a finished
+session of phase N still listed as working or blocked, as forge
+implement --help describes: finished means phase N's result.json exists
+or the session's transcript ends in assistant text holding a line
+starting "result:" outside a ``` fence. It runs claude rm <id> alone,
+never claude stop, and lists claude agents --json --all again every
+0.5 s for up to 5 s until the id is gone or no longer working or
+blocked. Only an unfinished session, or a finished one that claude rm
+cannot remove, refuses the start.
+When the worktree cannot be created, it logs no start event and exits
+1. While $FORGE_MAX_SESSIONS (default 12) live,
+non-blocked forge sessions of all projects are running, of any form
+(phase, verify, ship, discuss, quick, fast, new or debug; a
+session blocked on a question holds no place), it starts nothing,
+prints "forge: <n> forge sessions live; phase <N> waits for a free
+session" on stderr, logs a wait event "waits for a free session" and
+exits 0. It waits the same way while MemAvailable is under 4 GiB
+(3 GiB plus 1 GiB for this session), printing "forge: MemAvailable <x>
+GiB; phase <N> waits for memory" and logging "waits for memory" (see
+forge implement --help). Each wait
+leaves the result removed so the phase stays due and the next forge
+done, next or implement that finds room starts it, as forge implement
+does, up to $FORGE_CONCURRENCY (default 10) per feature, a session
+blocked on a question holding no place. Each wait also records the held
+phase N in ${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl, keeping
+the first hold time when it is already recorded, and prints "forge:
+recorded the held phase <N>; forge watchdog starts it once room frees"
+on stderr; forge watchdog starts it through forge resume <N> once room
+frees (see forge implement --help). The session gets a
+FORGE_PORT_OFFSET and a start event carrying it as forge implement
+--help describes.
+
+A refused start prints "forge: phase <N> not started: <reason>" on
+stderr: phase N has a live unfinished session, nothing held; a finished
+session of phase N that claude rm cannot remove (a failed claude rm
+whose session is still listed, or one still working or blocked 5 s
+after claude rm), the reason naming the session, its id and that it is
+finished but still running after claude rm, nothing held; its
+worktree has uncommitted changes that
+keep git from merging forge/<track>-<feature> into it
+("worktree <w> has uncommitted changes", git's output printed first,
+nothing held); or claude --bg fails to start ("claude --bg exited <s>:
+<last stderr line>", or "root <path> is not trusted by Claude Code" when
+claude's stderr starts "Workspace not trusted", <path> the main
+checkout of the session's cwd), which logs no start event and records
+phase N in held.jsonl as a held start is, with the same "forge:
+recorded the held phase <N>" line, so forge watchdog retries it. It
+sends one notification through forge's notify, titled "forge: launch
+refused" with body "<root basename> phase <N>: <reason>"; a failed start
+already recorded in held.jsonl sends none, so watchdog rescans do not
+repeat it, and a failed notify only warns. Resume then exits 8. A
+capacity hold (sessions or memory) is no refusal: it sends
+no notification and the exit stays 0.
+
+Exit codes:
+  0  started, or held for capacity and recorded
+  1  the phase is merged, the worktree cannot be created, or another
+     failure
+  8  a launch was refused or skipped, already reported
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  STATE/phases/NN-slug/{spec,result}.json, events.jsonl
+  claude agents --json, claude agents --json --all
+  ~/.claude/projects/*/<sessionId>.jsonl   (phase N's live sessions)
+  /proc/meminfo                 (see forge implement --help)
+
+Writes:
+  STATE/phases/NN-slug/result.json    (removed)
+  the Claude sessions it removes
+  STATE/phases/NN-slug/events.jsonl   (start or wait event)
+  the phase worktree, when missing, merged up to forge/<track>-<feature>
+  <git common dir>/forge.lock   (held from the live-session check through
+                                 the start; see forge commit --help)
+  ${XDG_RUNTIME_DIR:-~/.local/state}/forge/sessions.lock
+                                (see forge implement --help)
+  ${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl, held.jsonl.lock
+                                (a held start)
+
+Example:
+  forge resume 09

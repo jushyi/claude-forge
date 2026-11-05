@@ -1,0 +1,18 @@
+Usage: forge notify <title> <body>
+
+Send a desktop notification to the operator at the laptop: runs
+notify-send -- <title> <body> with stdin from /dev/null, bounded at
+FORGE_NOTIFY_TIMEOUT seconds (default 10). Backslashes in <body> are
+doubled so notify-send shows them as typed. When
+DBUS_SESSION_BUS_ADDRESS is unset it is set to
+unix:path=$XDG_RUNTIME_DIR/bus (default XDG_RUNTIME_DIR /run/user/<uid>),
+so it reaches the user session bus from a systemd unit too. Runs in any
+directory. Prints nothing on success.
+
+Exits 1 with a forge: warning: line on stderr naming the failure and its
+exit status when notify-send is missing, exits non-zero or runs past
+FORGE_NOTIFY_TIMEOUT seconds (default 10); exits 2 on a wrong argument
+count.
+
+Example:
+  forge notify "forge: question" "myproj P07 tr/feat: needs input"

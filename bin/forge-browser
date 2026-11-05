@@ -1,0 +1,266 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+pin_dir=${FORGE_BROWSER_PIN_DIR:-$HOME/.claude/forge/jbc}
+prefix=${FORGE_BROWSER_PREFIX:-$HOME/.local/share/forge/jbc}
+key_file=${XDG_CONFIG_HOME:-$HOME/.config}/forge/jev-api-key
+jbc_home=$HOME/.jev-browser-control
+unit=forge-jbc
+wait_secs=90
+owner_wait=${FORGE_BROWSER_OWNER_WAIT:-540}
+me=${CLAUDE_CODE_SESSION_ID:-}
+lock_file=$(dirname "$prefix")/.forge-browser.lock
+owner_file=$(dirname "$prefix")/.forge-browser.owner
+
+die() {
+  echo "forge-browser: $*" >&2
+  exit 1
+}
+
+find_chrome() {
+  local c
+  if [ -n "${CHROME_PATH:-}" ]; then
+    printf '%s\n' "$CHROME_PATH"
+    return 0
+  fi
+  case $(uname -s) in
+    Darwin) c="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ;;
+    *)
+      for c in google-chrome google-chrome-stable chromium chromium-browser; do
+        command -v "$c" && return 0
+      done
+      c=/opt/google/chrome/chrome ;;
+  esac
+  printf '%s\n' "$c"
+}
+
+usage() {
+  cat <<'EOF'
+Usage: forge-browser <command>
+
+Run the pinned, patched Jev Browser Control (JBC) as the one browser owner
+in the forge-jbc systemd --user unit, with Chrome's DevTools on
+127.0.0.1:9222 for playwright.
+
+Commands:
+  start [--headed]  (re)start the forge-jbc unit, headless unless --headed,
+                    installing the pinned JBC first when needed; returns
+                    once JBC and DevTools on 127.0.0.1:9222 answer. The
+                    calling Claude session ($CLAUDE_CODE_SESSION_ID)
+                    becomes the one owner; its own start restarts at once.
+                    While the unit is active and another owner is still
+                    listed in claude agents --json in any state but done,
+                    failed or stopped, idle or awaiting input included,
+                    start waits for it to stop and gives up after
+                    $FORGE_BROWSER_OWNER_WAIT seconds (default 540) with
+                    exit 1. After /clear a
+                    session has a new id and is no longer the owner: run
+                    stop before starting again.
+  stop              stop the unit and every browser process it started,
+                    and release the owner
+  mcp               stdio MCP server for sessions: joins the unit's
+                    browser as a peer and never owns it
+  --help            show this help
+
+Reads:
+  $FORGE_BROWSER_PIN_DIR   pin.json, patches and lockfile
+                           (default ~/.claude/forge/jbc)
+  $FORGE_BROWSER_PREFIX    installed JBC (default ~/.local/share/forge/jbc)
+  $CHROME_PATH             Chrome binary (default: found per OS; Linux
+                           google-chrome, chromium on PATH, then
+                           /opt/google/chrome/chrome; macOS
+                           /Applications/Google Chrome.app)
+  $CLAUDE_CODE_SESSION_ID  the calling session, recorded as the owner in
+                           .forge-browser.owner beside the prefix; start
+                           refuses to run when it is empty
+  $FORGE_BROWSER_OWNER_WAIT
+                           seconds start waits for another owner (default 540)
+  ${XDG_CONFIG_HOME:-~/.config}/forge/jev-api-key
+                           OPENROUTER_API_KEY, read by the unit's process;
+                           refused when group- or other-readable
+EOF
+}
+
+pin_stamp() {
+  local p
+  {
+    cat "$pin_dir/pin.json" "$pin_dir/package-lock.json"
+    jq -r '.patches[]' "$pin_dir/pin.json" | while IFS= read -r p; do cat "$pin_dir/$p"; done
+  } | sha256sum | cut -d' ' -f1
+}
+
+install() {
+  local url version sha got stamp p out stage
+  [ -f "$pin_dir/pin.json" ] || die "pin $pin_dir/pin.json is missing"
+  stamp=$(pin_stamp)
+  [ "$(cat "$prefix/.forge-pin" 2>/dev/null)" != "$stamp" ] || return 0
+  url=$(jq -er .url "$pin_dir/pin.json") || die "pin.json has no url"
+  version=$(jq -er .version "$pin_dir/pin.json") || die "pin.json has no version"
+  sha=$(jq -er .sha256 "$pin_dir/pin.json") || die "pin.json has no sha256"
+  mkdir -p "$(dirname "$prefix")"
+  stage=$(mktemp -d "$(dirname "$prefix")/.forge-browser.XXXXXX")
+  trap 'rm -rf "$stage"' EXIT
+  curl -fsSL --max-time 300 -o "$stage/jbc.tgz" "$url" || die "could not fetch JBC $version from $url"
+  got=$(sha256sum <"$stage/jbc.tgz" | cut -d' ' -f1)
+  [ "$got" = "$sha" ] || die "sha256 mismatch for $url: pin has $sha, download has $got; refusing to extract"
+  mkdir "$stage/root"
+  tar -xzf "$stage/jbc.tgz" -C "$stage/root" --strip-components=1 package || die "could not extract package/ from $url"
+  while IFS= read -r p; do
+    if ! out=$(patch -p1 -d "$stage/root" --batch --forward --fuzz=0 --no-backup-if-mismatch -r - <"$pin_dir/$p" 2>&1); then
+      printf '%s\n' "$out" >&2
+      die "$p does not apply to JBC $version; nothing installed"
+    fi
+  done < <(jq -r '.patches[]' "$pin_dir/pin.json")
+  cp "$pin_dir/package-lock.json" "$stage/root/package-lock.json"
+  (cd "$stage/root" && npm ci --ignore-scripts --no-audit --no-fund >&2) || die "npm ci failed for JBC $version; nothing installed"
+  printf '%s\n' "$stamp" >"$stage/root/.forge-pin"
+  rm -rf "$prefix"
+  mv "$stage/root" "$prefix"
+  rm -rf "$stage"
+  trap - EXIT
+}
+
+check_key() {
+  [ -e "$key_file" ] || die "key file $key_file is missing"
+  (( (8#$(stat -L -c %a "$key_file") & 8#044) == 0 )) || die "key file $key_file is group- or other-readable"
+  [ -r "$key_file" ] || die "key file $key_file is not readable"
+  [ -s "$key_file" ] || die "key file $key_file is empty"
+}
+
+stop_unit() {
+  local out
+  if ! out=$(systemctl --user stop "$unit" 2>&1); then
+    [[ $out == *"not loaded"* ]] || die "could not stop $unit: $out"
+  fi
+}
+
+peer_status() {
+  local line id=1 in out pid ok='' answered='' last="no answer" deadline=$((SECONDS + wait_secs))
+  coproc PEER { FORGE_JBC_PEER=1 JBC_HOME=$jbc_home exec node "$prefix/server.mjs"; }
+  in=${PEER[0]} out=${PEER[1]} pid=$PEER_PID
+  trap '' PIPE
+  if printf '%s\n' '{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"forge-browser","version":"1"}}}' '{"jsonrpc":"2.0","method":"notifications/initialized"}' 1>&"$out" 2>/dev/null; then
+    while [ -z "$ok" ] && [ "$SECONDS" -lt "$deadline" ]; do
+      printf '{"jsonrpc":"2.0","id":%d,"method":"tools/call","params":{"name":"browser_status","arguments":{}}}\n' "$id" 1>&"$out" 2>/dev/null || break
+      answered=
+      while [ "$SECONDS" -lt "$deadline" ] && IFS= read -r -t "$((deadline - SECONDS))" line <&"$in" 2>/dev/null; do
+        [ "$(jq -r '.id // empty' <<<"$line" 2>/dev/null)" = "$id" ] || continue
+        answered=1
+        break
+      done
+      [ -n "$answered" ] || break
+      if jq -e '.error == null and (.result.isError | not)' <<<"$line" >/dev/null 2>&1; then
+        ok=1
+      else
+        last=$(jq -r '.error.message // .result.content[0].text // "unknown error"' <<<"$line" 2>/dev/null) || last=$line
+        id=$((id + 1))
+        sleep 1
+      fi
+    done
+  fi
+  exec {out}>&-
+  trap - PIPE
+  for _ in $(seq 50); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  [ -n "$ok" ] || die "JBC browser_status did not succeed (last: $last); see journalctl --user -u $unit"
+}
+
+live_owner() {
+  local id label agents
+  [ -s "$owner_file" ] || return 1
+  { IFS= read -r id; IFS= read -r label; } <"$owner_file" || true
+  [ -n "$id" ] && [ "$id" != "$me" ] || return 1
+  systemctl --user is-active --quiet "$unit" >/dev/null 2>&1 || return 1
+  agents=$(claude agents --json </dev/null) || die "cannot list Claude sessions to check browser owner ${label:-$id}"
+  jq -e --arg s "$id" 'any(.[]; .sessionId == $s and ((.state // "") | IN("done","failed","stopped") | not))' <<<"$agents" >/dev/null || return 1
+  owner=${label:-$id}
+}
+
+record_owner() {
+  local agents label=''
+  if agents=$(claude agents --json </dev/null); then
+    label=$(jq -r --arg s "$me" 'first(.[] | select(.sessionId == $s) | .name // empty)' <<<"$agents") || label=''
+  else
+    echo "forge-browser: warning: cannot list Claude sessions; recording owner $me without a name" >&2
+  fi
+  printf '%s\n%s\n' "$me" "${label:-$me}" >"$owner_file"
+}
+
+claim() {
+  local deadline=$((SECONDS + owner_wait)) said=''
+  while :; do
+    exec {lock_fd}>"$lock_file"
+    flock -x "$lock_fd" || die "could not acquire lock on $lock_file"
+    live_owner || return 0
+    exec {lock_fd}>&-
+    [ -n "$said" ] || echo "forge-browser: browser in use by $owner; waiting for it to stop" >&2
+    said=1
+    [ "$SECONDS" -lt "$deadline" ] || die "gave up after ${owner_wait}s: the browser is still owned by $owner; run start again once $owner has run forge-browser stop"
+    sleep 2
+  done
+}
+
+wait_devtools() {
+  local deadline=$((SECONDS + wait_secs))
+  until curl -fs --max-time 2 -o /dev/null http://127.0.0.1:9222/json/version; do
+    [ "$SECONDS" -lt "$deadline" ] || die "Chrome DevTools on 127.0.0.1:9222 did not answer within ${wait_secs}s"
+    sleep 0.5
+  done
+}
+
+start() {
+  local headless=1 node started='' lock_fd owner chrome
+  case ${1:-} in
+    '') ;;
+    --headed) headless=0 ;;
+    *) die "unknown start option: $1" ;;
+  esac
+  [ -n "$me" ] || die "CLAUDE_CODE_SESSION_ID is not set; run start from a Claude session so it can own the browser"
+  chrome=$(find_chrome)
+  [ -x "$chrome" ] || die "Chrome not found at $chrome; install Google Chrome or set CHROME_PATH"
+  check_key
+  node=$(command -v node) || die "node is not on PATH"
+  node=$(readlink -f "$node")
+  mkdir -p "$(dirname "$prefix")"
+  claim
+  install
+  stop_unit
+  rm -f "$owner_file"
+  systemd-run --user --unit="$unit" --collect --quiet \
+    --setenv=JBC_HEADLESS="$headless" --setenv=JBC_HOME="$jbc_home" --setenv=CHROME_PATH="$chrome" \
+    --setenv=JBC_CONFIRM_IRREVERSIBLE=1 --setenv=JBC_PROVIDER=openrouter \
+    -- "$BASH" -c 'OPENROUTER_API_KEY=$(<"$1") || exit 1; export OPENROUTER_API_KEY; exec "$2" "$3" < <(exec sleep infinity)' \
+    "$unit" "$key_file" "$node" "$prefix/server.mjs" {lock_fd}>&- || die "systemd-run could not start $unit"
+  trap '[ -n "$started" ] || stop_unit' EXIT
+  peer_status
+  wait_devtools
+  started=1
+  trap - EXIT
+  record_owner
+  exec {lock_fd}>&-
+}
+
+stop() {
+  local lock_fd
+  mkdir -p "$(dirname "$prefix")"
+  exec {lock_fd}>"$lock_file"
+  flock -x "$lock_fd" || die "could not acquire lock on $lock_file"
+  stop_unit
+  rm -f "$owner_file"
+  exec {lock_fd}>&-
+}
+
+mcp() {
+  [ -f "$prefix/server.mjs" ] || die "JBC is not installed at $prefix; run forge-browser start"
+  FORGE_JBC_PEER=1 JBC_HOME=$jbc_home exec node "$prefix/server.mjs"
+}
+
+case ${1:-} in
+  start) shift; [ $# -le 1 ] || die "start takes at most one option"; start "$@" ;;
+  stop) [ $# -eq 1 ] || die "stop takes no arguments"; stop ;;
+  mcp) [ $# -eq 1 ] || die "mcp takes no arguments"; mcp ;;
+  -h|--help|help) usage ;;
+  '') usage >&2; exit 2 ;;
+  *) echo "forge-browser: unknown command: $1" >&2; usage >&2; exit 2 ;;
+esac

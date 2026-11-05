@@ -1,0 +1,7 @@
+--- a/server.mjs
++++ b/server.mjs
+@@ -5,3 +5,3 @@
+ const INSTRUCTIONS = MODE === 'browser'
+-  ? `These tools drive a Chrome window that this server opens. The first tool call opens it. Sign in once in that window.\n${COMMON}\n- browser_record saves a recording.`
++  ? `These tools drive a Chrome window that this server opens. ${process.env.FORGE_JBC_PEER === '1' ? 'The first tool call does not open it: run forge-browser start (headless) or forge-browser start --headed before the first mcp__jbc__* call, and forge-browser stop when done.' : 'The first tool call opens it.'} Sign in once in that window.\n${COMMON}\n- browser_record saves a recording.`
+   : `These tools control the user's own Chrome browser.\n${COMMON}`;

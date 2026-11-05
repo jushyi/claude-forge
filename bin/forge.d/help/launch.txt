@@ -1,0 +1,52 @@
+Usage: forge launch [--auto] <track>
+
+Start the next session of every ready feature of an open track, in
+track order. Fails with usage when the track is missing or extra or a
+flag other than --auto is given, and exits 1 naming the track when
+.forge/tracks/<track>.json is missing or its status is not open,
+starting nothing.
+
+For each feature of the track:
+  shipped                skipped silently
+  a dependency unshipped "forge: <track>/<feature> waits on unshipped
+                         features" on stderr; nothing started
+  a live session         a working or blocked phase, Verify, Ship or
+                         discuss session of the feature (by name, new or
+                         legacy, or by a phase's or the feature's start
+                         event id) prints "forge: <track>/<feature>
+                         already has a live session <name>; not starting
+                         another" on stderr; nothing started
+  todo, discussing       forge discuss <track>/<feature>
+  discussed, verify      forge implement <track>/<feature>, then
+                         forge resume <N> for each of its phases whose
+                         result.json status is blocked
+  ship                   forge next <track>/<feature>
+
+With --auto the discuss starts run forge discuss --auto
+<track>/<feature>, whose session settles each decision with its
+recommended option and whose start waits for admission (see forge
+discuss --help).
+
+Each start runs as its own forge subprocess with FORGE_ROOT set to the
+project root, so it takes its own locks and waits for admission as that
+command does. A start that exits nonzero prints "forge:
+<track>/<feature>: forge <command> failed (exit <n>)" on stderr and the
+launch goes on to the next feature. It exits 0 when every start
+succeeded, else 1.
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  .forge/tracks/*.json
+  STATE/features/<track>-<feature>/*.json
+  STATE/phases/*/spec.json, result.json, events.jsonl
+  claude agents --json
+  and whatever the discuss, implement, resume and next starts read
+
+Writes:
+  what the discuss, implement, resume and next starts write: the Claude
+  sessions they start, worktrees, events and held.jsonl records
+
+Example:
+  forge launch forge
+  forge launch --auto audit-261014

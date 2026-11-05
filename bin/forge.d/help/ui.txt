@@ -1,0 +1,23 @@
+Usage: forge ui <track>/<feature>
+
+Decide whether a feature is UI work, from files alone.
+
+A feature is UI when STATE/features/<track>-<feature>/design.json
+exists.
+
+Prints nothing.
+
+Exit codes:
+  0  UI
+  1  not UI
+  2  usage, a phase number, or no such feature directory
+
+STATE is the project's state dir that forge paths prints as STATE.
+
+Reads:
+  STATE/features/<track>-<feature>/design.json
+
+Writes: nothing
+
+Example:
+  forge ui crm/intake

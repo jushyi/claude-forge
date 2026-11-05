@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "track",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "track",
+    "goal",
+    "status",
+    "notes",
+    "features",
+    "shipped"
+  ],
+  "properties": {
+    "track": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "open",
+        "closed"
+      ]
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "feature",
+          "delivers",
+          "depends"
+        ],
+        "properties": {
+          "feature": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "delivers": {
+            "type": "string"
+          },
+          "depends": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^([a-z0-9][a-z0-9-]*/)?[a-z0-9][a-z0-9-]*$"
+            }
+          }
+        }
+      }
+    },
+    "shipped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "feature",
+          "phases",
+          "date"
+        ],
+        "properties": {
+          "feature": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9]{2,}$"
+            }
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "track": "crm",
+  "feature": "intake",
+  "number": "03",
+  "slug": "intake-api",
+  "goal": "The API returns the lead",
+  "spec": [],
+  "requirements": [
+    "INT-02"
+  ],
+  "depends": [
+    "02"
+  ]
+}

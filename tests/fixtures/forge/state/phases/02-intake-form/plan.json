@@ -1,0 +1,58 @@
+{
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Lead table",
+      "files": [
+        "db/leads.sql"
+      ],
+      "deps": [],
+      "dep_reasons": {},
+      "test": "test-first",
+      "requirements": [
+        "INT-01"
+      ],
+      "criteria": [
+        "PII-03",
+        "PII-05"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Form submit",
+      "files": [
+        "src/form.ts",
+        "src/api.ts"
+      ],
+      "deps": [
+        "T1"
+      ],
+      "dep_reasons": {
+        "T1": "symbol leads table"
+      },
+      "test": "exempt",
+      "exempt_reason": "glue",
+      "requirements": [
+        "INT-01"
+      ],
+      "criteria": [
+        "PII-01",
+        "PII-02"
+      ]
+    }
+  ],
+  "na_criteria": [
+    {
+      "criterion": "PII-04",
+      "reason": "no backup, export or cache copy of a lead"
+    },
+    {
+      "criterion": "PII-06",
+      "reason": "no delete path for leads"
+    },
+    {
+      "criterion": "PII-07",
+      "reason": "no third-party processor or queue"
+    }
+  ]
+}

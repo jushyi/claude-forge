@@ -1,0 +1,669 @@
+Usage: forge watchdog [--install]
+
+Scans once for stalled forge sessions and exits; the forge-watchdog user
+timer runs it every 5 minutes, and resumes parked phases whose condition
+has cleared. Runs in any directory. It never messages a working session
+or a blocked one with a pending question, and never waits in a pgrep or ps
+loop.
+
+Doctor: once per boot, after the test snapshot prune and before the stall scan, the
+scan reads the boot id from
+${FORGE_PROC_ROOT:-/proc}/sys/kernel/random/boot_id. When
+~/.local/state/forge/doctor-boot is missing or holds another id, it
+runs forge doctor, then writes the boot id to doctor-boot through a temp
+file and a rename whatever doctor's exit, so doctor runs and alerts at most
+once per boot. Scans hold ~/.local/state/forge/doctor-boot.lock from
+the check through the write, so two concurrent scans run doctor once; a
+scan that finds the lock held does not wait, prints a "forge: warning: ..."
+line and skips doctor. Doctor runs as its own process, killed after
+FORGE_DOCTOR_TIMEOUT seconds (default 120), so a hung check such as a
+stuck git worktree list prints a "forge: warning: forge doctor timed out ..."
+line and still writes doctor-boot. Doctor's problem lines are not printed. When doctor exits 1
+it sends one forge notify "forge: doctor" "<n> problems: <first problem>",
+<n> being the number of "forge doctor: ..." lines and <first problem> the
+first one without that prefix, both leaving out the "forge doctor: removed
+..." lines doctor prints for the dead lock holders it removes, which are
+not problems. An unreadable boot id, a doctor-boot that
+cannot be written, a failing notify or a doctor exit other than 0 or 1
+each print a "forge: warning: ..." line on stderr; the scan goes on and its
+exit status never depends on doctor.
+
+Codex quota: after doctor and before claude agents is listed, so a failed
+listing does not stop it, each scan runs the out-of-credits check forge
+review --help describes, over the Codex job records of the last 10 minutes
+rather than 5, so a job finishing between two scans is seen whatever their
+timing. A failed codex:rescue or forge mockup job gets the notification
+"forge: Codex out of credits" and the forge-codex-login.service login once,
+with no review running. The check's result and cause never change the scan
+or its exit status.
+
+Perf pull: last, after the weekly gc, so a slow pull never delays the
+stall scan, the scan reads each root
+listed in ~/.local/state/forge/watchdog-roots and skips one whose
+.forge/TESTING.md has no "- Perf log:" line. For each other root it runs
+FORGE_ROOT=<root> forge perf pull, stdin /dev/null and fds 8 and 9 closed,
+at most once per 7 days: ~/.local/state/forge/perf-pull holds one
+"<root><TAB><epoch seconds>" line per root, the time of its last pull, and a
+root runs again once that time is 7 days old. The scan rewrites perf-pull
+through a temp file and a rename after each pull it runs. Each pull runs as
+its own process, killed after FORGE_PERF_TIMEOUT seconds (default 60); one
+that times out prints "forge: warning: forge perf pull in <root> timed out
+after <n> s; it runs again in 7 days" on stderr and still records its time.
+A pull exiting
+non-zero prints "forge: warning: forge perf pull exited <n> in <root>; it
+runs again in 7 days" on stderr and still records its time; an unreadable
+watchdog-roots or perf-pull, or a perf-pull that cannot be written, prints
+a "forge: warning: ..." line too. The scan goes on and its exit status never
+depends on the pull.
+
+Weekly gc: after the stall scan and the held launches, the scan reads
+~/.local/state/forge/gc-week, which holds the epoch second of the last
+weekly gc. When it is missing or older than 7 days (604800 s), the scan
+runs FORGE_ROOT=<root> forge gc --apply once for each root listed in
+~/.local/state/forge/watchdog-roots, from the scan's own cwd, skipping a
+listed root that is no longer a directory, then writes the current epoch
+second to gc-week through a temp file and a rename whatever the gc exits.
+Scans hold ~/.local/state/forge/gc-week.lock from the check through the
+write; a scan that finds it held does not wait, prints a "forge: warning:
+..." line and runs no gc. Each gc runs as its own process, killed after
+FORGE_GC_TIMEOUT seconds (default 300) or, when sooner, 285 s into the
+scan, so the gc and the gc-week write end inside the 5 min TimeoutStartSec
+of forge-watchdog.service. A root reached 285 s or more into the scan runs
+no gc: the scan prints one "forge: warning: the weekly forge gc reached the
+5 min forge-watchdog.service deadline before <root>; ..." line, skips the
+roots it did not reach until next week and still writes gc-week. A gc that
+exits nonzero prints
+"forge: warning: forge gc --apply in <root> exited <n>; the scan goes on",
+one that times out prints "forge: warning: forge gc --apply in <root> timed
+out after <n> s; the scan goes on", and the scan goes on to the next root.
+A gc-week that cannot be written prints a "forge: warning: ..." line saying
+the weekly gc may run again next scan. The scan's exit status never depends
+on the weekly gc and the stall scan always runs.
+
+PATH: each scan first puts ${FNM_DIR:-~/.local/share/fnm}/aliases/default/bin
+(fnm's default Node), ${FNM_DIR:-~/.local/share/fnm} (the fnm binary) and
+~/.cargo/bin in front of PATH, in that order, leaving out each directory
+that does not exist or is already on PATH, and exports it, so the sessions
+it starts or resumes find node, fnm and cargo under the timer's stripped
+PATH. A project's .nvmrc still needs the session's own fnm use.
+
+Tool warning: before reviving parked phases, the scan reads
+<root>/.forge/TESTING.md and <root>/*/.forge/TESTING.md of each project root
+it knows. A file needs node when the backticked command of a "- <Label>: "
+line in its "## Commands" section has the word node, npm, npx, pnpm or
+yarn, and cargo when one has cargo. For each needed tool the PATH above
+lacks, it prints "forge: warning: <file> runs <tool>, which is not on the
+watchdog PATH (<PATH>)" on stderr, once per file and tool per scan; it sends
+no notification, keeps the exit status and the scan goes on.
+
+Options:
+  --install   enable and start the timer: systemctl --user enable --now
+              forge-watchdog.timer. It relies on forge-watchdog.service and
+              forge-watchdog.timer that ./port --apply installs in
+              ~/.config/systemd/user and fails naming ./port --apply when
+              either is missing; it never writes the units itself. Exits 1
+              when a unit is missing or systemctl fails.
+
+Queued port: each scan first runs the ports forge golive queued in
+~/.local/state/forge/port.pending, JSON lines {repo, commit, time, root,
+branches}, time being when the repo was first queued since its last
+applied port. No file
+or an empty one does nothing. A line is applied when claude agents --json
+lists no working forge session of the line's project (counted as golive
+counts them, every session for a forge.liveInstall repo), or when its time
+is 2 hours ago or more, whichever comes first. A younger line, while such
+a session works or
+the sessions cannot be listed within FORGE_AGENTS_TIMEOUT seconds, stays
+and it prints "forge: port still queued: <n> forge sessions working" (or
+"cannot list Claude sessions"). A time jq fromdate cannot read counts as
+younger than 2 hours and prints "forge: cannot read the queue time of
+<repo> in <file>" on stderr. For each line to apply it takes <git common
+dir>/forge-land.lock, as land does, without waiting: when a land or golive
+holds it, the line stays and it prints so. Under the lock it rereads the
+repo's line, so a golive that queued it again meanwhile is covered, and
+when the repo is on main and its main holds the commit (else the line
+stays and it prints why), runs ./port --apply in the repo and releases the
+lock. Success prints "forge: ported <sha> from the queued golive of
+<repo>", then removes the line, and the file once empty; a line already
+marked "ported": true is removed with no port. A forced apply,
+one made while the session count was not 0 or was unknown, then sends
+forge notify "forge: port applied" "<sha> applied after 2 h queued with
+<n> sessions working", <n> being the count or unknown; when that fails it
+prints "forge: cannot send the forced-port notice for <repo> through forge
+notify" on stderr and the port stays applied. A failure, forced or not,
+keeps the line, prints it and sends an alert through forge notify "forge:
+queued port failed" "<repo>: <cause>", as the repeat stall alert does,
+then marks the line "alerted": true. Each later scan retries the port and
+prints a failure, but sends no new alert until forge golive queues the
+repo again. Nothing here stops the stall scan that follows.
+
+Test past limit: after the queued ports, each scan lists the user's
+forge-test-*.scope units (systemctl --user list-units --all --plain
+--no-legend) and checks each one still running: any ActiveState but
+inactive and failed, deactivating included; a failed scope has stopped and
+is not reported. It reads the scope's limit with systemctl --user show -p
+RuntimeMaxUSec --value <unit> (the RuntimeMaxSec forge test sets), parsed
+from its space-separated <n><unit> tokens (us, ms, s, min, h, d, w), and
+its start with systemctl --user show -p ActiveEnterTimestamp --value
+--timestamp=unix <unit> (@<epoch>). A limit of infinity, an empty one or
+one with another unit means no limit and the scope is never reported; a
+start other than @<epoch>, or @0, skips the scope. When the wall time
+since the start, suspend included, exceeds the limit + 5 min, it sends
+forge notify "forge: test past limit" "<unit> running <age> min" once per
+unit and records the unit in ${XDG_STATE_HOME:-~/.local/state}/forge/
+test-past-limit under test-past-limit.lock, so later scans stay quiet for
+it; each scan drops the units list-units no longer lists. When forge notify
+fails it prints "forge: cannot send the test-past-limit alert for <unit>
+through forge notify" on stderr, records nothing and retries on the next
+scan. A listing that fails, or a state file that cannot be read or
+written, prints a warning on stderr; the scan goes on.
+
+Test snapshots: forge test makes no snapshot worktrees, so this pass
+sweeps the ones an older forge left. After the test-past-limit check,
+each scan visits every repo forge doctor checks (each ~/Projects/*/ and
+~/Projects/*/*/ holding .forge/, plus each listed in
+~/.local/state/forge/watchdog-roots) that is a git worktree with a
+<main worktree>/.claude/worktrees/_snap dir, or a forge-test/snap-owner/
+or forge-test/snap/ dir in its git common dir; phase worktrees share
+their repo's main worktree and git common dir, so their snapshots are
+covered. A repo with none of them is skipped and adds no output. In
+each, it removes every snapshot .claude/worktrees/_snap/<name> with its
+git worktree registration, as the next forge test in that repo would,
+then runs git worktree prune once so the snapshot leaves git worktree
+list. Two kinds are kept: a k-keyed snapshot _snap/k<key> whose lock
+forge-test/snap-owner/k<key>.lock an older forge run still holds, and a
+run snapshot _snap/<pid> whose pid is live, one being created included,
+or whose pid is dead but whose stack unit (forge-test/tmp/<pid>.unit) is
+still active. Each goes on a later scan once its lock is free, or once
+its pid is dead and its unit inactive or failed. The scan also removes
+the whole forge-test/snap-owner/ dir once no kept k-keyed snapshot still
+needs its lock, and the legacy forge-test/snap/ dir, whose <pid>
+snapshots follow the same live-pid and active-unit rule. A snapshot that
+cannot be removed prints "forge: cannot remove <path>" and
+"forge: warning: cannot prune the forge test snapshots of <repo>; the
+next scan retries" on stderr; the scan goes on to the next repo and
+never fails on it. The prune of all repos runs
+as its own process, killed after FORGE_SNAP_TIMEOUT seconds (default 60),
+so a hung removal prints "forge: warning: the forge test snapshot prune
+timed out after <n> s; the next scan retries" and the scan goes on.
+
+State dir: each project root R keeps its phase and feature records in its
+state dir S, ${XDG_STATE_HOME:-~/.local/state}/forge/<repo>, as forge paths
+prints it under STATE; S/root names R. Every phase and feature dir below
+is S/phases/NN-slug or S/features/<track>-<feature> of its root, and the
+scan writes no record under R/.forge. A root whose .forge/ still holds a
+non-empty archive/, phases/ or features/ is unmoved: the scan skips it,
+printing "forge: <root>/.forge still holds planning records; move them
+to its state dir" on stderr once per scan, and goes on with the other
+roots. A state dir whose root file names another root prints forge's
+error and that root is skipped the same way.
+
+Sessions: those claude agents --json --all lists with a sessionId and a
+cwd, named as forge names them: "<project> P<N>[R<k>] <track>/<feature>",
+"<project> verify <track>/<feature>" or "<project> ship
+<track>/<feature>", or by the legacy names "<project> <track>-<feature>
+Phase <N>[ retry <k>]", "... Verify" or "... Ship". Sessions in state
+working get the idle-stall scan; sessions whose turn has ended (any
+other state but blocked, crashed and stopped included) get the ended-turn
+scan; sessions in state blocked are handled as Blocked sessions below
+says. The project root is the first directory at or above
+the session's cwd, less any /.claude/worktrees/<name> part, whose name
+is <project> and whose state dir holds features/<track>-<feature>/. When
+there is none, as for a session in a linked repo outside the project, it
+is the root the session's launch prompt (/forge-phase, /forge-verify or
+/forge-ship <root> <arg>) names in its transcript, under the same
+conditions.
+
+Session ids: forge records the claude agents .id of each session it starts
+as the session field of the phase or Verify start event. A session whose
+name parses is skipped with a warning when the last start event in its
+events.jsonl records another session id; one with no session field is
+trusted. A renamed session, whose name no longer parses, is mapped by its
+cwd, a worktree <repo>/.claude/worktrees/<track>-<feature>-<N>: the
+roots at or above <repo> and their child roots <dir>/<project>, each a
+directory holding .forge/, are searched nearest first for
+S/phases/<N>-*/ in each one's state dir, and the
+session is taken as phase <N> of the first project whose phase <N> has a
+last start event recording its session id. Other sessions with unparsed
+names are skipped.
+
+Activity: the newest mtime of the session's transcript,
+~/.claude/projects/<cwd>/<sessionId>.jsonl, and of its subagent
+transcripts, ~/.claude/projects/<cwd>/<sessionId>/subagents/agent-*.jsonl,
+<cwd> with every character other than a letter or digit replaced by '-'.
+A session is stalled when that is FORGE_STALL_MIN minutes ago or more,
+unless its transcript has a background task unreported in flight (as
+Resume below defines it): it is waiting on that task, so the scan logs no
+stall and prints "forge: <session name> (<sessionId>) idle <M> min with
+background task <id> in flight; no stall". A task launched
+FORGE_BG_CEIL_MIN minutes ago or more, its age taken from the timestamp
+of the transcript record that starts it, is past the ceiling and holds
+off no stall: when every in-flight task is past it, the session stalls
+as below, the stall message gaining "; background task <id> in flight
+<age> min past the <ceil> min ceiling", one clause per such task,
+comma-joined. The watchdog never kills the task. A task whose launch
+timestamp cannot be found counts as under the ceiling, with a warning
+naming it. An unreadable transcript warns and counts as idle.
+
+On a stall it appends a stall event {time, step: "stall", message:
+"<session name> (<sessionId>) idle <M> min"}:
+  phase session           S/phases/NN-slug/events.jsonl
+  verify or ship session  S/features/<track>-<feature>/events.jsonl
+The feature-level events.jsonl is a log only: forge commit never records
+it and forge status does not read it.
+
+Repeat stall: when the same session (matched by sessionId) already has a
+stall event in that events.jsonl from 30 min ago or less, it sends the
+operator a desktop alert through forge notify "forge: repeat stall"
+"<project>: <session name> idle <M> min" (followed by the stall
+message's past-the-ceiling clauses when a background task is past the
+ceiling), and records the stall as
+notified by ending its message with "; operator notified". An older
+previous stall, or none, logs a plain stall. When forge notify fails it
+warns and logs a plain stall. Once a stall is
+notified, the session gets no further stall event or alert until its
+transcripts show new activity.
+
+Finished phase: a working phase session idle FORGE_STALL_MIN minutes or
+more, and at least 10, whose claude agents row has an id and whose phase
+dir holds result.json has done its work and is stopped: the scan runs
+claude stop <id> and logs a stall event whose message ends "; stopped:
+phase has result.json", with no notification and no repeat-stall alert. A
+background task in flight keeps it running, as Activity above says, its
+no-stall line going to stderr. A running Bash process under the row's pid
+(as Resume below defines it) keeps it running with "forge: <session name>
+(<sessionId>) has a running Bash process <pid> in flight; not stopping
+it" on stderr, and a failed claude stop warns "forge: cannot stop
+<session name>: <error>"; either way the idle session is then stalled as
+above.
+
+Blocked sessions: a session in state blocked is first classified as
+Stopped sessions below says, from its main transcript. A usage limit or an
+API error makes it an ended turn stopped by that cause, with the
+ended-turn stall and the auto-resume below, though claude agents lists it
+blocked. Any other blocked session, a reboot or an unclassified stop
+included, waits on the operator while it was active less than
+FORGE_STALL_MIN minutes ago, while its claude agents row has a waitingFor,
+or while a question is pending in its main or any subagent transcript,
+each read from its last 400 lines: an assistant tool_use whose id no
+tool_result in a user record answers, or a last record that is an end_turn
+assistant reply whose text (its text blocks gathered by message id, the
+last 800 characters, trailing whitespace dropped) has a line starting
+"needs input:" or "blocked:", after any spaces or tabs, or ends in "?".
+Such a session is skipped, unless Self-heal below resumes it first. A stop that cannot be read warns "forge: cannot
+read the stop of <session name> from <file>; checking it for a pending
+question" on stderr, and a transcript whose question cannot be read skips
+the session with "forge: cannot read <file>; skipping <session name>". A
+blocked session with no question pending is stalled like a working one:
+the Activity, stall and repeat-stall rules above apply.
+
+Self-heal: no operator is present at a phase session, so a phase that
+stopped on a blocker is resumed to fix it itself. A phase session whose
+turn has ended (state done, or any state but working once its phase dir
+holds result.json, or blocked and idle FORGE_STALL_MIN minutes with no
+waitingFor) is self-healed when its phase dir's result.json has "status":
+"blocked", or when it holds no result.json and the session's last
+end_turn reply (read as a pending question is, the last 800 characters)
+has a line starting "needs input:" or "failed:". A blocked result whose
+summary starts "phase <N> already has a running session" is the
+peer-session rule and is never resumed; neither is a blocked result
+older than 7 days, nor one of a phase whose feature is archived under
+S/archive/<track>-<feature>. The resume runs as Resume below
+does (sessions.lock, the in-flight check, claude --bg --resume, a new
+session id) with the prompt
+  "forge watchdog: no operator is present; fix the blocker yourself and continue phase <N> from where it stopped"
+logs the resume event "self-heal <k>/3 on '<line>'; resumed <session name>
+with claude --bg --resume <sessionId>", <line> being the needs input: or
+failed: line or "blocked: <summary>", and then removes the blocked
+result.json, so the phase is live again; it sends no notification. A
+phase gets at most 3 self-heals, counted as its resume events whose
+message starts "self-heal", listed session or gone, never reset. When a
+phase whose 3 are spent stops on a blocker again, the scan sends once
+forge notify "forge: self-heal gave up" "<project> phase NN-slug:
+<session name> still stops after 3 self-heals; last line: <line>" and logs
+a stall event "<session name> (<sessionId>) stops on '<line>' after 3
+self-heals; gave up"; when that notify fails it warns and retries next
+scan, and once the stall is logged later scans of that stop do nothing
+more. A phase whose result.json is blocked and whose last start's session
+claude agents --json --all no longer lists is self-healed in the
+Gone session pass below: it runs FORGE_ROOT=<root> forge resume <N>, which
+removes the blocked result and starts a fresh session, and logs the resume
+event "self-heal <k>/3 on '<line>'; <session name> is gone, resumed phase
+<N> with forge resume", under the same cap and give-up alert; a refused or
+failed forge resume, or one that only waits for a free session, logs
+nothing and is retried next scan. A blocker line that cannot be read warns
+on stderr and the session is handled as the rules above say.
+
+Ended turn: a session whose turn has ended, whose phase or feature dir
+holds no result.json and whose events.jsonl's last event is not a park
+(not counting the refused events and the "launch refused: " stall events
+after it) or wait, gets one stall event {time, step: "stall", message: "<session
+name> (<sessionId>) turn ended with no result"} in its events.jsonl per
+turn end, and an alert through forge notify "forge: turn ended"
+"<project> phase NN-slug: <session name> turn ended with no result"
+("<project> <track>/<feature> verify|ship: ..." for a Verify or Ship
+session). A phase session is skipped when its last assistant reply in the
+last 400 transcript lines has a line starting "result: Phase <N> waits
+on " (a phase waiting on a dependency, which forge done relaunches). A
+finished Verify, whose feature dir holds verify.json, and a finished Ship,
+whose ship.json is newer than the session's start, get no ended-turn
+stall, alert or auto-resume. The watchdog is the one
+desktop sender for these sessions' stalls and ended turns. When Stopped sessions below
+classifies the stop, an ended turn included, the message ends ": stopped
+by <cause>" and no "forge: turn ended" alert is sent; the auto-resume
+notices replace it. The "forge: turn ended" and "forge: question" alerts
+below are left for a turn the watchdog does not resume: an unclassified
+stop (a row in state stopped, failed or crashed, a pending question, a
+"result: Phase <N> waits on " line, a park or a wait) or one whose
+auto-resumes reached the cap.
+When the stop is not classified and the last non-empty paragraph of the
+last end_turn reply (its text blocks gathered by message id, as for a
+pending question, its lines joined by spaces) ends in "?", the one alert
+is forge notify "forge: question" "<session name>: <paragraph>", the body
+cut to 200 characters, in place of "forge: turn ended", and the stall
+message ends "; asked: <paragraph>", so later scans of that turn send
+nothing more. When that reply cannot be read it warns on stderr and sends
+"forge: turn ended". A turn whose main transcript (read whole) has an
+assistant Bash tool_use running forge notify after the last user prompt
+(a user record other than tool results and task notifications) already
+alerted the operator: the stall event is logged but neither "forge: turn
+ended" nor "forge: question" is sent. Only a command that runs forge
+notify counts, not one that names it in quotes or searches for it, and a
+PushNotification call does not count. When that transcript
+cannot be read it warns "forge: cannot read <file>; alerting on its ended
+turn" on stderr and alerts as above. A
+turn end is the newest transcript mtime: once such a stall is logged at or
+after it, later scans log nothing, and a newer mtime (a later turn end)
+alerts again. When forge notify fails it warns and still logs the stall.
+Ended sessions whose project, phase or transcript is not found, or whose
+phase's last start event records another session id, are skipped without
+a warning.
+
+Stopped sessions: for an ended phase, Verify or Ship session as above, the
+scan classifies the stop from the last 400 lines of its main transcript.
+The last
+assistant record is current only when no user record other than a task
+notification follows it. A current record with isApiErrorMessage true and
+error "rate_limit" is a usage limit, reset at its quotaLimits.resetsAt
+(epoch seconds); without that, at the time its text "resets [<Mon> <d>,
+]<h>[:<mm>]am|pm (<IANA tz>)" names under that tz, a time without a date
+being its next occurrence, and when that does not parse it is an API error
+rate_limit. One with any other error is an API error <error>, timed from
+its timestamp. With no error record, a reboot is a "was restarted after
+the previous session ended" user record that no later task notification
+with a <status> for the same task id follows, or a <status>killed</status>
+task notification timed before the current boot (now less the first field
+of ${FORGE_PROC_ROOT:-/proc}/uptime), at the tail with no assistant record
+after it. With none of these, the stop is an ended turn, timed at the
+newest transcript mtime, when the session's claude agents row is in state
+done exactly, no question is pending in its main or any subagent
+transcript (as Blocked sessions above defines it), and the turn passed the
+Ended turn gates above: no result.json, no finished Verify or Ship, no
+park or wait as the last event and no "result: Phase <N> waits on " line.
+A transcript whose question cannot be read warns on stderr and its turn is
+never resumed. Any other stop is never resumed and keeps the ended-turn
+alert: a row in state stopped, failed or crashed is never resumed without
+a usage limit, API error or reboot record. An operator's claude stop of a
+working session leaves its row stopped, so it is never resumed; claude
+stop of an idle session already done leaves the row done and no trace in
+its transcript, so such a turn reads as an ended turn and is resumed.
+The four causes are usage limit, API error <error>, reboot and ended turn.
+Every scan of a classified stop, also after its stall is logged, counts
+its attempts in the session's events.jsonl, the phase's or, for a Verify
+or Ship session, the feature's: every resume event whose message starts
+"auto-resume", whatever its cause or session, across stops, never reset by
+a later park, wait, test, retry or replan event, so the cap is 5
+auto-resumes per phase, per feature for Verify and Ship. A usage limit's
+attempt is due at its reset + 60 s, since a resume before the reset fails
+at once; an attempt for any other cause is due on the first scan at or
+after the stop record's timestamp, the transcript mtime for an ended turn.
+Before an API-error
+attempt it runs getent hosts api.anthropic.com; when that fails it makes
+and counts no attempt and prints "forge: <session name> waits for
+api.anthropic.com to resolve" on stderr. A due attempt <k> resumes the
+session as Resume does (sessions.lock, the in-flight check, claude --bg
+--resume, a new session id) with the prompt
+  "forge watchdog: <cause> cleared; continue phase <N> from where it stopped"
+  "forge watchdog: <cause> cleared; continue <track>/<feature> <verify|ship> from where it stopped"
+the second for a Verify or Ship session, and logs the resume event
+"auto-resume <k>/5 after <cause>; resumed <session name> with claude --bg
+--resume <sessionId>", <cause> being usage limit, API error <error>, reboot
+or ended turn. A Verify or Ship session's resume event, and the start event of a
+new session id, go to its feature's events.jsonl. A resume that does not
+happen (work in flight, a session still running, a failed resume) counts
+nothing and is retried next scan. After a resume it sends forge notify
+"forge: auto-resume" "<project> phase NN-slug: <session name> stopped by
+<cause>; resume <k>/5"; a failed notify warns on stderr. Once 5 attempts
+are counted and the session stops again with a classified cause, it sends
+once forge notify "forge: auto-resume gave up" "<project> phase NN-slug:
+<session name> stopped by <cause> after 5 resumes" and logs a stall event
+whose message ends "; gave up"; later scans of that stop do nothing more.
+For a Verify or Ship session both notices name "<project> <track>/<feature>
+verify|ship" in place of "<project> phase NN-slug".
+
+Resume: a phase session in state done, failed, stopped or crashed whose phase
+dir holds no result.json and whose events.jsonl's last event is a park (forge
+event <N> park <cond>), not counting the refused events and the "launch
+refused: " stall events after it, is resumed once its condition clears:
+  wait <ref>
+          another phase or feature: <N> clears once phase <N> is merged,
+          as Gone session defines it, <N> naming phase <N> of the parked
+          phase's own root (read from S/root) and <abs-root>:<N> phase <N>
+          of <abs-root>, its S/phases/<N>-*/ read from that root's state
+          dir; <track>/<feature> once <root>/.forge/tracks/<track>.json
+          (<root> read from S/root) lists <feature> in its shipped list,
+          and "branch <name>" once <name> is an ancestor of main in the
+          repo of the session's cwd (git merge-base --is-ancestor). A
+          malformed ref, a root with no .forge, a track file or root that
+          cannot be read, or a branch main or <name> git cannot resolve,
+          warns "forge: <what failed>; <session name> stays parked" each
+          scan.
+A slot, memory or load park, logged before forge dropped those
+conditions, has nothing left to wait on: it counts as cleared and
+resumes once.
+Other conditions are left parked. Once one clears, and the session's cwd
+still exists, it takes the sessions.lock flock forge's launches take
+($XDG_RUNTIME_DIR/forge/sessions.lock) and rereads the session's row. A
+row with a pid is stopped first with claude stop <id>, unless it has work
+in flight, which skips it with a warning "<session name> (<sessionId>) has
+<what> in flight; not stopping it":
+  a running Bash process <pid>
+          a descendant of the row's pid, found through
+          ${FORGE_PROC_ROOT:-/proc}/<pid>/task/*/children, whose cmdline
+          holds shell-snapshots/, as every Bash tool command does; MCP
+          servers and other children do not count
+  background task <id> unreported
+          the session's transcript starts a background task (a Bash
+          backgroundTaskId, a Monitor taskId or an async_launched Agent
+          agentId in a user record's toolUseResult) and no task
+          notification naming that task id with a <status> follows in a
+          user or queue-operation record; a restart notice, which has no
+          <status>, reopens the task until a later notification with a
+          <status> names it
+An unreadable transcript also skips it with a warning. A row with no pid
+stays parked with "<session name> (<sessionId>) has a running Bash process
+<pid> in flight with no Claude process; not resuming it" while a process
+whose cmdline holds shell-snapshots/ and whose environ holds
+CLAUDE_CODE_SESSION_ID=<sessionId> still runs under ${FORGE_PROC_ROOT:-/proc};
+MCP servers and other sessions' processes do not count, and nothing survives
+a reboot. After a claude stop it rereads the
+row for up to 5 seconds, whatever claude stop printed or exited, and goes
+on only once the row has no pid and is not working or blocked; otherwise
+it warns and retries next scan. From the session's cwd it runs
+  claude --bg --resume <sessionId> -n "<session name>" "forge watchdog: <cond> cleared; continue phase <N> from where it parked"
+with the full sessionId and stdin from /dev/null. A resume may continue
+the session in place or start a copy under a new id; -n keeps the forge
+title on either. It passes no --model, --effort, --permission-mode or
+--settings. It reads the id that took the resume from the
+"backgrounded · <id> · <name>" banner, else from the claude agents row
+with that name and cwd started at or after the resume, rereading claude
+agents for up to 5 seconds for such a row or for the session's own row
+working, blocked or holding a pid again (a resume in place). When that id
+differs from the session's, it appends {time, step: "start", message:
+"<session name>", offset: <the last start event's offset, left out when
+it has none>, session: "<new id>"} to S/phases/NN-slug/events.jsonl,
+so later scans and forge commands follow the new session and skip the
+superseded one, and when the superseded row is still working, blocked or
+has a pid it runs claude stop <old id>, warning when that fails; the row
+stays listed. The same id appends no start event. When no id is found
+it warns "cannot find the session that took the resume of <session
+name>; recording it as unknown, so no scan resumes <old id> again",
+sends a "forge: resume unconfirmed" notification and appends the start
+event with session "unknown", so no scan resumes the old id or follows
+the phase's sessions until the operator does. On success it appends
+{time, step: "resume", message: "<cond> cleared; resumed <session name> with claude
+--bg --resume <sessionId>"}, ending in "; now session <new id>" when the
+id changed, so the phase is no longer parked. A failed resume warns, logs
+nothing and is retried next scan.
+
+Gone session: after the scan of the listed sessions, for each project
+root that scan resolved for a session, active ones included, and each
+root recorded in ~/.local/state/forge/watchdog-roots (where forge event
+<N> park also appends its project root) whose state dir holds phases/ or
+that is unmoved and still holds .forge/phases (skipped as State dir says),
+it checks every phase whose
+events.jsonl's last event is a park, not counting the refused events
+and the "launch refused: " stall events after it, whose last start event's session id
+(or, for a start event without one, its name, the start message) claude
+agents --json --all no longer lists, and that is not merged. A phase is
+merged when its result.json says done and its branch
+forge/<track>-<feature>-<N> is an ancestor of forge/<track>-<feature> in
+the phase's repo; an unmerged phase that parked after writing a done
+result.json is resumed, and forge resume removes that result.json. Once
+the condition clears, as Resume says, it runs
+  FORGE_ROOT=<root> forge resume <N>
+by name from PATH, outside sessions.lock (forge resume takes it itself)
+and with fd 6 closed, which starts a fresh session. On success it appends
+{time, step: "resume", message: "<cond> cleared; <session name> is gone,
+resumed phase <N> with forge resume"} to S/phases/NN-slug/events.jsonl.
+A failed forge resume warns, logs nothing and is retried next scan. A
+forge resume exiting 8 refused the launch and already reported it: it
+prints "forge: forge resume <N> refused for <session name>, already
+reported; phase <N> stays parked until the next scan", logs nothing and
+prints no failed line. A forge resume that only waits for a free session
+(its last event is then a wait) warns, logs no resume and appends
+{time, step: "park", message: "<cond>"}, so the phase stays parked and is
+retried next scan. Each scan rewrites watchdog-roots with the roots it
+checked, under the flock watchdog-roots.lock that forge event park takes;
+a root it cannot read or record there is warned about and the scan goes
+on.
+
+Held launches: after the gone-session pass, each scan reads
+${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl, where forge resume,
+forge implement and forge next record a launch held at the machine-wide
+cap as {root, kind, target, time}. No file or an empty one does nothing.
+It lists claude agents --json once and counts the live forge sessions as
+forge's launches do (a forge session name, state not blocked, done,
+failed, stopped or crashed); at or above ${FORGE_MAX_SESSIONS:-12} it runs
+nothing this scan, and a failed listing warns and runs nothing. Under the
+flock held.jsonl.lock it reads the records sorted by time and, oldest
+first, drops a record without running anything when its target no longer
+needs launching:
+  phase <N>     S/phases/<N>-*/ is missing, holds result.json, or
+                its events.jsonl has a start at or after the record's time
+  verify <t>/<f>
+                S/features/<t>-<f>/ is missing, holds verify.json, or
+                its events.jsonl has a start at or after the record's time
+  ship <t>/<f>  S/features/<t>-<f>/verify.json is missing or its
+                result is not pass, its ship.json was written after
+                the record's time, or claude agents --json --all lists a
+                session named "<root basename> ship <t>/<f>" in <root>
+                started at or after the record's time
+Otherwise it leaves the record in held.jsonl and runs, by name from PATH
+with FORGE_ROOT=<root> FORGE_HELD_SINCE=<time>, stdin from /dev/null, fd 6
+closed, outside sessions.lock and held.jsonl.lock,
+  forge resume <N>          for a phase
+  forge implement <t>/<f>   for a verify
+  forge next <t>/<f>        for a ship
+The record stays until the entry has started and is removed only then:
+once the entry exits 0 it prints "forge: started the held <kind> <target>
+of <root>, held since <time>" and removes the record with that root, kind,
+target and time under the flock. When the entry held again (it exited 0
+or 8 and its stderr has "forge: recorded the held <kind> <target>;" or
+"forge: warning: cannot record the held <kind> <target> ...") the record
+stays, keeping its time through FORGE_HELD_SINCE, and the pass stops: room
+is still short. An entry exiting 8 without that line refused the launch
+and already reported it on its stderr, which passes through: the record
+is removed under the flock and it prints "forge: dropped the held <kind>
+<target> of <root>, held since <time>: launch refused, already reported",
+with no failed line, so it is not relaunched and renotified every scan.
+An entry exiting another non-zero code prints "forge: held <kind> <target>
+of <root> failed to start: <last stderr line>; retrying next scan" and
+keeps the record with its time. A scan killed at any point, by SIGKILL or
+a power loss included, leaves the record, and a later scan's drop rules
+retire it once the launch has started or run the entry again.
+
+Exits 1 when claude agents cannot be listed or an event cannot be written;
+exits 2 when FORGE_STALL_MIN is not a whole number above 0. A
+FORGE_BG_CEIL_MIN that is not a positive integer warns "forge:
+FORGE_BG_CEIL_MIN=<v> is not a positive integer; using 120" and uses 120.
+A session whose project, phase or transcript is not found is skipped
+with a warning.
+
+Environment:
+  FORGE_STALL_MIN   idle minutes that make a stall (default 20); it
+                    governs idle-session stalls only, never when an
+                    ended turn or other classified stop is resumed
+  FORGE_BG_CEIL_MIN  minutes a background task may stay in flight before
+                    the idle session counts as stalled (default 120)
+  FORGE_AGENTS_TIMEOUT  seconds the queued-port session listing may take
+                    (default 30)
+  FORGE_PROC_ROOT   root read for the session's processes, uptime and
+                    boot id (default /proc)
+  FORGE_DOCTOR_TIMEOUT  seconds the once-per-boot forge doctor may take
+                    (default 120)
+  FORGE_WATCHDOG_POLL_SECS  seconds between the 10 tries of the post-stop
+                    and resumed-session polls (default 0.5)
+  FORGE_SNAP_TIMEOUT  seconds the forge test snapshot prune may take
+                    (default 60)
+  FORGE_PERF_TIMEOUT  seconds each weekly forge perf pull may take
+                    (default 60)
+
+Reads:
+  claude agents --json --all, ~/.claude/projects/, the events.jsonl files
+  above, the session transcript (and, for a blocked or done session, its
+  subagent transcripts) and /proc/<pid>/task/*/children and
+  cmdline under ${FORGE_PROC_ROOT:-/proc}, /proc/uptime under
+  ${FORGE_PROC_ROOT:-/proc} for a stopped session, getent hosts
+  api.anthropic.com before an API-error auto-resume, each root's state
+  dir S (S/root, S/phases/, S/features/) and its .forge/ to find an
+  unmoved root, git merge-base for a wait park,
+  ~/.local/state/forge/watchdog-roots,
+  ${FORGE_PROC_ROOT:-/proc}/sys/kernel/random/boot_id and
+  ~/.local/state/forge/doctor-boot, and what forge doctor reads once per
+  boot
+  and, for a queued port, claude agents --json and
+  ~/.local/state/forge/port.pending; systemctl --user list-units and show
+  for the forge-test-*.scope units; ~/.local/state/forge/held.jsonl and,
+  for its records, claude agents --json and the phase and feature dirs
+  above; ~/.claude/plugins/data/codex-openai-codex/state/*/jobs/*.json, their
+  logs and the modification time of ~/.codex/auth.json
+
+Writes:
+  the events.jsonl files above in each root's state dir S, including the
+  auto-resume and self-heal resume events and the "; gave up" stall event
+  of a stopped session; S/phases/NN-slug/result.json (removed after a
+  self-heal); S and S/root when a root has none; runs forge notify
+  on a repeat stall, on an ended turn ("forge: turn ended" or "forge:
+  question"), on each auto-resume ("forge: auto-resume") and when it gives
+  up ("forge: auto-resume gave up", "forge: self-heal gave up"); runs claude stop and claude --bg
+  --resume to resume a parked phase or a stopped or blocked phase, Verify or Ship
+  session, claude stop on an idle phase session whose phase has
+  result.json, and forge resume <N> when its session is gone;
+  ~/.local/state/forge/watchdog-roots;
+  ~/.local/state/forge/held.jsonl under held.jsonl.lock; runs forge
+  resume, forge implement or forge next for a held launch;
+  ~/.local/state/forge/port.pending; runs ./port --apply for a queued port
+  and forge notify when it fails or is forced;
+  ${XDG_STATE_HOME:-~/.local/state}/forge/test-past-limit and its .lock;
+  runs forge notify on a forge-test scope past its limit;
+  ~/.local/state/forge/doctor-boot, its temp file and its .lock; runs forge doctor
+  once per boot and forge notify "forge: doctor" when it finds problems;
+  ~/.local/state/forge/codex-quota-notified; runs forge notify, systemctl
+  --user stop and systemd-run --user for a failed Codex job out of credits;
+  --install runs systemctl --user enable --now forge-watchdog.timer
+
+Example:
+  forge watchdog
+  FORGE_STALL_MIN=30 forge watchdog
+  forge watchdog --install

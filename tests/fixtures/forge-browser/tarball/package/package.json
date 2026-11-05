@@ -1,0 +1,11 @@
+{
+  "name": "jev-browser-control-mcp",
+  "version": "0.3.0",
+  "type": "module",
+  "bin": {
+    "jev-browser-control-mcp": "server.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}

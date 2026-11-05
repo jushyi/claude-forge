@@ -1,0 +1,138 @@
+Usage: forge commit <scope> <step>
+
+Under a lock, validate the scope's planning JSON and commit the scope's
+in-repo paths to main as "forge(<scope>): <step>". Runs only when the
+project root is on main.
+
+STATE is the project root's state dir (see forge paths --help). The
+phase, feature and archive records of the scope live there and are
+never committed: commit validates and gates them in place and leaves
+them as written. Only the scope's in-repo .forge files (.forge/tracks/,
+plus the extra paths an internal caller names, such as .forge/todo.md)
+go through the commit below.
+
+Sweep: every commit, whatever its scope, also removes every tracked
+rendered planning .md under .forge/ in the same commit: STATE.md and
+tracks/*.md. It never touches CONCERNS.md or other hand docs. Their
+working copies are deleted after the commit lands. A scope with no
+change of its own still commits when the sweep finds files, so the
+first commit in a project carries all of them under its own
+forge(<scope>): <step> message.
+
+The commit is built in a private index from HEAD, so the root's shared
+index is never read, and it and the working tree change only for the
+scope's paths: staged files, an open merge (MERGE_HEAD and its conflicts) and other
+sessions' planning files all stay as they are, and none of them lands in
+the commit. Holding the root's index.lock, as git does (waiting up to 5
+seconds while another git command holds it), commit builds the index
+synced for exactly the committed paths, moves main by compare-and-swap
+(retrying up to 5 seconds while HEAD.lock or main's ref lock is held) and
+renames the synced index into place, so no git command in the root sees
+the new main with the old index. When main moved meanwhile it rebuilds
+the commit on the new tip, at most 3 times; on any failure it removes the
+lock and leaves main unchanged.
+
+Validation covers the scope's planning JSON, in STATE and in .forge/tracks/,
+so another feature's half-written or invalid file never blocks it, and the
+linked docs of the root's .forge/ (PROJECT, RULES, REJECTED, ARCHITECTURE,
+STACK, CONVENTIONS, TESTING and INTEGRATIONS .md) whose working copy or
+index entry differs from HEAD: each is linted with doc_lint as forge
+validate does, printing each limit it breaks as a warning on stderr,
+  forge: warning: .forge/<doc>.md:<line>: <rule>
+and the commit goes ahead and exits 0 as without them; an unchanged doc
+is never checked. Linked docs are never committed.
+
+Prints on success
+  forge: committed <short sha> (<n> files) forge(<scope>): <step>
+and, when neither the scope's in-repo paths nor the sweep has a change
+(always so for a phase scope, whose records all live in STATE), commits
+nothing, exits 0 and prints
+  forge: recorded <scope> <step>
+When the command runs from another worktree whose .forge holds changed
+or untracked track files of the scope, it also warns on stderr naming
+them: they were written to the worktree's copy, not the root's .forge.
+
+With step archive, it then pushes the root's main to origin as forge push
+does (only with git config forge.pushMain true), committed or not, so the
+ship and archive commits made after forge golive reach origin, printing
+  forge: pushed <short sha> to origin
+When origin's main moved and main's own commits change only .forge/,
+the push merges origin's main into main once and pushes again, as forge
+push describes; otherwise a failed push only warns on stderr, as forge
+push does, and exits 0.
+
+Step gates: for a live phase scope NN, a step whose records are missing
+from STATE/phases/NN-*/ is refused, exit 1, naming the missing record by
+its absolute path:
+  plan       plan.json, and a passing forge check NN: events.jsonl's
+             last "check" event comes after its last "retry" and "replan"
+             events, and its "plan" key equals the sha256 (sha256sum) of
+             plan.json as it is now (a check exits 1 without logging one)
+  result     result.json
+Whatever the step, once events.jsonl holds a "check" event, a plan.json
+whose sha256 differs from the last check event's "plan" key (or a last
+check event with no "plan" key) is refused until forge check NN passes
+again. Other steps (T<k>, done, sync, interface, escalate, ...) are not
+gated otherwise.
+
+Verify gate: whatever the step, a commit whose scope (a feature, a phase
+and so its feature, or a track and so each of its features) has a
+STATE/features/<track>-<feature>/verify.json with result pass is
+refused, exit 1, when any repo forge repos <track>/<feature> lists (its
+first column, the review_trees key) has no review_trees key. The message
+names each missing repo and says to run the final review or its
+forge-reviewer fallback for it. A result gaps record passes.
+
+A scope is one of:
+  NN                   a phase
+  <track>/<feature>    a feature; so are <track>-<feature> and a bare
+                       feature slug
+  <track>              a track, when .forge/tracks/<track>.json exists
+
+Each of these errors exits non-zero and commits and stages nothing:
+  a scope that resolves to nothing
+  a bare slug matching features in two or more tracks (the message
+  names each <track>/<feature>)
+  a bare name that is both a track and a feature
+  planning JSON of the scope failing its schema (the error names each
+  failing file by its absolute path)
+  a phase step whose records are missing or whose plan is unchecked
+  (see Step gates)
+  a pass verify.json missing a repo's review_trees entry (see Verify gate)
+  a linked doc that differs from HEAD in the working copy or index and
+  cannot be read
+
+Scope records:
+  phase      STATE/phases/NN-*/, STATE/archive/*/phases/NN-*/ and the
+             split.json and settled.json of the phase's feature, live
+             or archived
+  feature    STATE/features/<track>-<feature>/,
+             STATE/archive/<track>-<feature>/, .forge/tracks/<track>.json
+             and each live or archived phase dir whose spec.json names
+             the feature
+  track      .forge/tracks/<track>.json and
+             STATE/features/<track>-<feature>/ of each feature it lists,
+             shipped ones included
+
+Reads:
+  the scope's records in STATE and .forge/tracks/, HEAD's .forge
+
+Writes:
+  main on origin, for step archive with forge.pushMain
+  a commit on main of the scope's in-repo paths (.forge/tracks/<track>.json
+  and any extra in-repo path) and the sweep's deletions of tracked
+  rendered planning .md under .forge/ (see Sweep)
+  the working copies of the swept files, removed after the commit lands
+  <git common dir>/forge.lock, forge.lock.holder
+
+Lock:
+  commit, alloc, archive, check, done, implement, next, resume and land
+  hold flock on <git common dir>/forge.lock, one lock per repo (outside
+  a git repo, <root>/.forge/forge.lock), and record the holder in
+  forge.lock.holder beside it. A command that finds the lock held
+  prints once on stderr
+    forge: waiting for forge.lock (held by <pid> <command> since <time>)
+  and waits until it is free, however long that takes.
+
+Example:
+  forge commit 07 plan

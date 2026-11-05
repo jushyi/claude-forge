@@ -1,0 +1,15 @@
+{
+  "requirements": [
+    {
+      "id": "AUTH-01",
+      "text": "A user logs in with email.",
+      "done": true
+    },
+    {
+      "id": "AUTH-02",
+      "text": "A session lasts 30 days.",
+      "done": true,
+      "concern": "crm:C-02"
+    }
+  ]
+}

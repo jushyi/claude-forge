@@ -1,0 +1,139 @@
+.
+./.claude
+./.claude/rules
+./.claude/rules/forge.md
+./.forge
+./.forge/PROJECT.md
+./.forge/REJECTED.md
+./.forge/RULES.md
+./.forge/seeds.md
+./.forge/todo.md
+./.forge/tracks
+./.gitignore
+./api
+./api/.claude
+./api/.claude/rules
+./api/.claude/rules/forge.md
+./api/.forge
+./api/.forge/ARCHITECTURE.md
+./api/.forge/CONCERNS.md
+./api/.forge/CONVENTIONS.md
+./api/.forge/INTEGRATIONS.md
+./api/.forge/REJECTED.md
+./api/.forge/RULES.md
+./api/.forge/STACK.md
+./api/.forge/TESTING.md
+./api/DESIGN.md
+./api/PRODUCT.md
+./api/vault
+./api/vault/Index.md
+./cli
+./cli/.claude
+./cli/.claude/rules
+./cli/.claude/rules/forge.md
+./cli/.forge
+./cli/.forge/ARCHITECTURE.md
+./cli/.forge/CONCERNS.md
+./cli/.forge/CONVENTIONS.md
+./cli/.forge/INTEGRATIONS.md
+./cli/.forge/REJECTED.md
+./cli/.forge/RULES.md
+./cli/.forge/STACK.md
+./cli/.forge/TESTING.md
+./vault
+./vault/Index.md
+./web
+./web/.claude
+./web/.claude/rules
+./web/.claude/rules/forge.md
+./web/.forge
+./web/.forge/ARCHITECTURE.md
+./web/.forge/CONCERNS.md
+./web/.forge/CONVENTIONS.md
+./web/.forge/INTEGRATIONS.md
+./web/.forge/REJECTED.md
+./web/.forge/RULES.md
+./web/.forge/STACK.md
+./web/.forge/TESTING.md
+./web/PRODUCT.md
+./web/vault
+== ./.claude/rules/forge.md
+# ws
+
+A workspace.
+
+| Work on | Read |
+|---|---|
+| Purpose, goal, scope | `.forge/PROJECT.md` |
+| Invariants that must never break | `.forge/RULES.md` |
+| Options already rejected | `.forge/REJECTED.md` |
+| Current work | `forge status` |
+| Planned work | `forge status --json` |
+| Research, learning, reviews, notes, references | `vault/Index.md` |
+
+| Repo | Read |
+|---|---|
+| api — The API. | `api/.claude/rules/forge.md` |
+| cli — The CLI. | `cli/.claude/rules/forge.md` |
+| web — The web app. | `web/.claude/rules/forge.md` |
+
+<!-- rendered by forge-init -->
+== ./.gitignore
+web/
+/api/
+/cli/
+== ./api/.claude/rules/forge.md
+# api
+
+The API.
+
+| Work on | Read |
+|---|---|
+| Components, boundaries, code layout | `.forge/ARCHITECTURE.md` |
+| Languages, frameworks, build, run, deploy | `.forge/STACK.md` |
+| Code patterns specific to this repo | `.forge/CONVENTIONS.md` |
+| Test layout, commands, gates | `.forge/TESTING.md` |
+| External services, APIs, secrets | `.forge/INTEGRATIONS.md` |
+| Known problems and their status; record a new one with `forge concern add`, never by editing `CONCERNS.md`, which `forge map` and every concern command regenerate from `concerns.json` | `.forge/CONCERNS.md` |
+| Invariants that must never break | `.forge/RULES.md` |
+| Options already rejected | `.forge/REJECTED.md` |
+| Product purpose, users, brand | `PRODUCT.md` |
+| Visual design system | `DESIGN.md` |
+| Research, learning, reviews, notes, references | `vault/Index.md` |
+
+<!-- rendered by forge-init -->
+== ./cli/.claude/rules/forge.md
+# cli
+
+The CLI.
+
+| Work on | Read |
+|---|---|
+| Components, boundaries, code layout | `.forge/ARCHITECTURE.md` |
+| Languages, frameworks, build, run, deploy | `.forge/STACK.md` |
+| Code patterns specific to this repo | `.forge/CONVENTIONS.md` |
+| Test layout, commands, gates | `.forge/TESTING.md` |
+| External services, APIs, secrets | `.forge/INTEGRATIONS.md` |
+| Known problems and their status; record a new one with `forge concern add`, never by editing `CONCERNS.md`, which `forge map` and every concern command regenerate from `concerns.json` | `.forge/CONCERNS.md` |
+| Invariants that must never break | `.forge/RULES.md` |
+| Options already rejected | `.forge/REJECTED.md` |
+
+<!-- rendered by forge-init -->
+== ./web/.claude/rules/forge.md
+# web
+
+The web app.
+
+| Work on | Read |
+|---|---|
+| Components, boundaries, code layout | `.forge/ARCHITECTURE.md` |
+| Languages, frameworks, build, run, deploy | `.forge/STACK.md` |
+| Code patterns specific to this repo | `.forge/CONVENTIONS.md` |
+| Test layout, commands, gates | `.forge/TESTING.md` |
+| External services, APIs, secrets | `.forge/INTEGRATIONS.md` |
+| Known problems and their status; record a new one with `forge concern add`, never by editing `CONCERNS.md`, which `forge map` and every concern command regenerate from `concerns.json` | `.forge/CONCERNS.md` |
+| Invariants that must never break | `.forge/RULES.md` |
+| Options already rejected | `.forge/REJECTED.md` |
+| Product purpose, users, brand | `PRODUCT.md` |
+
+<!-- rendered by forge-init -->

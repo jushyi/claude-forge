@@ -1,0 +1,43 @@
+Usage: forge paths [<N> | <track>/<feature>]
+
+Print the absolute paths a phase or feature session and its agents use,
+one KEY=value line each, so every spawn prompt can name them exactly:
+  R      the project root, holding .forge/
+  F      the feature dir, STATE/features/<track>-<feature>
+  P      the phase dir, STATE/phases/NN-slug   (phases only)
+  STATE  the state dir S of R:
+         ${XDG_STATE_HOME:-~/.local/state}/forge/<repo>, <repo> being
+         the basename of R's main checkout; it holds phases/, features/,
+         archive/, quicks.json, debugs.json, history.json and a root
+         file naming R
+  W      the worktree: <repo>/.claude/worktrees/<track>-<feature>-<N> for
+         a phase, <repo>/.claude/worktrees/<track>-<feature> for a
+         feature, <repo> being the phase's repo, or for a feature the
+         repo of its first phase (else R)
+  B      the worktree's branch, forge/<track>-<feature>-<N> or
+         forge/<track>-<feature>
+  BASE   the branch its diff is taken against: forge/<track>-<feature>
+         for a phase, main for a feature
+  G      the worktree's git dir, for diffs and logs; omitted while W
+         does not exist
+With no argument it prints only R and STATE, creating S and its root
+file, for callers with no feature. Phase, feature and archive records go
+under STATE, never under R/.forge or W/.forge.
+
+Exit codes:
+  0  printed
+  1  no phase N, S/root naming another root, or a root whose .forge/
+     still holds archive/, phases/ or features/
+  2  an argument that is neither a phase number nor <track>/<feature>
+
+Reads:
+  STATE/phases/NN-slug/spec.json
+  STATE/features/<track>-<feature>/split.json
+  STATE/root
+  .forge/repos.json
+
+Writes:
+  STATE/root, when S is new
+
+Example:
+  eval "$(forge paths 07)"; echo "$P/plan.json"

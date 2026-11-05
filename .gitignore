@@ -1,0 +1,4 @@
+mods/*/.claude-plugin/types/
+mods/*/tsconfig.json
+.claude/worktrees/
+.claude/jobs/

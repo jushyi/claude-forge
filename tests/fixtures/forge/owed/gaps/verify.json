@@ -1,0 +1,9 @@
+{
+  "manual_test": [
+    "[agent] E/s1/out.txt INT-01: submit the intake form and see the lead saved",
+    "[operator] INT-02: GET /leads/1 returns the lead"
+  ],
+  "result": "gaps",
+  "gaps": [{"phase": "02", "gap": "INT-02: GET /leads/1 returns 404"}],
+  "operator_ran": true
+}

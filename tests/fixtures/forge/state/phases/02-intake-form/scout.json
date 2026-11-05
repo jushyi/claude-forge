@@ -1,0 +1,12 @@
+{
+  "files": [
+    {
+      "path": "src/form.ts",
+      "symbols": [
+        "submit",
+        "validate"
+      ],
+      "why": "Form entry point"
+    }
+  ]
+}

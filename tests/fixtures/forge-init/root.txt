@@ -1,0 +1,19 @@
+exit 0
+root CLAUDE.md byte-identical
+router in .claude/rules/forge.md
+.claude
+.forge
+.git
+CLAUDE.md
+exit 0
+workspace CLAUDE.md files kept
+child router written
+exit 0
+The API.
+exit 0
+forge-init: warning: git ignores .claude/rules/forge.md; sessions on other clones will not get it
+no CLAUDE.md created
+exit 1
+tail: cannot open '<tmp>/none/CLAUDE.md' for reading: No such file or directory
+router kept
+.claude/rules/forge.md

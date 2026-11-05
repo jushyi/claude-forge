@@ -1,0 +1,44 @@
+Usage: forge finish <N>
+
+Close phase N in one call: record the result step, then run forge done
+<N>, in place of the session's separate forge commit <N> result and
+forge done calls. Finish runs no test command and checks no test
+stamp: forge done trusts each task committed through forge task-done.
+
+Steps:
+  1. No P/result.json exits 1, committing nothing.
+  2. Run forge commit N result, which validates and gates
+     P/result.json in place in STATE and, with no in-repo change,
+     commits nothing and prints "forge: recorded N result"; a refused
+     commit exits 1.
+  3. Run forge done N. Its stderr is passed through and its exit is
+     finish's exit.
+
+Each step runs as its own forge subprocess, so the gate of forge done
+(every planned task committed through forge task-done), its locks and
+its exit codes are unchanged; finish holds no lock itself. It ends with
+one status line, "forge: phase N finished" on stdout, or the cause on
+stderr.
+
+Exit codes:
+  0  done
+  1  no result.json (naming P/result.json), a refused commit, a refused
+     done result, or another failure
+  2  a usage error
+  6  the phase branch conflicts with forge/<track>-<feature>, merge aborted
+  8  a launch was refused or skipped, already reported
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  STATE/phases/NN-slug/result.json    (P/result.json)
+  everything forge done reads (see forge done --help)
+
+Writes:
+  nothing for the result step itself: P/result.json stays in STATE as
+  written (no git commit)
+  everything forge done writes (see forge done --help)
+  <git common dir>/forge.lock          (through forge commit and forge done)
+
+Example:
+  forge finish 09

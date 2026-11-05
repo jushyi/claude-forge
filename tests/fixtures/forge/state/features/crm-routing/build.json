@@ -1,0 +1,64 @@
+{
+  "status": "in-progress",
+  "steps": {
+    "S01": {
+      "state": "skipped",
+      "date": "2026-09-20"
+    },
+    "S02": {
+      "state": "done",
+      "date": "2026-09-22"
+    }
+  },
+  "acceptance": [
+    {
+      "id": "A01",
+      "result": "pass",
+      "measured": "1 lamp lit",
+      "date": "2026-09-22"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B01",
+      "class": "wait",
+      "step": "S02",
+      "text": "Owner lamps are on back order.",
+      "opened": "2026-09-20",
+      "resume": "The owner lamps arrive.",
+      "resolved": "2026-09-22"
+    }
+  ],
+  "deviations": [
+    {
+      "step": "S01",
+      "text": "The board came pre-mounted in the enclosure.",
+      "date": "2026-09-20"
+    }
+  ],
+  "log": [
+    {
+      "date": "2026-09-22",
+      "steps": [
+        "S02"
+      ],
+      "notes": [
+        "Lamp 3 header was loose; reseated it."
+      ],
+      "measurements": [
+        {
+          "name": "Supply voltage at lamp 1",
+          "value": "5.1 V",
+          "step": "S02"
+        },
+        {
+          "name": "Room temperature",
+          "value": "21 C"
+        }
+      ],
+      "evidence": [
+        "evidence/crm-routing/lamps-wired.jpg"
+      ]
+    }
+  ]
+}

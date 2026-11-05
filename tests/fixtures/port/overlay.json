@@ -1,0 +1,11 @@
+{
+  "env": {
+    "FORGE_CONCURRENCY": "2",
+    "FORGE_HOST": "overlay-host"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(overlay-only *)"
+    ]
+  }
+}

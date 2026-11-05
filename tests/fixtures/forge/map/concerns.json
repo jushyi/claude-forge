@@ -1,0 +1,3 @@
+{"concerns": [
+  {"id": "C-01", "area": "intake", "files": ["src/intake.ts"], "severity": "high", "focus": ["security", "pii"], "evidence": ["src/intake.ts:12"], "status": "open"},
+  {"id": "C-02", "area": "queue", "files": ["src/queue.ts", "src/server.ts"], "severity": "low", "evidence": ["src/queue.ts:4", "src/server.ts:30"], "status": "open"}]}

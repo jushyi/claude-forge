@@ -1,0 +1,19 @@
+Usage: forge repos <track>/<feature>
+
+Print one line "<name> <absolute path>" per repo holding a phase of the
+feature, producer first: a repo holding a phase that a phase in another
+repo depends on comes before that repo, ties by each repo's lowest phase
+number. Repos resolve as the run commands resolve them (see forge
+implement). A repo's feature worktree is
+<absolute path>/.claude/worktrees/<track>-<feature> on forge/<track>-<feature>. Fails on a
+cycle between repos.
+
+Reads:
+  STATE/features/<track>-<feature>/split.json, STATE being the project
+  root's state dir (see forge paths --help)
+  .forge/repos.json
+
+Writes: nothing
+
+Example:
+  FORGE_ROOT=~/Projects/acme forge repos crm/intake

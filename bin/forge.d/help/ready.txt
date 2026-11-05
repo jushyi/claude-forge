@@ -1,0 +1,15 @@
+Usage: forge ready <track>/<feature>
+
+Check that every feature <feature> depends on has shipped. A dependency
+without a track prefix is in the same track.
+
+Prints "ready" and exits 0, or prints "waiting on: <features>" and exits 1.
+Exits 2 when the track has no such open feature.
+
+Reads:
+  .forge/tracks/*.json
+
+Writes: nothing
+
+Example:
+  forge ready forge/agents

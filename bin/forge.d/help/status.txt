@@ -1,0 +1,187 @@
+Usage: forge status [--json | <track>/<feature>]
+
+Print the open tracks, each feature with its status, its phases done
+out of its split phases and the dependencies it still waits on.
+
+A feature's status is todo (requirements only), discussing (spec or
+research, no split), discussed (split, phases still open), verify (every
+split phase done, no verify.json), ship (verify.json, no ship.json)
+or shipped. A phase counts as done when its spec.json names the feature
+and its result.json status is done.
+
+A feature's status reads stalled instead while one of its phases has a
+notified repeat stall as its latest event in events.jsonl: a stall event
+whose message ends with "; operator notified" (see forge watchdog
+--help). It reverts once a later event is logged for that phase.
+
+After Features comes an Intake section, left out when no repo has a
+todo, seed or open concern, with one row per repo that has any: Repo,
+Todos (the "- " lines of its .forge/todo.md), Seeds (the "- " lines of
+its .forge/seeds.md, a missing file counting 0), Concerns (the entries
+of its .forge/concerns.json whose status is open) and Oldest (whole days
+from today, FORGE_NOW when set, to the oldest date among those todos,
+seeds and concerns, "—" when none is dated, "unknown" when the time
+cannot be read). The repos are each git repo directly under the project
+root, else the root itself, each named by its directory name; in a
+workspace the root's own .forge/todo.md and .forge/seeds.md add to a row
+under the root's name. An unreadable todo.md, seeds.md or concerns.json
+fails the command with a forge: message naming the file.
+
+Then comes a Conflicts section covering the project root, each
+git repo directly under it and each .forge/repos.json entry that has a
+main branch. It has one line per local forge/* branch that has commits
+not on main and whose merge into main conflicts. A line reads
+"<repo> <branch>: <file>, <file>" with the files git merge-tree reports,
+or "<repo> <branch>: merge-tree failed" when git merge-tree errors. The
+section is left out when no branch conflicts. It needs git 2.38 or
+later.
+
+Last comes a Sessions section with one line:
+"<n> forge sessions removed in the last 24 h, <m> idle". <n> counts the
+lines of forge-reaped.log in the project root's git common dir whose
+UTC time is within the 24 hours before now (FORGE_NOW, when set, as
+now); a missing log counts 0, a malformed line is skipped, and an
+unreadable FORGE_NOW gives "unknown" with a warning on stderr. <m>
+counts this project's idle forge sessions in claude agents --json
+--all: background sessions whose state is done, whose cwd is at or
+under the project root or a .forge/repos.json repo and whose name is
+"<project> " followed by a forge session form (P<N>[R<k>] <t>/<f>,
+verify, ship or discuss <t>/<f>, quick <task>, debug <symptom>, or the
+older <t>-<f> Phase N[ retry k], Verify or Ship). When claude agents
+fails the line ends "idle unknown" and forge status warns on stderr and
+still exits 0. forge status never removes a session or writes the log.
+
+After Sessions, for each line of ~/.local/state/forge/port.pending (the
+machine-wide queue of ports whose non-bin part is not yet applied) whose
+time is more than 1 hour before now (FORGE_NOW, when set, as now), a
+line "warning: forge port <short sha> queued <h>h<m>m", the first after
+a blank line, in file order. <short sha> is git rev-parse --short of the
+line's commit in its repo, else the commit's first 7 characters;
+<h>h<m>m is whole hours and remaining whole minutes. No file, an empty
+file or only younger lines print nothing. An unreadable port.pending or
+a line whose time cannot be parsed prints "forge: warning: cannot read
+<path>" on stderr and forge status still exits 0.
+
+With --json, forge status prints one JSON document on stdout instead,
+with eight top-level keys:
+  tracks    each open track in the order above: {track, goal, features,
+            shipped}. features has one {feature, delivers, status, phases,
+            depends, waiting, requirements, current_phase, last_activity}
+            per feature of the track, status the same string the
+            Features table prints, phases {done, total} or null without a
+            split, depends the track's list as written, waiting the
+            dependencies still unmet and requirements [{id, text, done}]
+            from the feature's requirements.json, empty when it is
+            missing. shipped has one {feature, date, requirements} per
+            shipped item, requirements read from
+            STATE/archive/<track>-<feature>/requirements.json, else the
+            live feature's, else empty.
+            current_phase and last_activity are set only for a feature
+            in the Now set, one whose status is verify, ship or stalled,
+            or discussed with split phases, and are null for
+            every other feature. current_phase is {number, name}, the
+            integer number and slug of the first phase in split order
+            that is not done, or null when every phase is done.
+            last_activity is the latest time (ISO 8601 UTC) among the
+            events.jsonl lines of the feature's phases and of
+            STATE/features/<track>-<feature>/events.jsonl, or null when
+            there is none.
+  closed_tracks
+            each closed track in .forge/tracks/*.json file order, the
+            order tracks uses: {track, goal, shipped}, shipped built as
+            for an open track. A closed track has no features key.
+  quicks    one {slug, task, repos, date, source} per entry of the
+            project root's STATE/quicks.json in file order, source the
+            entry's source, else forge.
+  debugs    one {slug, symptom, cause, repos, date, source} per entry of
+            the project root's STATE/debugs.json in file order, source
+            the entry's source, else forge.
+  gsd_history
+            one {repo, milestones} per repos entry of the project root's
+            STATE/history.json in file order, each milestone {version,
+            name, shipped, phases} as written with done dropped, shipped
+            a date or null and phases [{number, name}].
+            A missing quicks.json, debugs.json or history.json gives []
+            for its key, and an unreadable or unparsable one fails the
+            command with a forge: message naming the file. Child repos'
+            and .forge/repos.json repos' state dirs and any
+            .forge/quicks.json, .forge/debugs.json or .forge/history.json
+            are not read.
+  todos     one {text, concern} per "- " line of .forge/todo.md in file
+            order, with no date: text is the line without the leading
+            "- " and, on a "- YYYY-MM-DD <text>" line, without the date
+            and its space. concern is the <repo>:C-NN of a trailing
+            " — concern: <repo>:C-NN" or null; heading and comment lines
+            are skipped and a missing todo.md gives [].
+  seeds     one {text} per "- " line of .forge/seeds.md in file order,
+            text stripped the same way as a todo's; a missing seeds.md
+            gives [] and an unreadable one fails the command with a
+            forge: message naming the file. Child repos' seeds.md are
+            not read.
+  concerns  one {repo, id, area, severity, focus} per open concern in the
+            .forge/concerns.json of each git repo directly under the
+            project root, else of the root itself, repo being the
+            directory name and focus [] when absent. .forge/repos.json
+            repos are left out and a repo without concerns.json adds
+            nothing; an unreadable or invalid concerns.json fails the
+            command with a forge: message naming the file.
+It leaves out the Conflicts and Sessions sections and
+the port warnings, so it calls neither claude agents nor git merge-tree.
+
+With <track>/<feature>, forge status prints that one feature's view on
+stdout instead: a "# <track> / <feature>" heading, what it delivers, its
+status (the string the Features table prints), Depends on and Focus,
+then its decisions, spec, requirements with done marks and each one's
+owner in parentheses (agent, operator or post-ship; agent when the
+record has none), research,
+design, phases with their status (each phase's result.json status, "—"
+without one), manual test, final review and PR. It reads them from
+STATE/features/<track>-<feature>/ or, once the feature has shipped,
+STATE/archive/<track>-<feature>/. An unknown track, or a feature in
+neither the track's features nor its shipped, exits 1 with a forge:
+message naming it. It writes no file and leaves out the project-wide
+sections.
+
+When a phase whose spec.json names the feature has unmet tasks, the
+view ends with a "## Unmet tasks" section: for each such phase, in
+phase number order, one line "<N>-<slug>: unmet <task>: <reason>" per
+entry of its result.json unmet list, or, when the phase has no
+result.json, per tasks/*.json record whose status is unmet. With none
+the section is left out.
+
+Any argument other than --json or one <track>/<feature> is a usage
+error (exit 2).
+
+STATE is the project root's state dir (see forge paths --help); the
+phase, feature and archive records and quicks.json, debugs.json and
+history.json live there, never under .forge/.
+
+Reads:
+  .forge/tracks/*.json
+  STATE/features/*/*.json
+  STATE/phases/*/spec.json
+  STATE/phases/*/result.json
+  STATE/phases/*/events.jsonl
+  each repo's main and forge/* branches
+  <git common dir>/forge-reaped.log
+  claude agents --json --all
+  ~/.local/state/forge/port.pending
+  each child repo's .forge/todo.md, .forge/seeds.md and .forge/concerns.json
+  with --json: .forge/todo.md, .forge/seeds.md, STATE/quicks.json,
+  STATE/debugs.json, STATE/history.json,
+  STATE/features/*/events.jsonl,
+  STATE/archive/<track>-<feature>/requirements.json of each open or
+  closed track's shipped feature and each child
+  repo's .forge/concerns.json
+  with <track>/<feature>: .forge/tracks/*.json,
+  STATE/features/<track>-<feature>/*.json or
+  STATE/archive/<track>-<feature>/*.json and the spec.json, result.json,
+  events.jsonl and tasks/*.json of each phase in STATE/phases/
+
+Writes: no files, only the unreferenced objects git merge-tree stores
+(none with --json or <track>/<feature>)
+
+Example:
+  cd ~/Projects/forge && forge status
+  forge status --json | jq '.tracks[].features[] | {feature, status}'
+  forge status crm/intake

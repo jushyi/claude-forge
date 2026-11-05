@@ -1,0 +1,40 @@
+Usage: forge map [<repo>...]
+
+Map each repo named, or every repo, into its docs. A repo is a direct
+subdirectory of the project root holding .git; a project without one is a
+single repo named for its directory. Per repo, four headless Claude runs
+start in parallel in the repo: forge-mapper for tech, arch and quality,
+and forge-mapper-concerns. Each gets the repo's current docs, so a rerun
+keeps what the code still supports. When every run succeeds, the map JSON
+is written into the docs, map/ is removed and each written
+.forge/TESTING.md is linted like forge check does: the Test line needs
+{test}, the Changed tests line needs {files}, every command line must
+parse with bash -n and a Quarantine line needs an "(added YYYY-MM-DD)"
+date that is a valid calendar date at most 7 days (168 h) old. The
+written STACK, INTEGRATIONS, ARCHITECTURE, CONVENTIONS and TESTING .md
+are also checked against the doc limits, CONCERNS.md is not: a doc over
+8192 bytes, a bullet over 300 characters or a bullet holding a history
+phrase prints a "forge: warning: <path>:<line>: <rule>" line on stderr
+and does not stop the commit. When every repo passes the TESTING.md
+lint, the docs are committed in the repo as "docs(map): map <repo>" and
+map exits 0, warnings or not. A TESTING.md lint failure prints every
+failing line and exits 1 with nothing committed; the written docs stay
+in the working tree. When
+any run fails, nothing is written and map/ keeps each run's log.
+
+Reads:
+  <repo>/.forge/{STACK,INTEGRATIONS,ARCHITECTURE,CONVENTIONS,TESTING}.md
+  <repo>/.forge/concerns.json
+  $FORGE_TEMPLATES/<DOC>.md
+  bin/forge.d/forge.jq
+
+Writes:
+  <repo>/.forge/map/<focus>.json and <focus>.log   (removed on success;
+                                                    map/concerns.json
+                                                    replaces concerns.json)
+  <repo>/.forge/concerns.json
+  <repo>/.forge/{STACK,INTEGRATIONS,ARCHITECTURE,CONVENTIONS,TESTING,CONCERNS}.md
+  a git commit in <repo>
+
+Example:
+  cd ~/Projects/acme && forge map acme-hub

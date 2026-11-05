@@ -1,0 +1,26 @@
+{
+  "phases": [
+    {
+      "slug": "routing-rules",
+      "goal": "Rules pick an owner",
+      "spec": [
+        "Round robin."
+      ],
+      "requirements": [
+        "ROUTE-01"
+      ],
+      "depends": []
+    },
+    {
+      "slug": "routing-ui",
+      "goal": "Owners see their leads",
+      "spec": [],
+      "requirements": [
+        "ROUTE-01"
+      ],
+      "depends": [
+        "routing-rules"
+      ]
+    }
+  ]
+}

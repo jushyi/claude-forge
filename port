@@ -1,0 +1,466 @@
+#!/usr/bin/env bash
+# Port approved forge files into the live Claude setup. Dry-run unless --apply.
+# Copies (never symlinks) so in-progress edits here can't change live sessions.
+set -euo pipefail
+if [ -L "$0" ]; then cd "$(dirname "$(readlink -f "$0")")"; else cd "$(dirname "$0")"; fi
+apply= only= uninstall= plugins= browser=
+while [ $# -gt 0 ]; do
+  case $1 in
+    --apply) apply=--apply ;;
+    --uninstall) uninstall=1 ;;
+    --plugins) plugins=1 ;;
+    --browser) browser=1 ;;
+    --only)
+      [ $# -ge 2 ] || { echo "port: --only needs a source path" >&2; exit 2; }
+      only=${2%/}
+      shift ;;
+    *) echo "port: unknown argument '$1'" >&2; exit 2 ;;
+  esac
+  shift
+done
+. bin/forge.d/platform.sh
+forge_gnubin
+if [ -z "$uninstall" ] && ! forge_preflight >&2; then
+  echo "port: nothing changed; fix the above and rerun" >&2
+  exit 1
+fi
+refuse() {
+  echo "port: --apply runs only from a clean checkout on main: $1; land the change and port it with forge golive" >&2
+  exit 1
+}
+if [ "$apply" = --apply ]; then
+  head=$(git symbolic-ref -q --short HEAD) || refuse "HEAD is detached or this is not a git checkout"
+  [ "$head" = main ] || refuse "on branch $head"
+  dirty=$(git -c core.quotePath=false status --porcelain -uno -- . ':!.forge') || refuse "git status failed"
+  [ -z "$dirty" ] || refuse "uncommitted changes to $(cut -c4- <<<"$dirty" | paste -sd ' ')"
+fi
+
+overlay=$HOME/.config/forge/settings.json
+live_settings=$HOME/.claude/settings.json
+manifest=$HOME/.local/state/forge/port.manifest
+stamp=$(dirname "$manifest")/port.json
+rec=$(dirname "$manifest")/port.settings.json
+merged_settings=$(mktemp)
+new_rec=$(mktemp)
+mcp_added=$(mktemp)
+listdst=$(mktemp -d)
+trap 'rm -f "$merged_settings" "$new_rec" "$mcp_added"; rm -rf "$listdst"' EXIT
+units=$HOME/.config/systemd/user
+reload_pending=$HOME/.local/state/forge/port.reload-pending
+reload_failed=""
+replace() {
+  local t
+  t=$(mktemp "$1.XXXXXX")
+  "${@:2}" >"$t" && mv "$t" "$1" || { rm -f "$t"; return 1; }
+}
+reload_units() {
+  if systemctl --user daemon-reload; then
+    rm -f "$reload_pending"
+    reload_failed=""
+  else
+    echo "port: error: systemctl --user daemon-reload failed; the next --apply retries it" >&2
+    reload_failed=1
+    mkdir -p "${reload_pending%/*}"
+    touch "$reload_pending"
+  fi
+}
+settings_lib=bin/forge.d/settings.jq
+prior_rec='{}'
+if [ -f "$rec" ]; then
+  prior_rec=$(jq -c . "$rec") || { echo "port: error: cannot read $rec" >&2; exit 1; }
+fi
+[ "$(jq -r '.plugins // false' <<<"$prior_rec")" != true ] || plugins=1
+[ "$(jq -r '.browser // false' <<<"$prior_rec")" != true ] || browser=1
+live_json='{}'
+if [ -f "$live_settings" ]; then
+  live_json=$(jq -c 'if type == "object" then . else error("not an object") end' "$live_settings") ||
+    { echo "port: error: $live_settings is not a JSON object; fix it and rerun, nothing changed" >&2; exit 1; }
+fi
+if [ -z "$uninstall" ]; then
+  wanted=$(if [ -n "$plugins" ]; then jq -cs '.[0] * .[1]' global/settings.json global/plugin-settings.json; else jq -c . global/settings.json; fi)
+  user_json=$(jq -c --argjson rec "$prior_rec" "$(cat "$settings_lib") strip(\$rec)" <<<"$live_json")
+  jq --argjson w "$wanted" "$(cat "$settings_lib") merged(\$w)" <<<"$user_json" >"$merged_settings"
+  jq -nc --argjson u "$user_json" --argjson w "$wanted" "$(cat "$settings_lib") {added: added(\$u; \$w), hooks: newhooks(\$u; \$w)}" >"$new_rec"
+  if [ -f "$overlay" ]; then
+    t=$(jq -n --slurpfile g "$merged_settings" --slurpfile o "$overlay" --arg path "$overlay" \
+      'if ($o | length) != 1 then error("\($path): must hold exactly one JSON object") else $g[0] * $o[0] end')
+    printf '%s\n' "$t" >"$merged_settings"
+  fi
+fi
+
+map=(
+  "output-styles/:$HOME/.claude/output-styles/"
+  "templates/:$HOME/.claude/forge/templates/"
+  "schemas/:$HOME/.claude/forge/schemas/"
+  "mods/:$HOME/.claude/forge/mods/"
+  "global/:$HOME/.claude/"
+  "skills/:$HOME/.claude/skills/"
+  "agents/:$HOME/.claude/agents/"
+  "hooks/:$HOME/.claude/hooks/"
+  "bin/:$HOME/.local/bin/"
+)
+[ "$(forge_os)" = mac ] || map+=("systemd/:$units/")
+uninstall_forge() {
+  [ -f "$manifest" ] || { echo "port: forge is not installed: $manifest is missing" >&2; exit 1; }
+  local path dir t first had stripped n p
+  if [ "$(forge_os)" != mac ] && command -v systemctl >/dev/null; then
+    systemctl --user disable --now forge-watchdog.timer >/dev/null 2>&1 || echo "port: warning: could not disable forge-watchdog.timer" >&2
+  fi
+  while IFS= read -r t; do
+    n=$(jq -r .name <<<"$t") p=$(jq -r '.project // ""' <<<"$t")
+    if [ -n "$p" ]; then
+      [ ! -d "$p" ] || (cd "$p" && claude mcp remove "$n" --scope local </dev/null) || echo "port: warning: could not remove mcp $n from $p" >&2
+    else
+      claude mcp remove "$n" --scope user </dev/null || echo "port: warning: could not remove mcp $n" >&2
+    fi
+  done < <(jq -c '.mcp // [] | .[]' <<<"$prior_rec")
+  while IFS= read -r path; do
+    [ "$path" != "$live_settings" ] || continue
+    managed "$path" || { echo "port: skipping manifest path outside every map target or under a symlink: $path" >&2; continue; }
+    rm -f "$path"
+    dir=$(dirname "$path")
+    for t in "${targets[@]}"; do
+      case $path in "$t"/*) ;; *) continue ;; esac
+      while [ "$dir" != "$t" ] && rmdir "$dir" 2>/dev/null; do dir=$(dirname "$dir"); done
+    done
+  done <"$manifest"
+  rmdir "$HOME/.claude/forge" 2>/dev/null || true
+  [ "$(forge_os)" = mac ] || ! command -v systemctl >/dev/null || systemctl --user daemon-reload >/dev/null 2>&1 || true
+  first=$(jq -r '.first_backup // ""' <<<"$prior_rec")
+  had=$(jq -r '.had_settings // false' <<<"$prior_rec")
+  if [ -n "$first" ] && [ -d "$first" ]; then
+    while IFS= read -r path; do
+      case ${path#"$first"/} in .claude/settings.json | .claude.json) continue ;; esac
+      mkdir -p "$(dirname "$HOME/${path#"$first"/}")"
+      cp -p "$path" "$HOME/${path#"$first"/}"
+    done < <(find "$first" -type f)
+  fi
+  stripped=$(jq -c --argjson rec "$prior_rec" "$(cat "$settings_lib") strip(\$rec)" <<<"$live_json")
+  if [ "$had" = true ] && [ -f "$first/.claude/settings.json" ] && cmp -s <(jq -S . <<<"$stripped") <(jq -S . "$first/.claude/settings.json"); then
+    cp -p "$first/.claude/settings.json" "$live_settings"
+  elif [ "$had" != true ] && [ "$stripped" = "{}" ]; then
+    rm -f "$live_settings"
+  else
+    replace "$live_settings" jq . <<<"$stripped"
+  fi
+  rm -f "$manifest" "$stamp" "$rec" "$reload_pending"
+  echo "port: forge removed; your settings are kept and backups stay in $HOME/.claude/forge-backup-*"
+}
+ignored=$(git -c core.quotePath=false ls-files --others --ignored --exclude-standard --directory -- "${map[@]%%:*}") ||
+  { echo "port: git ls-files failed listing ignored files" >&2; exit 1; }
+ignores() {
+  local r=$2 p
+  ex=("${pex[@]}")
+  [ "$1" != global/ ] || ex+=(--exclude=/mcp.json --exclude=/mcp-browser.json --exclude=/mcp-projects.json --exclude=/plugins.json --exclude=/plugin-settings.json --exclude=/settings.json)
+  [[ $r == */ ]] || r=${r%/*}/
+  while IFS= read -r p; do
+    [[ -n $p && $p == "$r"* ]] || continue
+    ex+=("--exclude=/${p#"$r"}")
+  done <<<"$ignored"
+}
+if [ "$apply" = --apply ]; then
+  untracked=$(git -c core.quotePath=false ls-files --others --exclude-standard -- "${map[@]%%:*}") || refuse "git ls-files failed"
+  [ -z "$untracked" ] || refuse "untracked files $(paste -sd ' ' <<<"$untracked")"
+fi
+
+span() {
+  from=$1 to=$2
+  [ -n "$only" ] || return 0
+  case $only/ in "$1"*) ;; *) return 1 ;; esac
+  [ "$only/" != "$1" ] || return 0
+  from=$only
+  rel=${only#"$1"}
+  case $rel in */*) to=$2${rel%/*}/ ;; esac
+}
+scope=
+if [ -n "$only" ]; then
+  [ -e "$only" ] || { echo "port: --only $only: no such source path" >&2; exit 1; }
+  for m in "${map[@]}"; do
+    span "${m%%:*}" "${m#*:}" || continue
+    if [ "$from" = "${m%%:*}" ]; then scope=${to%/}; else scope=$to${only##*/}; fi
+  done
+  [ -n "$scope" ] || { echo "port: --only $only is under no mapped source" >&2; exit 1; }
+fi
+inscope() { [ -z "$only" ] || [ "$1" = "$scope" ] || [[ $1 == "$scope"/* ]]; }
+
+port_exclude=$HOME/.config/forge/port-exclude
+pex=()
+if [ -e "$port_exclude" ] || [ -L "$port_exclude" ]; then
+  if [ ! -f "$port_exclude" ] || [ ! -r "$port_exclude" ]; then
+    echo "port: error: $port_exclude must be a readable regular file" >&2
+    exit 1
+  fi
+  pex=(--exclude-from="$port_exclude")
+fi
+
+targets=()
+for m in "${map[@]}"; do targets+=("${m#*:}"); targets[-1]=${targets[-1]%/}; done
+managed() {
+  case $1 in */../*|*/..|*/./*|*/.) return 1 ;; esac
+  local t dir
+  for t in "${targets[@]}"; do
+    case $1 in "$t"/?*) ;; *) continue ;; esac
+    dir=${1%/*}
+    while :; do
+      [ ! -L "$dir" ] || return 1
+      [ "$dir" != "$t" ] || return 0
+      dir=${dir%/*}
+    done
+  done
+  return 1
+}
+if [ -n "$uninstall" ]; then
+  uninstall_forge
+  exit 0
+fi
+shipped=()
+for m in "${map[@]}"; do
+  src=${m%%:*} dst=${m#*:}
+  [ -n "$(ls -A "$src" 2>/dev/null)" ] || continue
+  ignores "$src" "$src"
+  while IFS= read -r rel; do
+    shipped+=("$dst$rel")
+  done < <(rsync -a --dry-run --itemize-changes "${ex[@]}" "$src" "$listdst/" | awk 'substr($0,1,2)==">f"{print substr($0,13)}')
+done
+shipped+=("$live_settings")
+shipped_sorted=$(printf '%s\n' "${shipped[@]}" | LC_ALL=C sort -u)
+stale=""
+if [ -f "$manifest" ]; then
+  while IFS= read -r path; do
+    inscope "$path" || continue
+    if managed "$path"; then
+      stale+=${stale:+$'\n'}$path
+    else
+      echo "port: skipping manifest path outside every map target or under a symlink: $path" >&2
+    fi
+  done < <(LC_ALL=C comm -23 <(LC_ALL=C sort -u "$manifest") <(printf '%s\n' "$shipped_sorted"))
+fi
+if [ -n "$stale" ]; then
+  while IFS= read -r path; do
+    printf '%-11s %s\n' '*deleting' "$path"
+  done <<<"$stale"
+fi
+affected() {
+  local m t
+  for m in "${map[@]}"; do
+    case ${m%%:*} in skills/|agents/|hooks/|bin/) ;; *) continue ;; esac
+    span "${m%%:*}" "${m#*:}" || continue
+    ignores "${m%%:*}" "$from"
+    rsync -an --itemize-changes "${ex[@]}" "$from" "$to" | grep -q '^>f' && return 0
+    t=${m#*:}
+    grep -qF -- "$t" <<<"$stale" && return 0
+  done
+  return 1
+}
+if [ "$apply" = --apply ] && affected; then
+  if running=$(claude agents --json </dev/null | jq -r '.[] | select(.state == "working" or .state == "blocked") | select(.name | test("^(Discuss|Quick|Debug|Fast|New|Port) |^[^ ]+ [^ ]+ (Phase [0-9]+( retry [0-9]+)?|Verify|Ship)$|^[^ ]+ (discuss|build|quick|fast|debug|new|port|audit)( |$)|^[^ ]+ (P[0-9]+(R[0-9]+)?|verify|ship) [^ /]+/[^ /]+$")) | .name'); then
+    if [ -n "$running" ]; then
+      echo "port: warning: these running sessions use the skills, agents, hooks or bin files this apply changes:"
+      sed 's/^/  /' <<<"$running"
+    fi >&2
+  else
+    echo "port: warning: cannot list running Claude sessions" >&2
+  fi
+fi
+backup_dir=
+backup() {
+  [ -f "$1" ] || return 0
+  [ -n "$backup_dir" ] || backup_dir=$HOME/.claude/forge-backup-$(date +%Y%m%dT%H%M%S)-$$
+  mkdir -p "$backup_dir/$(dirname "${1#"$HOME"/}")"
+  cp -p "$1" "$backup_dir/${1#"$HOME"/}"
+}
+if [ "$apply" = --apply ]; then
+  for m in "${map[@]}"; do
+    src=${m%%:*} dst=${m#*:}
+    [ -n "$(ls -A "$src" 2>/dev/null)" ] || continue
+    span "$src" "$dst" || continue
+    ignores "$src" "$from"
+    while IFS= read -r rel; do
+      backup "$to$rel"
+    done < <(rsync -an --itemize-changes "${ex[@]}" "$from" "$to" 2>/dev/null | awk 'substr($0,1,2)==">f" && substr($0,3,9)!="+++++++++"{print substr($0,13)}')
+  done
+  if [ -n "$stale" ]; then
+    while IFS= read -r path; do backup "$path"; done <<<"$stale"
+  fi
+  if [ -z "$only" ]; then
+    backup "$live_settings"
+    backup "$HOME/.claude.json"
+  fi
+fi
+if [ "$apply" = --apply ] && [ -n "$stale" ]; then
+  while IFS= read -r path; do
+    shipped_dir=$path
+    while shipped_dir=$(dirname "$shipped_dir"); managed "$shipped_dir"; do
+      grep -qxF -- "$shipped_dir" <<<"$shipped_sorted" || continue
+      rm -f "$path"
+      dir=$(dirname "$path")
+      while rmdir "$dir" 2>/dev/null && [ "$dir" != "$shipped_dir" ]; do
+        dir=$(dirname "$dir")
+      done
+      break
+    done
+  done <<<"$stale"
+fi
+
+for m in "${map[@]}"; do
+  src=${m%%:*} dst=${m#*:}
+  [ -n "$(ls -A "$src" 2>/dev/null)" ] || continue
+  span "$src" "$dst" || continue
+  ignores "$src" "$from"
+  if [ "$apply" = --apply ]; then
+    mkdir -p "$to"
+    itemized=$(rsync -a --itemize-changes "${ex[@]}" "$from" "$to")
+  else
+    itemized=$(rsync -an --itemize-changes "${ex[@]}" "$from" "$to")
+  fi
+  [ -z "$itemized" ] || printf '%s\n' "$itemized"
+  if [ "$src" = systemd/ ] && [ "$apply" = --apply ] && { grep -qE '^>f' <<<"$itemized" || [ -e "$reload_pending" ]; }; then
+    reload_units
+  fi
+  if [ "$src" = global/ ] && [ "$from" = "$src" ]; then
+    changed=1
+    [ ! -f "$live_settings" ] || ! cmp -s <(jq -S . "$merged_settings") <(jq -S . "$live_settings") || changed=
+    if [ ! -f "$live_settings" ]; then
+      echo ">f+++++++++ settings.json"
+    elif [ -n "$changed" ]; then
+      echo ">fc.st..... settings.json"
+    fi
+    if [ "$apply" = --apply ] && [ -n "$changed" ]; then
+      mkdir -p "${live_settings%/*}"
+      replace "$live_settings" cat "$merged_settings"
+    fi
+  fi
+done
+live=$HOME/.claude.json
+[ -f "$live" ] || live=/dev/null
+projects=global/mcp-projects.json
+[ -n "$only" ] || jq -r 'to_entries[] | .key as $n | .value.projects[] | "\($n) \(.)"' "$projects" | while read -r name path; do
+  case $path in "~/"*) abs=$HOME/${path#"~/"} ;; *) abs=$path ;; esac
+  if [ ! -d "$abs" ]; then
+    echo "port: warning: project directory $abs does not exist; skipping mcp $name there" >&2
+    continue
+  fi
+  want=$(jq -c --arg n "$name" '.[$n].server' "$projects")
+  state=$(jq -rn --slurpfile have "$live" --argjson want "$want" --arg p "$abs" --arg n "$name" '
+    def pick: {type, command, args, url};
+    ($have[0] // {} | .projects[$p].mcpServers // {}) as $have
+    | if ($have | has($n) | not) then "absent"
+      elif ($have[$n] | pick) == ($want | pick) then "ok"
+      else "drift" end')
+  echo "mcp $name $path: $state"
+  [ "$apply" = --apply ] || continue
+  [ "$state" = absent ] || { [ "$state" != drift ] || echo "port: keeping your mcp $name in $path; it differs from forge's" >&2; continue; }
+  (cd "$abs" && claude mcp add-json "$name" "$want" --scope local </dev/null) ||
+    { echo "port: error: claude mcp add-json $name failed; $name is not registered" >&2; exit 1; }
+  jq -cn --arg n "$name" --arg p "$abs" '{name: $n, project: $p}' >>"$mcp_added"
+done
+mcp_want=$(if [ -n "$browser" ]; then jq -cs '.[0] + .[1]' global/mcp.json global/mcp-browser.json; else jq -c . global/mcp.json; fi)
+[ -n "$only" ] || jq -rn --argjson want "$mcp_want" --slurpfile have "$live" '
+  def pick: {type, command, args, url};
+  ($have[0] // {} | .mcpServers // {}) as $have
+  | $want | keys_unsorted[] as $n
+  | if ($have | has($n) | not) then "absent \($n)"
+    elif ($have[$n] | pick) == ($want[$n] | pick) then "ok \($n)"
+    else "drift \($n)" end
+' | while read -r state name; do
+  echo "mcp $name: $state"
+  [ "$apply" = --apply ] || continue
+  [ "$state" = absent ] || { [ "$state" != drift ] || echo "port: keeping your mcp $name; it differs from forge's" >&2; continue; }
+  claude mcp add-json "$name" "$(jq -c --arg n "$name" '.[$n]' <<<"$mcp_want")" --scope user </dev/null ||
+    { echo "port: error: claude mcp add-json $name failed; $name is not registered" >&2; exit 1; }
+  jq -cn --arg n "$name" '{name: $n}' >>"$mcp_added"
+done
+scoped_manifest() {
+  {
+    [ ! -f "$manifest" ] || while IFS= read -r path; do inscope "$path" || printf '%s\n' "$path"; done <"$manifest"
+    while IFS= read -r path; do ! inscope "$path" || printf '%s\n' "$path"; done <<<"$shipped_sorted"
+  } | LC_ALL=C sort -u
+}
+unit_pruned=""
+if [ "$apply" = --apply ] && [ -n "$stale" ]; then
+  while IFS= read -r path; do
+    managed "$path" || { echo "port: skipping manifest path under a symlink: $path" >&2; continue; }
+    [ -d "$path" ] && [ ! -L "$path" ] || rm -f "$path"
+    target=""
+    for t in "${targets[@]}"; do
+      case $path in
+        "$t"/*) [ ${#t} -le ${#target} ] || target=$t ;;
+      esac
+    done
+    [ "$target" != "$units" ] || unit_pruned=1
+    dir=$(dirname "$path")
+    while [ -n "$target" ] && [ "$dir" != "$target" ]; do
+      rmdir "$dir" 2>/dev/null || break
+      dir=$(dirname "$dir")
+    done
+  done <<<"$stale"
+fi
+[ -z "$unit_pruned" ] || reload_units
+if [ "$apply" = --apply ] && [ -z "$reload_failed" ] && [ "$(forge_os)" != mac ] && span systemd/ "$units/" &&
+  [ -e "$units/forge-watchdog.service" ] && [ -e "$units/forge-watchdog.timer" ] &&
+  ! { systemctl --user is-enabled --quiet forge-watchdog.timer && systemctl --user is-active --quiet forge-watchdog.timer; }; then
+  systemctl --user enable --now forge-watchdog.timer ||
+    echo "port: warning: systemctl --user enable --now forge-watchdog.timer failed; the next --apply retries it" >&2
+fi
+if [ "$apply" = --apply ]; then
+  mkdir -p "$(dirname "$manifest")"
+  if [ -z "$only" ]; then
+    replace "$manifest" printf '%s\n' "$shipped_sorted"
+  elif ! scoped_manifest | cmp -s - "$manifest"; then
+    replace "$manifest" scoped_manifest
+  fi
+  prior=$(jq -cs 'if length == 1 and (.[0] | type) == "object" then .[0] else {} end' "$stamp" 2>/dev/null) || prior={}
+  replace "$stamp" jq -n --argjson prior "$prior" --arg commit "$(git rev-parse HEAD)" --arg time "$(date -u +%FT%TZ)" --arg only "$only" --arg source "$(pwd -P)" '
+    {$commit, $time} as $p
+    | if $only == "" then $p + {bin: $p, rest: $p}
+      elif $only == "bin" then $prior + {bin: $p}
+      else $p + {$only} + ($prior | with_entries(select(.key == "bin" or .key == "rest"))) end
+    | . + {$source}'
+  if [ -z "$only" ]; then
+    first=$(jq -r '.first_backup // ""' <<<"$prior_rec")
+    had=$(jq -r '.had_settings // false' <<<"$prior_rec")
+    if [ "$prior_rec" = '{}' ]; then
+      first=$backup_dir
+      if [ -n "$backup_dir" ] && [ -f "$backup_dir/.claude/settings.json" ]; then had=true; else had=false; fi
+    fi
+    jq -c --slurpfile mcp "$mcp_added" --arg first "$first" --arg had "$had" --argjson prior "$prior_rec" \
+      --arg plugins "$plugins" --arg browser "$browser" \
+      '. + {first_backup: $first, had_settings: ($had == "true"), plugins: ($plugins != ""), browser: ($browser != ""),
+             mcp: ((($prior.mcp // []) + $mcp) | unique)}' "$new_rec" >"$rec.new"
+    mv "$rec.new" "$rec"
+  fi
+  [ -z "$backup_dir" ] || echo "port: backup of changed files in $backup_dir"
+fi
+installed=$HOME/.claude/plugins/installed_plugins.json
+pins=global/plugins.json
+plugin_state() {
+  local have=$installed
+  [ -f "$have" ] || have=/dev/null
+  jq -rn --slurpfile have "$have" --slurpfile want "$pins" --arg id "$1" '
+    ($have[0] // {} | .plugins // {} | .[$id][0] // null) as $r
+    | $want[0][$id] as $p
+    | if $r == null then "absent"
+      elif $r.version == $p.version and $r.gitCommitSha == $p.gitCommitSha then "ok"
+      else "drift" end'
+}
+plugin_cmd() {
+  local out
+  out=$(claude plugin "$@" --json </dev/null) &&
+    tail -n 1 <<<"$out" | jq -e '.outcome == "ok" and .shownCommand == null' >/dev/null 2>&1 && return 0
+  why=$(tail -n 1 <<<"$out" | jq -r '.message | strings' 2>/dev/null) || why=
+  return 1
+}
+[ -n "$only" ] || [ -z "$plugins" ] || jq -r 'to_entries[] | "\(.key) \(.value.marketplace)"' "$pins" | while read -r id market; do
+  state=$(plugin_state "$id")
+  echo "plugin $id: $state"
+  [ "$apply" = --apply ] && [ "$state" != ok ] || continue
+  plugin_cmd marketplace update "$market" ||
+    { echo "port: error: claude plugin marketplace update $market failed; $id stays $state${why:+: $why}" >&2; exit 1; }
+  case $state in absent) verb=install ;; *) verb=update ;; esac
+  plugin_cmd "$verb" "$id" --scope user ||
+    { echo "port: error: claude plugin $verb $id failed${why:+: $why}" >&2; exit 1; }
+  [ "$(plugin_state "$id")" = ok ] ||
+    { echo "port: error: $id is not at its pinned version $(jq -r --arg id "$id" '.[$id] | "\(.version) (\(.gitCommitSha))"' "$pins") after claude plugin $verb" >&2; exit 1; }
+done
+if [ "$apply" = --apply ]; then echo "ported $(git rev-parse --short HEAD)"; else echo "(dry run — rerun with --apply to port)"; fi
+[ -z "$reload_failed" ] || exit 1

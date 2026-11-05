@@ -1,0 +1,50 @@
+Usage: forge clean [--confirmed | --sessions] <track>/<feature>
+
+Remove a feature's run state: claude rm every session named
+"<project> P<N>[R<k>] <track>/<feature>" or
+"<project> verify <track>/<feature>", or by the legacy names
+"<project> <track>-<feature> Phase <N>[ retry <k>]" and
+"<project> <track>-<feature> Verify" (the ship session, which runs clean,
+stays until forge gc or the next launch removes it after archive), then remove
+the phase and feature worktrees and delete each phase branch merged into
+forge/<track>-<feature>. forge/<track>-<feature> stays until forge archive
+deletes it. Untracked .serena/ and node_modules/ directories and any
+untracked path under .impeccable/ go with the worktrees; fails on a worktree
+with uncommitted changes or any other untracked file, or a phase branch not
+merged into forge/<track>-<feature>. Run it before forge archive, which
+moves the split away.
+
+Before removing anything, clean checks that the feature has landed: in every
+phase repo the local refs/remotes/origin/main exists, equals the remote's
+current main (queried with git ls-remote origin refs/heads/main, no fetch)
+and holds forge/<track>-<feature>, which holds every existing phase branch.
+A phase repo with no origin remote (git remote get-url origin fails) is
+checked against its local main instead; an unreachable, stale or repointed
+origin still refuses. Otherwise (an unreachable origin, no main on the
+remote, a different sha or a branch not in origin/main or, with no origin,
+local main) it removes nothing, prints the worktrees, phase branches and
+sessions it would remove and the override on stderr and exits 3. The other
+checks still apply.
+
+  --confirmed   skip the origin/main check; run it only after the operator
+                overrides a refusal
+  --sessions    claude rm only the feature's phase and verify sessions that
+                are not working or blocked, never a ship session; no
+                origin/main check, and worktrees and branches stay
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  STATE/features/<track>-<feature>/split.json
+  claude agents --json --all
+  refs/remotes/origin/main of each phase repo with origin
+  git ls-remote origin refs/heads/main of each phase repo with origin
+  refs/heads/main of each phase repo with no origin
+
+Writes:
+  the worktrees and phase branches it removes
+
+Example:
+  forge clean forge/run
+  forge clean --confirmed forge/run
+  forge clean --sessions forge/run

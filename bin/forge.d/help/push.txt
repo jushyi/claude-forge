@@ -1,0 +1,47 @@
+Usage: forge push [<repo>]
+
+Push main to origin in <repo> (default the current directory), only when
+the repo has opted in with 'git config forge.pushMain true' and is
+currently on main; otherwise prints nothing and exits 0. forge land and
+forge commit <scope> archive push by themselves; run push after a commit
+made on main outside them, such as /forge-fast's.
+GIT_TERMINAL_PROMPT is set to 0 so a stalled HTTPS credential prompt
+cannot hang.
+
+When the push fails, push fetches origin's main. If origin's main is no
+longer an ancestor of main (origin moved) and main's own commits since
+they split change only .forge/ paths, push recovers once: under the
+repo's forge.lock it merges origin's main into main with a merge commit,
+moving main by fast-forward only, prints
+  forge: origin/main moved; merged it into main as <short sha>
+on stderr and pushes again. It never rebases and never retries more than
+once. Recovery does not apply, and main stays as it was, when:
+  - the fetch fails (origin unreachable), or origin's main is still an
+    ancestor of main (a hook or permission rejection)
+  - main's own commits change paths outside .forge/:
+    forge: origin/main moved and local commits change <paths> outside
+    .forge/; run forge land to retest
+  - origin's main conflicts with main:
+    forge: origin/main conflicts with main in: <names>; reconcile by hand
+  - main moved, or the repo has local edits or untracked files on a path
+    the merge changes:
+    forge: origin/main moved; main has local changes to <paths>; commit
+    or move them, then push again
+
+A failed push, including one where recovery does not apply and a second
+push after the merge that fails, prints "forge: warning: pushing main to
+origin failed in <repo>:" followed by git's error, both on stderr, and
+still exits 0. Works in a directory with no .forge/. Exits 2 on more
+than one argument.
+
+Reads:
+  <repo> git config forge.pushMain
+  <repo>'s current branch
+  origin's main, after a failed push
+
+Writes:
+  main on origin, in <repo>
+  origin/main and, on recovery, a merge commit on main, in <repo>
+
+Example:
+  forge push ../acme-hub

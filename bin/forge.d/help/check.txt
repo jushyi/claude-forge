@@ -1,0 +1,146 @@
+Usage: forge check <N>
+
+Check phase N's plan: it is valid against the plan schema (every task
+names files), every requirement in the phase spec is listed by a task,
+and every dependency names a task in the plan. Prints each failure and
+exits 1.
+
+Tasks may run in parallel, so it also fails (exit 1) when two tasks with
+no dependency path between them (no chain of deps either way) plan the
+same file in the same repo (a task's "repo", else its phase's, else the
+project root). It prints one line per pair, "<A> and <B> have no
+dependency path but both plan <files>", a file in a named repo as
+<repo>:<file>.
+
+Every dependency needs a reason: each task's "dep_reasons" maps a task
+in its "deps" to "file <path>" (a file both tasks plan) or "symbol
+<name>" (a symbol the earlier task creates and the later uses), {} when
+"deps" is empty; the plan schema leaves it optional so plans written
+before it still validate. After the checks above it fails (exit 1) with
+one line per task with no "dep_reasons", "<A> has no dep_reasons", per
+dependency with no dep_reasons entry, "<A> depends on <B> with no
+dep_reasons entry", and per file reason whose path the two tasks do
+not both plan in the same repo, "<A> depends on <B> for file <path>,
+which <A> and <B> do not both plan". A symbol reason is checked for presence only.
+
+When the phase spec has a focus, its criteria are the "- <ID>: " bullets
+of $FORGE_TEMPLATES/checks/<focus>.md for each focus tag; a focus tag
+with no criteria file fails, naming the missing path. Each criterion in
+no task's "criteria" and not in the plan's "na_criteria" prints "<ID>
+maps to no task and is not n/a", and each ID in "criteria" or
+"na_criteria" that is not a criterion of the focus fails; both exit 1.
+A phase with no focus has no criteria check.
+
+Right after the requirement and dependency checks it checks that the
+plan covers the phase spec's "Files: " bullets. Their paths are read
+with the entries def of bin/forge.d/forge.jq: only the backticked
+paths of a bullet holding backticks, else each comma-separated entry,
+a "<repo>:" prefix of the spec's repo, a :<line> tail, a parenthesised
+note and trailing dots dropped. Backticked paths elsewhere in the spec
+are not checked. A path is covered when a task in the spec's repo (a
+task's "repo", else the phase spec's, else the project root) plans it
+or a file under it, or when an entry of the plan's "na_files", a list
+of {"file", "reason"} objects, has it as its "file". Each uncovered
+path prints "<path> is named in the phase spec Files but in no task's
+files and not in na_files", and each "na_files" file the Files bullets
+do not name prints "<file> in na_files is not named in the phase
+spec"; both print on stderr and exit 1. A phase spec with a bullet
+starting "Gap:" (a retry plan) skips this check.
+
+It then lints the TESTING.md of every repo the plan touches (a task's
+"repo", else the phase spec's, else the project root), reading
+<repo>/.forge/TESTING.md as forge test --help describes: a "- Test:" line
+without {test}, a "- Changed tests:" line without {files}, a "- Failed
+tests:" line without {log}, or an All tests, Test, Changed tests, Failed
+tests or Setup command that fails bash -n once its placeholders are
+filled, {log} by a sample path, each prints "forge: <path>: - <Name>:
+`<command>`: <reason>", the missing placeholder or the bash -n error. A
+command that is a <...> placeholder is not checked. A Failed tests line
+with no backticked command prints one line naming the file, the line
+number, the line and "no backticked command". A Quarantine
+line with no "(added YYYY-MM-DD)" date or a date that is not a valid
+calendar date prints one line naming the file, the line number and the
+line. A Quarantine date more than 7 days (168 h) old, from 00:00 UTC of
+that date, is no failure: when the repo's .forge/concerns.json has no
+open concern of area "quarantine" whose text ends in that line, check
+appends one, as forge concern add does (id C-NN, area quarantine, files
+[".forge/TESTING.md"], severity low, status open, today's date, text
+"Quarantine line <n> of .forge/TESTING.md, added YYYY-MM-DD, is over 7
+days old; lift it or fix the tests: <line>"), writes CONCERNS.md,
+commits both in the main worktree as "docs(concerns): add <repo>:C-NN"
+and prints "forge: <path>: line <n>: <line>: added YYYY-MM-DD, over 7
+days ago; recorded as concern <repo>:C-NN" on stderr; with such a
+concern open it prints nothing, and either way the lint goes on. Every
+other failure is
+printed, then it exits 1 before the overlap checks, logging no event. A
+missing TESTING.md or line is not a failure.
+
+It then checks test coverage per repo, on the same rule: every file a
+task lists that does not exist yet in its repo and is a test file
+(*.test.*, *.spec.*, *_test.*, test_*.py or under __tests__/; a path
+under fixtures/ or __fixtures__/ is not) must be covered by the All
+tests, Test or Changed tests command of <repo>/.forge/TESTING.md. A
+command covers a file when it names the file, a parent directory or a
+matching glob, placeholders ignored, shell expansions ($x, ${x})
+read as *, NAME=value assignment words ignored and a flag such as
+--dir=src/ read as its value. A command names a test file through any
+word that is one (tests/other.test.sh), and names a directory only
+through a word holding a /, so `npm test` or `pytest tests` in a repo
+holding test/ and tests/ is a whole-repo runner; a word holding a /
+that is not an existing file names a directory, created yet or not,
+unless it is the command word of its simple command (node_modules/.bin/jest,
+./gradlew). A command naming no test file, such directory, path glob
+(one holding a /) or glob match of the repo, or naming the repo root
+(., ./...), is a whole-repo runner and covers every file. Each uncovered file prints "forge: [<repo>:]<file>
+is a new test file no command of <repo>/.forge/TESTING.md covers", a
+file in a named repo as <repo>:<file>; after every failure it exits 1
+before the overlap checks, logging no event. A repo whose TESTING.md or
+command lines are missing, or whose .forge/TESTING.md a task of the
+plan lists in its files, is not checked.
+
+When the plan passes, under the lock, compare its files with the plans of
+every other phase of the feature that is checked (its latest check,
+replan or retry event is check) and not done. Files match per repo: a
+task's "repo", else its phase's, else the project root. Union-merged
+files are ignored: a file whose git merge attribute is union, set by a
+.gitattributes line "<pattern> merge=union" and read with git check-attr
+merge from the feature branch in its repo, or from its repo's checkout
+while that branch does not exist yet, since git's union merge keeps both sides'
+added lines. A repo whose checkout cannot be resolved, or whose git
+check-attr fails, keeps its files. Each phase M that shares a file that
+is not union-merged and is not already in N's depends is added to
+depends in N's spec.json (as M) and in N's split.json entry (as M's
+slug), with a wait event on N naming M. Prints "waits on <M>[, <M>...]" and exits 3, or prints "plan
+ok" and exits 0; both log a check event whose "plan" key holds the
+sha256 (sha256sum) of plan.json, which the plan gate of forge commit
+compares with plan.json as it is then. Commits nothing. A waiting phase
+starts again once every phase it depends on is done.
+
+It also compares the plan's files, per repo as above, with the plans of
+active phases of other features: every phase directory with a plan.json
+and no result.json whose status is done, ignoring union-merged files as
+above. For each phase M sharing a file that is not union-merged it
+prints "forge: warning: phase N plans files that phase M (<track>/<feature>)
+also plans: <files>" on stderr, a file in a named repo as <repo>:<file>,
+and logs an overlap event on N with "phase M (<track>/<feature>): <files>",
+<files> listing only the files that are not union-merged. It never waits
+or fails on them.
+
+Reads:
+  STATE/phases/*/{spec,plan,result}.json, events.jsonl
+  STATE/features/<track>-<feature>/split.json
+  $FORGE_TEMPLATES/checks/<focus>.md
+  bin/forge.d/forge.jq
+  <repo>/.forge/TESTING.md   (each repo the plan touches)
+
+Writes:
+  STATE/phases/NN-slug/spec.json                (depends, on exit 3)
+  STATE/features/<track>-<feature>/split.json   (depends, on exit 3)
+  STATE/phases/NN-slug/events.jsonl             (wait, overlap and check
+                                                events)
+  <git common dir>/forge.lock   (see forge commit --help)
+
+STATE is the project root's state dir (see forge paths --help).
+
+Example:
+  forge check 09

@@ -1,0 +1,22 @@
+{
+  "enabledPlugins": {
+    "codex@openai-codex": true,
+    "impeccable@impeccable": true
+  },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc",
+        "ref": "v1.0.6"
+      }
+    },
+    "impeccable": {
+      "source": {
+        "source": "github",
+        "repo": "pbakaus/impeccable",
+        "ref": "skill-v4.5.2"
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+--- a/lib/local-browser.mjs
++++ b/lib/local-browser.mjs
+@@ -2,7 +2,7 @@
+     const base = {
+       headless: b.headless,
+       viewport: null,
+-      args: ['--window-size=1280,900', '--no-first-run', '--no-default-browser-check'],
++      args: ['--window-size=1280,900', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=9222', ...(!b.headless && process.env.WAYLAND_DISPLAY ? ['--ozone-platform=wayland'] : [])],
+     };
+     return chromium.launchPersistentContext(dir, base);
+ }

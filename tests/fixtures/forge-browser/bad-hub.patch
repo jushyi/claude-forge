@@ -1,0 +1,14 @@
+--- a/lib/hub.mjs
++++ b/lib/hub.mjs
+@@ -1,9 +1,10 @@
+ const PEER_ONLY = process.env.FORGE_JBC_PEER === '1';
++const NEVER_OWN = PEER_ONLY;
+ 
+ export class Hub {
+   async start() {
+     try {
+-      await this.claimPort();
++      await this.becomeOwner();
+     } catch (err) {
+       await this.becomePeer();
+     }

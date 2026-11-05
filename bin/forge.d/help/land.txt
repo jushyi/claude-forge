@@ -1,0 +1,107 @@
+Usage: forge land <repo> <branch>
+
+The only way code reaches a repo's main. <repo> is the repo's main
+checkout R, relative to the current directory; it must be on main. Runs in
+any directory, whatever FORGE_ROOT says, with or without .forge/.
+
+  0. Takes <git common dir>/forge-land.lock and holds it through step 4,
+     so lands of one repo run one at a time. A land that finds it held
+     prints once on stderr
+       forge: waiting for forge-land.lock (held by <pid> <command> since <time>)
+     and waits.
+  1. Merges <branch> with --no-ff into the current main tip in the
+     integration worktree <repo>/.claude/worktrees/_land (created detached
+     when missing, reset and reused otherwise, its untracked files
+     cleaned while its ignored files and its forge test setup stamp are
+     kept), never in R, after forge
+     exclude makes sure .claude/worktrees/ is git-ignored. With
+     forge.pushMain true, fetches origin's main first. When origin's main
+     already holds <branch>'s tip (a PR merged on the host) and main has
+     no commits origin's main lacks, fast-forwards to origin's main and
+     makes no merge commit. Otherwise merges any commits origin's main has
+     that main lacks ("Merge origin/main"), so local and origin never
+     diverge, then merges <branch> only when it is not already in. With
+     an origin remote and forge.pushMain unset, fetches origin's main and
+     refuses (exit 1) when it holds commits main lacks, such as a PR
+     merged on the host; a failed fetch there only warns.
+  2. Runs 'forge test _land' (FORGE_LAND_TEST overrides the command)
+     outside forge.lock, unless this host has a full forge test stamp
+     of the landed tree, whichever branch or commit recorded it, or a
+     recent full stamp of a tree that differs from the landed tree
+     only under .forge/ and not in .forge/TESTING.md, such as
+     <branch>'s tip (a stamp whose tree is gone is skipped): then it
+     prints "forge: tests passed (<tree>), cached" on stderr and runs
+     nothing.
+     So a fast-forward to a tree already tested runs no tests. This
+     host's changed-tests stamp changed/<tree> also counts when its
+     "chain <X>" lines lead, through the "chain" lines of changed/<X>
+     stamps in at most 20 hops (a cycle stops the walk), to a tree X
+     that has a full stamp and is the tree of a commit in the landed
+     commit's history; a bare merge-base line or an empty changed stamp
+     never counts, and the .forge/-only scan also offers changed stamps
+     that pass that walk. Another host's stamps never count. Exit 5
+     is no failure only
+     when <_land>/.forge/TESTING.md declares "- All tests: none": land
+     warns "forge: warning: <_land> declares "- All tests: none";
+     landing <branch> untested" on stderr and goes on. Exit 5 without
+     that declaration (a FORGE_LAND_TEST command's included), and exit 6
+     (no "- All tests:" line), fail the tests like any other exit.
+  3. Takes <git common dir>/forge.lock. When main (or origin's main) moved
+     since the tested base: if every file it changed is under .forge/
+     (planning churn), re-merges onto the new tip without retesting;
+     otherwise releases forge.lock and retests, at most 5 times.
+  4. Fast-forwards R's main to the landed commit with git merge
+     --ff-only, moving only the files the merge changed; R's other
+     uncommitted edits stay. With forge.pushMain true, pushes main to
+     origin under the lock only when main holds commits origin's main
+     lacks; otherwise pushes nothing, so a land after a PR merge starts
+     no second CI run. After a push, or when there was nothing to push,
+     deletes <branch> on origin, leased on its tip there, when that tip
+     is merged into origin's main ("forge: deleted origin/<branch>"; one
+     it cannot delete is kept with a warning).
+
+Prints "forge: landed <branch> as <sha> on main", then "forge: pushed
+<sha> to origin" when it pushed, or "forge: nothing to push; origin has
+main" when origin's main already matched main. A failed push warns on
+stderr, as forge push does, and still exits 0; the next land reconciles
+origin. The push's one recovery (merging a moved origin's main into main)
+applies only when main's own commits change nothing outside .forge/, so
+after landing code it does not apply and the push only warns.
+
+Exit codes:
+  0  landed
+  1  R is off main or not a git repository, <branch> is unknown, or git
+     failed
+  4  <branch> (or origin's main) conflicts with main; nothing landed. Run
+     'forge merge main' in the branch's worktree, then land again
+  5  main kept moving outside .forge/ through 5 tests; nothing landed
+  6  R has uncommitted or untracked changes to paths the merge changes; the
+     paths are named, nothing landed
+  7  the tests failed in _land (any exit but 0, or 5 without a
+     "- All tests: none" declaration); nothing landed
+
+Reads:
+  <repo>'s git state, git config forge.pushMain, origin's main
+  <git common dir>/forge-test/<machine-id>/<tree>
+                                       (this host's full pass of the
+                                       landed tree, or its recent full
+                                       passes of trees differing from
+                                       it only under .forge/)
+  <git common dir>/forge-test/<machine-id>/changed/<tree>
+                                       (this host's changed passes,
+                                       counted when their chain leads
+                                       to a full pass in the landed
+                                       commit's history)
+
+Writes:
+  <repo>/.claude/worktrees/_land
+  <git common dir>/info/exclude   (see forge exclude --help)
+  main, with a merge commit only when one is made, and origin's main
+  when opted in and main is ahead of it
+  <git common dir>/forge-land.lock, forge.lock
+
+Environment:
+  FORGE_LAND_TEST   command run with the _land path instead of forge test
+
+Example:
+  forge land api forge/intake

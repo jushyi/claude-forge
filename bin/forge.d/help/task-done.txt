@@ -1,0 +1,60 @@
+Usage: forge task-done <N> <id> [--unmet <reason>]
+
+Close task <id> (T1, T2, ...) of phase N in one call: judge the finished
+implementer record, commit a passed task's own files in the phase worktree
+W and record the task with forge commit N <id>, or exit with a code
+naming the implementer respawn. It ends with one status line.
+
+Record tasks/<id>.json:
+  status done with exit 0         passes without a rerun
+  status failed                   save the record to G/forge-N-<id>.log,
+                                  exit 5
+  otherwise (missing fields or a non-zero exit) the record's command runs
+  in W (bash -c, foreground): a pass continues, a failure saves its output
+  to G/forge-N-<id>.log and exits 5, and no record or no command exits 5.
+
+--unmet <reason> (a non-empty reason, else exit 2) closes a task the
+session could not finish: it writes tasks/<id>.json as
+{"id": "<id>", "status": "unmet", "reason": "<reason>"}, replacing any
+record, runs no test and commits as below, so the task's planned files
+are committed as they stand in W (no git commit when none changed) and
+forge commit N <id> runs. forge done counts an unmet record as done.
+
+Commit: the candidates are the plan task's files and each path
+git status --porcelain lists in W that the task record's deviation names
+verbatim. A candidate that is an absolute path under STATE (such as
+STATE/features/<feature>/procedure.json) is recorded in place: it is
+never passed to git status, git add or git commit, so a task whose only
+file lies under STATE makes no git commit, and its commit is W's HEAD.
+The candidates git status lists are staged with
+git add -- <files> and committed with
+git commit -m "feat(<phase slug>): <task title>" -- <files>, never -A,
+-a, -u or ., so no other task's work is swept in; a git command failing
+on index.lock is rerun once. With no listed files there is no git commit
+and the commit is W's HEAD. The short hash goes into tasks/<id>.json as
+commit, then forge commit N <id> runs: it validates and gates the record
+in place in STATE and, with no in-repo change, commits nothing on main
+and prints "forge: recorded N <id>".
+
+Exit codes:
+  0  committed
+  1  failure: git or forge commit failed, or W is missing
+  2  usage error
+  5  respawn the implementer with G/forge-N-<id>.log
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  STATE/phases/NN-slug/plan.json
+  STATE/phases/NN-slug/spec.json
+  STATE/phases/NN-slug/tasks/<id>.json
+  the phase worktree W
+
+Writes:
+  STATE/phases/NN-slug/tasks/<id>.json  (commit; the record on --unmet)
+  G/forge-N-<id>.log                    (on exit 5)
+  a commit in W; forge commit N <id> records in STATE, no commit on main
+
+Example:
+  FORGE_ROOT=~/Projects/acme forge task-done 12 T3
+  FORGE_ROOT=~/Projects/acme forge task-done 12 T4 --unmet "attempts ran out"

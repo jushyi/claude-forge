@@ -1,0 +1,6 @@
+["~/Projects/forge","mcp","add-json","playwright",{"type":"stdio","command":"npx","args":["-y","@playwright/mcp@0.0.83","--cdp-endpoint","http://127.0.0.1:9222"]},"--scope","local"]
+[".","mcp","add-json","context7",{"type":"http","url":"https://mcp.context7.com/mcp"},"--scope","user"]
+[".","plugin","marketplace","update","openai-codex","--json"]
+[".","plugin","update","codex@openai-codex","--scope","user","--json"]
+[".","plugin","marketplace","update","impeccable","--json"]
+[".","plugin","update","impeccable@impeccable","--scope","user","--json"]

@@ -1,0 +1,46 @@
+Usage: forge merge <branch>
+       forge merge --continue <record>
+       forge merge --abort
+
+Merges <branch> into the git worktree holding the current directory,
+whatever FORGE_ROOT says. Runs in any git worktree, with or without
+.forge/. Runs git merge --no-ff --no-commit with diff3 conflict markers and
+commits as "Merge branch '<branch>' into <current>".
+
+On conflicts, runs two passes in order:
+  1. Every conflicted .forge/ JSON file is merged three-way per top-level
+     key; a key changed on both sides stays a conflict. A track's features
+     and shipped are merged per record by feature, and requirements by id.
+     A merged file is staged when it parses as JSON and, where it has a
+     schema, validates against it.
+  2. In .forge/*.md files, hunks where both sides only inserted lines are
+     written ours then theirs.
+Then runs merge-check with no record before the commit.
+
+On exit 4, stdout lists each path still unmerged, or else the paths
+merge-check names, with its output on stderr. The merge stays in
+progress.
+
+With --continue, refuses while any path is unmerged, runs merge-check with
+<record>, and commits only when it exits 0; else exits 1 with the merge
+still in progress.
+
+With --abort, runs git merge --abort.
+
+Exit codes:
+  0  merged and committed, or already up to date
+  1  a git failure with no merge in progress, or a refused --continue
+  4  conflicts remain, merge in progress
+
+Reads:
+  the current worktree's git state
+  <record>   (STATE/phases/NN-slug/merge/M<n>.json, the phase dir P under
+             the project root's state dir; see forge paths --help)
+
+Writes:
+  the worktree's files and index
+  the merge commit
+
+Example:
+  cd .claude/worktrees/crm-intake-03 && forge merge forge/crm-intake
+  forge merge --continue "$P/merge/M1.json"

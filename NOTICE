@@ -1,0 +1,18 @@
+claude-forge third-party notices
+
+Jev Browser Control (optional)
+  Copyright (c) 2026 Jeroen Erne. MIT License.
+  https://github.com/nexibeo/jev-browser-control
+  Not vendored: bin/forge-browser downloads the package from the URL in
+  global/forge/jbc/pin.json and verifies its sha256. global/forge/jbc/ holds
+  forge's patches against it and its lockfile.
+
+Referenced but not included
+  Codex plugin (openai/codex-plugin-cc) and Impeccable plugin
+  (pbakaus/impeccable): optional, pinned in global/plugins.json, installed
+  only when you opt in, under their own licenses.
+  context7 and Playwright MCP: services and npm packages used through MCP,
+  under their own terms.
+
+Claude Code is a product of Anthropic. This project is unofficial and not
+affiliated with or endorsed by Anthropic.

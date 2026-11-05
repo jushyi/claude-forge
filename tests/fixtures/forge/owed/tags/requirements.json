@@ -1,0 +1,11 @@
+{
+  "requirements": [
+    {"id": "INT-01", "text": "The form saves a lead.", "done": false},
+    {"id": "INT-02", "text": "The API returns the lead.", "done": false},
+    {"id": "INT-03", "text": "The lead list shows the new lead.", "done": false, "owed": {"kind": "deferred", "check": "[skipped] INT-03 lead list on staging (deferred by phase 02: staging was down)", "owner": "operator"}},
+    {"id": "INT-04", "text": "The intake page renders on mobile.", "done": false, "concern": "crm:C-03"},
+    {"id": "INT-05", "text": "The leads migration runs.", "done": false},
+    {"id": "INT-06", "text": "Duplicate leads merge.", "done": true},
+    {"id": "INT-07", "text": "The confirmation email sends.", "done": false}
+  ]
+}

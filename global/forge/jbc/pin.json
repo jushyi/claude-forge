@@ -1,0 +1,10 @@
+{
+  "url": "https://jevbrowsercontrol.com/downloads/jev-browser-control-mcp-0.4.2.tgz",
+  "version": "0.4.2",
+  "sha256": "0cf9cf2838ce788194edf83e94ce503e0ff0ac3afb57e6207d963757501ff43f",
+  "patches": [
+    "local-browser.patch",
+    "hub.patch",
+    "server.patch"
+  ]
+}

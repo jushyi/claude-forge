@@ -1,0 +1,7 @@
+--- a/server.mjs
++++ b/server.mjs
+@@ -33,3 +33,3 @@
+ const INSTRUCTIONS = MODE === 'browser'
+-  ? `These tools drive a Chrome window that this server opens on the user's computer, with its own profile that is kept between sessions. The first tool call opens it. If a site needs a login, ask the user to sign in once in that window; the login stays for next time.\n${COMMON}\n- browser_clipboard returns what the page just copied (after a "Copy link" menu item). browser_record start/stop saves a screen recording of the browser as an MP4.`
++  ? `These tools drive a Chrome window that this server opens on the user's computer, with its own profile that is kept between sessions. ${process.env.FORGE_JBC_PEER === '1' ? 'The first tool call does not open it: run forge-browser start (headless) or forge-browser start --headed before the first mcp__jbc__* call, and forge-browser stop when done.' : 'The first tool call opens it.'} If a site needs a login, ask the user to sign in once in that window; the login stays for next time.\n${COMMON}\n- browser_clipboard returns what the page just copied (after a "Copy link" menu item). browser_record start/stop saves a screen recording of the browser as an MP4.`
+   : `These tools control the user's own Chrome browser through the Jev Browser Control extension, with the user's logins.\n${COMMON}`;

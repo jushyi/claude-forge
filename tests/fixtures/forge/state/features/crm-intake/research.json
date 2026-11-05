@@ -1,0 +1,17 @@
+{
+  "questions": [
+    {
+      "question": "Which validator?",
+      "answer": "zod",
+      "sources": [
+        "https://zod.dev",
+        "src/form.ts:10"
+      ]
+    },
+    {
+      "question": "Merge rule?",
+      "answer": "Latest wins",
+      "sources": []
+    }
+  ]
+}

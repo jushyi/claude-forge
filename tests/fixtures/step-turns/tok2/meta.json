@@ -1,0 +1,14 @@
+[
+ {
+  "session": "t-one",
+  "stype": "forge-phase"
+ },
+ {
+  "session": "t-two",
+  "stype": "forge-phase"
+ },
+ {
+  "session": "t-three",
+  "stype": "forge-discuss"
+ }
+]

@@ -1,0 +1,6 @@
+{
+  "phases": [
+    {"slug": "export-core", "goal": "Serve leads", "spec": ["Files: src/export.ts, src/core.ts"], "requirements": [], "depends": []},
+    {"slug": "export-ui", "goal": "Show leads", "spec": ["Files: `src/ui.ts`, `src/export.ts`"], "requirements": [], "depends": []}
+  ]
+}

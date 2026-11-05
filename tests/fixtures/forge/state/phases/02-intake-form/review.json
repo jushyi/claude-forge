@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "file": "src/form.ts",
+      "line": 12,
+      "severity": "low",
+      "summary": "Unchecked empty email",
+      "fixed": true
+    }
+  ]
+}

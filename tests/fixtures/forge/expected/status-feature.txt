@@ -1,0 +1,44 @@
+# crm / intake
+
+Intake form
+
+Status: discussed
+Depends on: —
+Focus: security, pii
+
+## Decisions
+- Leads live in one table.
+
+## Spec
+- A lead has name and email.
+- Duplicate emails merge.
+
+## Requirements
+- [x] INT-01 (agent): The form saves a lead.
+- [ ] INT-02 (agent): The API returns the lead. — concern: crm:C-03
+
+## Research
+- Which validator? — zod (https://zod.dev, src/form.ts:10)
+- Merge rule? — Latest wins
+
+## Design
+- Owners triage new leads fast
+- Dense table, no cards
+
+- mockups/intake-form.html — approved — Larger submit button; Email field first
+- mockups/lead-list.html — not approved — —
+
+## Phases
+| Phase | Goal | Depends on | Requirements | Status |
+|---|---|---|---|---|
+| 02-intake-form | The form saves a lead | — | INT-01 | done |
+| 03-intake-api | The API returns the lead | intake-form | INT-02 | — |
+
+## Manual test
+—
+
+## Final review
+—
+
+## PR
+—

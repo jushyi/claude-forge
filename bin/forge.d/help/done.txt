@@ -1,0 +1,152 @@
+Usage: forge done <N>
+
+Record the end of phase N; its session writes result.json first.
+
+When the result is done, done first refuses, changing nothing, while a
+task of P/plan.json has no P/tasks/<id>.json at status done, the record
+forge task-done writes when it commits the task after its own test
+command passed. No P/plan.json means no task to check. It prints
+"forge: phase N is not done:", one line "  tasks: <id> not committed
+through forge task-done: ..." per such task, and a closing line telling
+the session to commit each such task through forge task-done and rerun
+forge done N. A blocked result skips this check.
+
+Then, under the lock, so simultaneous finishes serialize:
+  - when the result is done, merge forge/<track>-<feature>-<N> into forge/<track>-<feature>
+    in the feature worktree; when the merge conflicts, done aborts it,
+    logs a sync event in phase N's events.jsonl and exits 6 with nothing
+    else changed, and the phase session merges forge/<track>-<feature> into
+    forge/<track>-<feature>-<N> and reruns forge done <N>; a done result
+    whose unmet array holds an entry with task "sync" skips the merge
+    and its conflict check, leaves the phase branch unmerged and prints
+    "forge: phase N done with sync unmet", the rest going on as below;
+    such a phase counts complete when forge picks the next phases and
+    feature verify, so its dependents start and verify can read unmet;
+    otherwise, unless
+    the phase branch was already merged, when a task carries a non-empty
+    deviation, replan each dependent phase that has a plan, is not done
+    and whose plan names a file that phase N's plan gives a deviating task
+    (remove plan.json and every later step file, log a replan event);
+    then, unless the phase branch was already merged, log a wait event
+    on each running phase whose depends holds N, so it relaunches
+  - when it replanned dependent phases, run forge commit <N> done, which
+    validates them in place in STATE and, with no in-repo change, commits
+    nothing and prints "forge: recorded <N> done"; otherwise commit
+    nothing
+  - before it counts live sessions, under sessions.lock, for any result,
+    claude rm this project's finished sessions as forge implement --help
+    describes: archived features' sessions, done background phase
+    sessions whose result.json is done, and done background quick,
+    debug and discuss sessions whose last reply has a "result:" line and
+    whose work is committed; each removal prints "forge: removed <name>
+    (<id>)" on stderr and appends "<UTC time><TAB><id><TAB><name>" to
+    <git common dir>/forge-reaped.log, and a failed claude rm only warns
+  - before each phase start (a retry's included) or the verify start,
+    after the count and before its live-session check, claude rm a
+    finished session of that phase or Verify still listed as working or
+    blocked, as forge implement --help describes: finished means
+    P/result.json (F/verify.json for Verify) exists or its transcript
+    ends in assistant text holding a line starting "result:" outside a
+    ``` fence; it runs claude rm <id> alone, never claude stop, and lists
+    claude agents --json --all again every 0.5 s for up to 5 s until the
+    id is gone or no longer working or blocked
+  - for any result, since a blocked phase frees its slot, start
+    the phases due as forge implement does, up to $FORGE_CONCURRENCY
+    (default 10) per feature, a session blocked on a question holding
+    no place, or, when every phase is done
+    (result done and branch merged), the verify session in the feature
+    worktree:
+    "<project> verify <track>/<feature>" running "/forge-verify <root> <track>/<feature>"
+    unless F/verify.json exists or a verify session (or one under the
+    legacy name "<project> <track>-<feature> Verify") is working or blocked;
+    it gets a FORGE_PORT_OFFSET chosen as forge implement --help
+    describes and a start event carrying it in F/events.jsonl
+  - start nothing while $FORGE_MAX_SESSIONS (default 12) live,
+    non-blocked forge sessions of all projects are running, of any form
+    (phase, verify, ship, discuss, quick, fast, new or debug):
+    print "forge: <n> forge sessions live; phase <N> waits for a free
+    session", or "forge: <n> forge sessions live; <track>/<feature>
+    Verify waits for a free session", on stderr and exit 0; the next
+    forge done, next, implement or resume that finds room starts it
+  - likewise start nothing while MemAvailable is under 3 GiB plus 1 GiB
+    for the start and each phase already started in the call, printing
+    "forge: MemAvailable <x> GiB; phase <N> waits for memory" (or
+    "<track>/<feature> Verify waits for memory"), as forge implement
+    --help describes
+  - record each held start in ${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl,
+    the held phase and every later due phase not yet started as phase
+    <N>, or the held Verify as verify <track>/<feature>, keeping the
+    first hold time of one already recorded, and print "forge: recorded
+    the held <kind> <target>; forge watchdog starts it once room frees"
+    on stderr; forge watchdog starts it once room frees (see forge
+    implement --help)
+  - a start it refuses or skips prints "forge: <kind> <target> not
+    started: <reason>" on stderr (kind phase or verify; target the phase
+    number or <track>/<feature>) and goes on with the other due phases:
+      - a phase or Verify that already has a live unfinished session,
+        the reason naming the session; nothing is held
+      - a finished session that claude rm cannot remove: a failed
+        claude rm whose session is still listed, or one still working or
+        blocked 5 s after claude rm, the reason naming the session, its
+        id and that it is finished but still running after claude rm;
+        nothing is held
+      - a phase worktree with uncommitted changes that keep git from
+        merging forge/<track>-<feature> into it: git's output is printed
+        on stderr and the reason is "worktree <w> has uncommitted
+        changes"; nothing is held, and the next forge done, next,
+        implement or resume that finds the worktree clean starts it
+      - a claude --bg that fails to start: the reason is "claude --bg
+        exited <s>: <last stderr line>", or "root <path> is not trusted
+        by Claude Code" when claude's stderr starts "Workspace not
+        trusted", <path> the main checkout of the session's cwd; no
+        start event is logged, the start is not counted, and the phase
+        or Verify is recorded in held.jsonl as a held start is, printing
+        the same "forge: recorded the held ..." line, so forge watchdog
+        retries it
+    Each refused kind and target sends one notification per run through
+    forge's notify, titled "forge: launch refused" with body "<root
+    basename> <kind> <target>: <reason>"; a failed start already
+    recorded in held.jsonl sends none, so watchdog rescans do not repeat
+    it, and a failed notify only warns. After all its other work (merge,
+    commit, wait and replan events, the other starts and holds) done
+    then exits 8. A capacity hold (sessions or memory) is no refusal: it sends no notification and the exit stays 0
+
+Exit codes:
+  0  recorded
+  1  no result.json, a refused done result, or another failure
+  2  a usage error
+  6  the phase branch conflicts with forge/<track>-<feature>, merge aborted
+  8  a launch was refused or skipped, already reported
+
+STATE below is the project root's state dir (see forge paths --help).
+
+Reads:
+  STATE/phases/*/{spec,result}.json, events.jsonl, plan.json,
+  tasks/*.json
+  STATE/features/<track>-<feature>/split.json
+  claude agents --json, claude agents --json --all
+  /proc/meminfo                        (see forge implement --help)
+  ~/.claude/projects/*/<sessionId>.jsonl, git status of their cwd
+                                  (done quick, debug and discuss sessions)
+  ~/.claude/projects/*/<sessionId>.jsonl
+                                  (live sessions of a phase or Verify
+                                   about to start)
+
+Writes:
+  a merge commit on forge/<track>-<feature>
+  the Claude sessions it removes
+  <git common dir>/forge-reaped.log   (one line per removed session)
+  dependent phases' files and events.jsonl
+  the replanned phases' files in STATE (no git commit)
+  started phases' events.jsonl   (start event)
+  STATE/features/<track>-<feature>/events.jsonl
+                                  (the verify start event)
+  ${XDG_RUNTIME_DIR:-~/.local/state}/forge/sessions.lock
+                                  (see forge implement --help)
+  ${XDG_STATE_HOME:-~/.local/state}/forge/held.jsonl, held.jsonl.lock
+                                  (held starts)
+  phase N's events.jsonl          (sync event, on a conflict)
+  <git common dir>/forge.lock   (see forge commit --help)
+
+Example:
+  forge done 09

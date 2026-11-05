@@ -1,0 +1,10 @@
+{
+  "track": "crm",
+  "feature": "auth",
+  "number": "01",
+  "slug": "auth-login",
+  "goal": "Users log in",
+  "spec": [],
+  "requirements": [],
+  "depends": []
+}

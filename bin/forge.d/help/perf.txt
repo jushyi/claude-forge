@@ -1,0 +1,67 @@
+Usage: forge perf pull
+
+forge perf pull reads each repo's own usage-log metrics into its perf
+ledger, .forge/perf.json. The repos are those of the root, FORGE_ROOT
+when set, else the current directory: each subdirectory holding a .git,
+or the root itself when none does. A repo takes part when the
+"## Commands" section of its .forge/TESTING.md has a line
+  - Perf log: `<command>`
+pull runs that command from the repo's top with FORGE_PERF_WINDOW, the
+window in days (default 7), in its environment. The command prints one
+JSON metric line per sample from the app's own usage logs for the last
+FORGE_PERF_WINDOW days:
+  {"metric": <name>, "value": <v>, "unit": <u>, "kind": <k>, "at": <t>}
+<name> and <u> non-empty strings, <v> a number >= 0, <k> count or time
+and <t> an ISO-8601 time. Other stdout lines are ignored.
+
+The lines are grouped by metric name into n, the sample count, and p50
+and p95, the 50th and 95th percentiles of the values. Each metric is
+written to the repo's .forge/perf.json as
+  {"metrics": {<name>: {"kind", "unit", "n", "p50", "p95",
+    "window": {"from", "to"}, "prev": {"n", "p50", "p95"}}}}
+window holds the first and last dates of the pulled window and prev the
+n, p50 and p95 of the metric's previous entry. A metric with no previous
+entry has no prev, and so does an entry in the old ledger shape
+(baseline, noise, commit, date), which has no p50 or p95; the first pull
+overwrites such a file in the new shape. forge perf pull is the ledger's
+only writer; do not edit .forge/perf.json by hand.
+
+For each metric whose p95 moved more than 20% against prev's p95, up or
+down, pull appends one dated seed line to the repo's .forge/seeds.md:
+  - <date> perf metric `<name>`: p95 <prev> -> <now> <unit> over <window>
+<date> is today as YYYY-MM-DD, <prev> and <now> the previous and new p95
+and <window> the FORGE_PERF_WINDOW days pulled. A metric whose identical
+seed line is already in seeds.md gets no second one.
+
+Under <git common dir>/forge.lock, pull then commits the repo's
+.forge/perf.json and .forge/seeds.md as
+  docs(perf): pull <date>
+A repo without a "- Perf log:" line is not read. A Perf log command that
+is missing or exits non-zero is reported on stderr, naming the repo, and
+that repo is skipped, writing nothing; it never fails the run as a gate,
+and the other repos are still pulled. The weekly forge watchdog run is
+pull's only scheduled caller; golive does not run it.
+
+Exits 0 once every repo is pulled or skipped. Exits 2 on bad usage: no
+subcommand, a subcommand other than pull, or any argument after pull.
+
+Reads:
+  <repo>/.forge/TESTING.md
+  <repo>/.forge/perf.json
+  <repo>/.forge/seeds.md
+  the stdout of each repo's Perf log command
+
+Writes:
+  <repo>/.forge/perf.json
+  <repo>/.forge/seeds.md
+  one docs(perf): pull <date> commit per pulled repo, under forge.lock
+
+Environment:
+  FORGE_ROOT          the root whose repos are pulled (default the
+                      current directory)
+  FORGE_PERF_WINDOW   days of usage logs the Perf log command reads
+                      (default 7)
+
+Example:
+  forge perf pull
+  FORGE_ROOT=~/Projects/app FORGE_PERF_WINDOW=14 forge perf pull

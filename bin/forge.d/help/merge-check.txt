@@ -1,0 +1,28 @@
+Usage: forge merge-check [<record>]
+
+Lists the lines an in-progress merge lost, in the git worktree holding the
+current directory, whatever FORGE_ROOT says. Runs in any git worktree, with
+or without .forge/, and needs MERGE_HEAD (a merge in progress).
+
+For ours (HEAD) and theirs (MERGE_HEAD), takes the lines each side added
+since git merge-base HEAD MERGE_HEAD, under their post-rename paths,
+skipping blank lines. Matches each line trimmed of leading and trailing
+whitespace, as a multiset per file and side, against the same file's staged
+content in the index, and prints each missing line as
+"<ours|theirs> <path>: <line>", ours first. A missing line counts as
+recorded when <record>'s files[].dropped[] has an entry with the same path,
+side and trimmed line.
+
+Exit codes:
+  0  nothing missing, or every missing line is recorded
+  1  an unrecorded missing line, no merge in progress, or a bad record
+
+Reads:
+  the current worktree's git diff and index
+  <record>   (STATE/phases/NN-slug/merge/M<n>.json, the phase dir P under
+             the project root's state dir; see forge paths --help)
+
+Writes: nothing
+
+Example:
+  forge merge-check "$P/merge/M1.json"
