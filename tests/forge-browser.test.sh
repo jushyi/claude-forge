@@ -17,6 +17,7 @@ trap cleanup EXIT
 export HOME=$tmp/home
 export PATH=$fx/bin:$PATH STUB_LOG=$tmp/log STUB_STATE=$tmp/state
 export CHROME_PATH=$fx/chrome
+unset XDG_CONFIG_HOME
 export STUB_TARBALL=$tmp/jbc.tgz STUB_TARBALL_URL STUB_LOCK=$fx/pin/package-lock.json
 STUB_TARBALL_URL=$(jq -r .url "$fx/pin/pin.json")
 key=fixture-value-not-secret

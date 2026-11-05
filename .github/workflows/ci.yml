@@ -22,8 +22,6 @@ jobs:
           echo "$HOME/.local/bin" >>"$GITHUB_PATH"
       - name: Identify
         run: git config --global user.name ci && git config --global user.email ci@example.com
-      - name: Browser suite detail
-        run: tests/forge-browser.test.sh 2>&1 | grep -a '^[-+]' | head -60 || true
       - name: Test
         run: tests/ci.sh
 
