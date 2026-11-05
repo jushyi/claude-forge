@@ -182,8 +182,15 @@ test_cmd() {
 stamps() { echo "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir)/forge-test"; }
 
 host_id() {
-  machine_id=$(tr -d '[:space:]' </etc/machine-id 2>/dev/null) || machine_id=
-  [ -n "$machine_id" ] || die "cannot read /etc/machine-id; cannot key $1"
+  local f g=${XDG_STATE_HOME:-$HOME/.local/state}/forge/machine-id
+  machine_id=
+  for f in /etc/machine-id /var/lib/dbus/machine-id "$g"; do
+    machine_id=$(tr -d '[:space:]' 2>/dev/null <"$f") || machine_id=
+    [ -z "$machine_id" ] || return 0
+  done
+  mkdir -p "${g%/*}" && od -An -tx1 -N16 /dev/urandom | tr -d ' \n' >"$g" || die "cannot write $g; cannot key $1"
+  machine_id=$(cat "$g")
+  [ -n "$machine_id" ] || die "cannot read $g; cannot key $1"
 }
 
 host_stamps() {
