@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq rsync pipx python3-yaml
+          pipx install check-jsonschema
+          echo "$HOME/.local/bin" >>"$GITHUB_PATH"
+      - name: Identify
+        run: git config --global user.name ci && git config --global user.email ci@example.com
+      - name: Test
+        run: tests/ci.sh
+
+  fedora:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container: fedora:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y -q git jq rsync curl python3 python3-pyyaml pipx util-linux procps-ng findutils diffutils which hostname gawk tar gzip patch
+          PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install check-jsonschema
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Test as a regular user
+        run: |
+          useradd -m ci
+          chown -R ci "$GITHUB_WORKSPACE"
+          su ci -c "git config --global user.name ci && git config --global user.email ci@example.com && cd '$GITHUB_WORKSPACE' && tests/ci.sh"
+
+  arch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --quiet git jq rsync curl python python-yaml python-pipx util-linux procps-ng findutils diffutils which inetutils gawk tar gzip patch
+          PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install check-jsonschema
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Test as a regular user
+        run: |
+          useradd -m ci
+          chown -R ci "$GITHUB_WORKSPACE"
+          su ci -c "git config --global user.name ci && git config --global user.email ci@example.com && cd '$GITHUB_WORKSPACE' && tests/ci.sh"
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install dependencies
+        run: |
+          brew install bash coreutils findutils gnu-sed flock rsync jq pipx
+          pipx install check-jsonschema
+          "$(brew --prefix)/bin/python3" -m pip install --break-system-packages pyyaml || python3 -m pip install --break-system-packages pyyaml
+          P=$(brew --prefix)
+          {
+            echo "$HOME/.local/bin"
+            echo "$P/opt/coreutils/libexec/gnubin"
+            echo "$P/opt/findutils/libexec/gnubin"
+            echo "$P/opt/gnu-sed/libexec/gnubin"
+            echo "$P/opt/flock/bin"
+            echo "$P/opt/rsync/bin"
+            echo "$P/bin"
+          } >>"$GITHUB_PATH"
+      - name: Identify
+        run: git config --global user.name ci && git config --global user.email ci@example.com
+      - name: Test
+        run: tests/ci.sh
+
+  wsl2:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: src
+      - uses: Vampire/setup-wsl@e707f0b61a07f8ea48a64d83edfcbd4a7af45926 # v7.2.0
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: 2
+          wsl-conf: |
+            [boot]
+            systemd=true
+          additional-packages: jq rsync pipx python3-yaml git curl
+      - name: Show WSL
+        shell: wsl-bash {0}
+        run: |
+          uname -a
+          ls -d /run/systemd/system
+      - name: Test
+        shell: wsl-bash {0}
+        run: |
+          pipx install check-jsonschema
+          export PATH=$HOME/.local/bin:$PATH
+          git config --global user.name ci
+          git config --global user.email ci@example.com
+          cp -r "$(pwd)/src" ~/src
+          cd ~/src
+          tests/ci.sh
