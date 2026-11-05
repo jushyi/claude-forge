@@ -4,7 +4,7 @@ case ${FORGE_UNAME:-$OSTYPE} in
     if ! date --version >/dev/null 2>&1; then
       for _h in /opt/homebrew /usr/local; do
         [ ! -d "$_h/bin" ] || PATH=$PATH:$_h/bin
-        for _p in bash/bin coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin flock/bin rsync/bin; do
+        for _p in bash/bin coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin grep/libexec/gnubin util-linux/bin flock/bin rsync/bin; do
           [ ! -d "$_h/opt/$_p" ] || PATH=$_h/opt/$_p:$PATH
         done
       done

@@ -83,7 +83,7 @@ if want notify; then
   grep -q '^osascript .*display notification.* -- T B$' "$N_LOG" || fail "macOS notify: $(cat "$N_LOG")"
   nosend=$tmp/nosend
   mkdir -p "$nosend"
-  for c in timeout id; do ln -sf "$(command -v "$c")" "$nosend/$c"; done
+  for c in timeout id readlink dirname uname; do ln -sf "$(command -v "$c")" "$nosend/$c"; done
   w() { FORGE_UNAME=Linux WSL_DISTRO_NAME=Ubuntu PATH=$nosend:$(dirname "$(command -v jq)"):$(dirname "$(command -v bash)") "$forge" notify T B 2>&1; }
   rm -f "$XDG_STATE_HOME/forge/notify-warned"
   o=$(FORGE_NOTIFY_TIMEOUT=2 w) || fail "WSL2 without a notifier exits 0: $o"

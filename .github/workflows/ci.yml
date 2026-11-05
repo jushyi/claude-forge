@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install dependencies
         run: |
-          brew install bash coreutils findutils gnu-sed flock rsync jq pipx node
+          brew install bash coreutils findutils gnu-sed grep util-linux flock rsync jq pipx node
           pipx install check-jsonschema
           "$(brew --prefix)/bin/python3" -m pip install --break-system-packages pyyaml || python3 -m pip install --break-system-packages pyyaml
           P=$(brew --prefix)
@@ -77,6 +77,8 @@ jobs:
             echo "$P/opt/coreutils/libexec/gnubin"
             echo "$P/opt/findutils/libexec/gnubin"
             echo "$P/opt/gnu-sed/libexec/gnubin"
+            echo "$P/opt/grep/libexec/gnubin"
+            echo "$P/opt/util-linux/bin"
             echo "$P/opt/flock/bin"
             echo "$P/opt/rsync/bin"
             echo "$P/bin"

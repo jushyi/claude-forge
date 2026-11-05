@@ -37,7 +37,7 @@ Required everywhere: [Claude Code](https://code.claude.com/docs), `git`, `jq`, `
 | Ubuntu, WSL2 | `sudo apt-get install -y git jq rsync curl util-linux python3-yaml pipx` |
 | Fedora | `sudo dnf install -y git jq rsync curl util-linux python3-pyyaml pipx` |
 | Arch | `sudo pacman -S --needed git jq rsync curl util-linux python-yaml python-pipx` |
-| macOS | `brew install bash coreutils findutils gnu-sed flock rsync jq pipx` |
+| macOS | `brew install bash coreutils findutils gnu-sed grep util-linux flock rsync jq pipx` |
 
 Optional: `node` and `npm` for plugins and browser tooling, the Codex and Impeccable plugins, Google Chrome, and an OpenRouter key for Jev Browser Control.
 

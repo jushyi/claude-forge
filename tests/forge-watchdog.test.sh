@@ -724,7 +724,7 @@ setup snaps
 mkdir -p "$WD_SCOPES"
 sed -i 's/^  \*" show "\*RuntimeMaxUSec\*)$/  *" is-active "*)\n    [ ! -f "$WD_SCOPES\/$u.active" ] || { cat "$WD_SCOPES\/$u.active"; [ "$(cat "$WD_SCOPES\/$u.active")" = active ] \&\& exit 0 || exit 3; }\n    ;;\n&/' "$bin/systemctl"
 grep -qF '"$WD_SCOPES/$u.active"' "$bin/systemctl" || fail "snaps: the stub systemctl answers is-active from \$WD_SCOPES/<unit>.active"
-dead=$(($(cat /proc/sys/kernel/pid_max) + 7))
+dead=$(($(cat /proc/sys/kernel/pid_max 2>/dev/null || echo 99999) + 7))
 [ ! -d "/proc/$dead" ] || fail "snaps: pid $dead is not alive"
 mkrepo() {
   mkdir -p "$1/.forge/phases"
