@@ -258,6 +258,9 @@ doctor() {
   while IFS= read -r w; do
     [ -z "$w" ] || doctor_bad "$w"
   done < <(forge_preflight || true)
+  [ "${FORGE_PERMISSION_MODE:-bypassPermissions}" != bypassPermissions ] ||
+    jq -e '.skipDangerousModePermissionPrompt == true' "$HOME/.claude/settings.json" >/dev/null 2>&1 ||
+    echo "forge doctor: note: background sessions need Claude Code's bypass warning accepted once; run: claude --permission-mode bypassPermissions"
   watchdog_enabled ||
     doctor_bad "forge-watchdog.timer is not enabled; fix: forge watchdog --install"
   for r in "${repos[@]}"; do

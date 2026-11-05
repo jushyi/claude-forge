@@ -5,7 +5,7 @@ set -euo pipefail
 unset FNM_DIR
 db=$tmp/dbin
 mkdir -p "$db" "$tmp/elsewhere" "$tmp/run-root/systemd/system"
-export FORGE_RUN_ROOT=$tmp/run-root
+export FORGE_RUN_ROOT=$tmp/run-root FORGE_PERMISSION_MODE=acceptEdits
 printf '#!/bin/sh\nexit 0\n' >"$db/claude"
 chmod +x "$db/claude"
 cat >"$db/systemctl" <<'EOF'
@@ -339,3 +339,13 @@ ok holders
 fi
 
 finish
+
+if want bypass-note; then
+  note=$(HOME=$tmp/note-home PATH=$path FORGE_PERMISSION_MODE=bypassPermissions "$forge" doctor 2>&1 | grep -c 'note: background sessions need' || true)
+  [ "$note" = 1 ] || fail "doctor must note the unaccepted bypass warning"
+  mkdir -p "$tmp/note-home/.claude"
+  echo '{"skipDangerousModePermissionPrompt": true}' >"$tmp/note-home/.claude/settings.json"
+  note=$(HOME=$tmp/note-home PATH=$path FORGE_PERMISSION_MODE=bypassPermissions "$forge" doctor 2>&1 | grep -c 'note: background sessions need' || true)
+  [ "$note" = 0 ] || fail "doctor must not note an accepted bypass warning"
+  ok bypass-note
+fi
