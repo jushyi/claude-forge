@@ -86,7 +86,10 @@ jobs:
       - name: Bash 3.2 hook check
         run: PATH=/bin:/usr/bin:$PATH tests/hook-bash32.sh
       - name: Test
-        run: tests/ci.sh
+        env:
+          FORGE_UNAME: Linux
+          FORGE_RUN_ROOT: /tmp
+        run: mkdir -p /tmp/systemd/system && tests/ci.sh
 
   wsl2:
     runs-on: windows-latest
