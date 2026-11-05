@@ -5,7 +5,7 @@ hook=$root/hooks/forge-hook.sh
 input='{"tool_name":"Bash","cwd":"/tmp","tool_input":{"command":"true"},"hook_event_name":"PreToolUse","session_id":"s"}'
 echo "bash on PATH: $(/bin/bash --version | head -1)"
 s=0
-out=$(PATH=/bin:/usr/bin FORGE_HOOK_BASHES=/bin/bash sh "$hook" forge-guard.sh <<<"$input" 2>&1) || s=$?
+out=$(PATH=/bin:/usr/bin FORGE_HOOK_BASHES='' FORGE_HOOK_BREW='' sh "$hook" forge-guard.sh <<<"$input" 2>&1) || s=$?
 echo "no modern bash: exit $s: $out"
 [ "$s" = 2 ] || { echo "the guard must fail closed with exit 2 without a modern bash"; exit 1; }
 case $out in *"Bash 4 or newer"*) ;; *) echo "the guard must say why"; exit 1 ;; esac

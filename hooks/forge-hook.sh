@@ -3,7 +3,7 @@ hook=$1
 shift
 dir=$(dirname "$0")
 if [ "$(uname -s)" = Darwin ]; then
-  for h in /opt/homebrew /usr/local; do
+  for h in ${FORGE_HOOK_BREW-/opt/homebrew /usr/local}; do
     [ ! -d "$h/bin" ] || PATH=$h/bin:$PATH
     for p in coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin flock/bin rsync/bin; do
       [ ! -d "$h/opt/$p" ] || PATH=$h/opt/$p:$PATH
@@ -17,7 +17,7 @@ modern() {
   case $v in '' | *[!0-9]*) return 1 ;; esac
   [ "$v" -ge 4 ]
 }
-for b in ${FORGE_HOOK_BASHES-bash /opt/homebrew/bin/bash /usr/local/bin/bash}; do
+for b in bash ${FORGE_HOOK_BASHES-/opt/homebrew/bin/bash /usr/local/bin/bash}; do
   if modern "$b"; then
     exec "$b" "$dir/$hook" "$@"
   fi
