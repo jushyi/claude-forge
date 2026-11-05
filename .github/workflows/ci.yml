@@ -87,6 +87,8 @@ jobs:
         run: git config --global user.name ci && git config --global user.email ci@example.com
       - name: Bash 3.2 hook check
         run: PATH=/bin:/usr/bin:$PATH tests/hook-bash32.sh
+      - name: Real install with a stubbed claude
+        run: tests/mac-install.sh
       - name: Test
         env:
           FORGE_UNAME: Linux

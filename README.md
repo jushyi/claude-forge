@@ -19,14 +19,14 @@ This project is unofficial and is not affiliated with or endorsed by Anthropic.
 | Ubuntu (with systemd) | CI-tested | Primary platform. Install also tested in a container |
 | Fedora | CI-tested | Test suite only, in a container without systemd |
 | Arch Linux | CI-tested | Test suite only, in a container without systemd |
-| macOS | Preview: known failures | Needs Homebrew tools, listed below |
+| macOS | CI-tested, with limits below | Needs Homebrew tools, listed below |
 | Windows through WSL2 | CI-tested | Ubuntu 24.04 on WSL 2 with systemd. Needs systemd enabled in WSL2; `port` prints the fix |
 | Native Windows | Refused | `port` stops before changing anything and points to WSL2 |
 | Linux without systemd | Unsupported | `port` stops before changing anything |
 
 CI has no Claude login, so it stubs the `claude` command. CI does not cover real background sessions, plan limits, desktop notifications, Chrome, or the `claude plugin` checks of the mods, which skip when `claude` is absent. No one has run forge with a real Claude login on macOS or WSL2 yet.
 
-**macOS known failures.** The macOS job is red. In its last completed run these suites failed: `forge-browser`, `forge-gates` and its `-lint`, `-resources`, `-setup` and `-tiers` suites, `forge-hook`, `forge-land`, `forge-phase-parallel`, `forge-quick-log`, `forge-commit`, `forge-review`, `forge-watchdog`, `preflight`, `port`, and `forge/check`, `doctor`, `env`, `map`, `merge`, `plan`, `pr`, `run`, `run-launch`, `review` and `state`. Several came from Homebrew tools shadowing test stubs, and a fix is in, but it hasn't been seen green. The Bash 3.2 hook check passes on macOS. Expect rough edges.
+**What macOS CI covers.** The job runs a real `./port --apply`, `forge doctor` and `./port --uninstall` with a stubbed `claude`, and checks that the guard fails closed under Bash 3.2. The test suite runs on macOS with Homebrew's GNU tools but takes forge's Linux code paths, so `launchctl`, `osascript` and memory reads have stubbed tests only. A few suite checks that read `/proc` pass without checking anything there.
 
 ## Dependencies
 
