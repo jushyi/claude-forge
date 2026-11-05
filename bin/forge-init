@@ -1,4 +1,22 @@
 #!/usr/bin/env bash
+case ${FORGE_UNAME:-$OSTYPE} in
+  darwin*)
+    if ! date --version >/dev/null 2>&1; then
+      for _h in /opt/homebrew /usr/local; do
+        [ ! -d "$_h/bin" ] || PATH=$PATH:$_h/bin
+        for _p in bash/bin coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin grep/libexec/gnubin util-linux/bin flock/bin rsync/bin; do
+          [ ! -d "$_h/opt/$_p" ] || PATH=$_h/opt/$_p:$PATH
+        done
+      done
+    fi
+    PATH=$PATH:/usr/sbin:/sbin
+    export PATH
+    if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+      _b=$(command -v bash)
+      [ "$("$_b" -c 'echo "${BASH_VERSINFO:-0}"')" -ge 4 ] || { echo "forge: needs Bash 4 or newer; run: brew install bash" >&2; exit 1; }
+      exec "$_b" "$0" "$@"
+    fi ;;
+esac
 set -euo pipefail
 shopt -s nullglob
 

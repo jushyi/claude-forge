@@ -30,6 +30,8 @@ PATH=/usr/bin:/bin sh "$HOME/.claude/hooks/forge-hook.sh" forge-guard.sh <<<"$in
 cd "$tmp/proj"
 git init -q -b main
 PATH=$HOME/.local/bin:$PATH forge-init proj "A project."
+mkdir -p "$tmp/bg"
+"$forge" limits | grep -q '^load=[0-9]' || { echo "forge limits must read the load"; exit 1; }
 [ -f .claude/rules/forge.md ] || { echo "forge-init must write .claude/rules/forge.md"; exit 1; }
 [ "$(cat CLAUDE.md)" = '# project' ] && [ "$(cat "$HOME/.claude/CLAUDE.md")" = '# mine' ] || { echo "CLAUDE.md files must not change"; exit 1; }
 cd "$tmp/src"
