@@ -14,7 +14,7 @@ real=$(command -v bash)
 printf '#!/bin/sh\nif [ "$1" = -c ]; then echo 5; exit 0; fi\nexec %s "$@"\n' "$real" >"$tmp/new/bash"
 chmod +x "$tmp/old/bash" "$tmp/new/bash"
 sys=$(dirname "$(command -v dirname)")
-run() { local s=0 p=$1; shift; PATH=$p:$sys FORGE_HOOK_BASHES=${HB-} sh "$tmp/hooks/forge-hook.sh" "$@" >"$tmp/out" 2>"$tmp/err" || s=$?; echo "$s"; }
+run() { local s=0 p=$1; shift; PATH=$p:$sys FORGE_HOOK_BASHES=${HB-} /bin/sh "$tmp/hooks/forge-hook.sh" "$@" >"$tmp/out" 2>"$tmp/err" || s=$?; echo "$s"; }
 HB=
 [ "$(run "$tmp/new" forge-guard.sh a b)" = 7 ] || fail "a modern bash on PATH runs the guard and keeps its exit: $(cat "$tmp/err")"
 grep -qx 'guard ran: a b' "$tmp/out" || fail "the guard gets its arguments: $(cat "$tmp/out")"

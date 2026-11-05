@@ -20,15 +20,13 @@ This project is unofficial and is not affiliated with or endorsed by Anthropic.
 | Fedora | CI-tested | Test suite only, in a container without systemd |
 | Arch Linux | CI-tested | Test suite only, in a container without systemd |
 | macOS | Preview: known failures | Needs Homebrew tools, listed below |
-| Windows through WSL2 | CI job present; see the note below | Needs systemd enabled in WSL2; `port` prints the fix |
+| Windows through WSL2 | CI-tested | Ubuntu 24.04 on WSL 2 with systemd. Needs systemd enabled in WSL2; `port` prints the fix |
 | Native Windows | Refused | `port` stops before changing anything and points to WSL2 |
 | Linux without systemd | Unsupported | `port` stops before changing anything |
 
 CI has no Claude login, so it stubs the `claude` command. CI does not cover real background sessions, plan limits, desktop notifications, Chrome, or the `claude plugin` checks of the mods, which skip when `claude` is absent. No one has run forge with a real Claude login on macOS or WSL2 yet.
 
 **macOS known failures.** The macOS job is red. In its last completed run these suites failed: `forge-browser`, `forge-gates` and its `-lint`, `-resources`, `-setup` and `-tiers` suites, `forge-hook`, `forge-land`, `forge-phase-parallel`, `forge-quick-log`, `forge-commit`, `forge-review`, `forge-watchdog`, `preflight`, `port`, and `forge/check`, `doctor`, `env`, `map`, `merge`, `plan`, `pr`, `run`, `run-launch`, `review` and `state`. Several came from Homebrew tools shadowing test stubs, and a fix is in, but it hasn't been seen green. The Bash 3.2 hook check passes on macOS. Expect rough edges.
-
-**WSL2.** The WSL2 job runs Ubuntu 24.04 on WSL 2 with systemd enabled. Check the latest run on `main` for its result.
 
 ## Dependencies
 

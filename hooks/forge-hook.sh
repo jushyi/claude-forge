@@ -2,7 +2,7 @@
 hook=$1
 shift
 dir=$(dirname "$0")
-if [ "$(uname -s)" = Darwin ]; then
+if [ "$(uname -s)" = Darwin ] && ! date --version >/dev/null 2>&1; then
   for h in ${FORGE_HOOK_BREW-/opt/homebrew /usr/local}; do
     [ ! -d "$h/bin" ] || PATH=$PATH:$h/bin
     for p in coreutils/libexec/gnubin findutils/libexec/gnubin gnu-sed/libexec/gnubin flock/bin rsync/bin; do

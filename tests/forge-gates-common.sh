@@ -27,7 +27,7 @@ lr=$tmp/lint
 mkdir -p "$lr"
 lintdoc() { rm -rf "$lr/$1"; mkdir -p "$lr/$1/.forge"; printf '%s\n' "# Testing" "" "## Commands" "${@:2}" >"$lr/$1/.forge/TESTING.md"; }
 names_line() { grep -qwF "$1" "$tmp/out" || grep -qF -- "$2" "$tmp/out"; }
-pstart() { local l a; read -r l <"/proc/$1/stat"; read -ra a <<<"${l##*) }"; echo "${a[19]}"; }
+pstart() { local l a; if [ ! -r "/proc/$1/stat" ]; then l=$(ps -o lstart= -p "$1"); echo "${l// /_}"; return; fi; read -r l <"/proc/$1/stat"; read -ra a <<<"${l##*) }"; echo "${a[19]}"; }
 
 r=$tmp/r
 gitinit "$r"
