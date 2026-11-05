@@ -427,7 +427,7 @@ s=$(prdir=$pu/repo/sub pprun push)
 [ "$s" = 0 ] || fail "forge pr push with a passing Pre-push line must exit 0, got $s: $(both)"
 [ "$(cat "$PREPUSH_LOG")" = "$ptop"$'\nstdin[]\n'"origin[$c1]" ] ||
   fail "the Pre-push command must run once from the checkout top with stdin /dev/null before the push when invoked from $pu/repo/sub: $(cat "$PREPUSH_LOG")"
-both | grep -qxF "prepush says: checking" || fail "forge pr push must pass the Pre-push command's stdout through: $(both)"
+grep -qxF "prepush says: checking" <<<"$(both)" || fail "forge pr push must pass the Pre-push command's stdout through: $(both)"
 grep -qxF "prepush warns: all clear" "$tmp/err" || fail "forge pr push must pass the Pre-push command's stderr through: $(both)"
 [ "$(pref forge/quick-x)" = "$c2" ] || fail "forge pr push with a passing Pre-push line must then push: origin has $(pref forge/quick-x), want $c2"
 nogh "forge pr push with a Pre-push line"
@@ -437,7 +437,7 @@ c3=$(pcommit three)
 s=$(PREPUSH_EXIT=7 prdir=$pu/repo/sub pprun push origin forge/quick-x)
 [ "$s" = 3 ] || fail "forge pr push with a failing Pre-push command must exit 3, got $s: $(both)"
 grep -qxF "forge: Pre-push failed (exit 7); nothing pushed" "$tmp/err" || fail "forge pr push with a failing Pre-push command must print 'forge: Pre-push failed (exit 7); nothing pushed' on stderr: $(both)"
-both | grep -qxF "prepush says: checking" || fail "forge pr push with a failing Pre-push command must pass its stdout through: $(both)"
+grep -qxF "prepush says: checking" <<<"$(both)" || fail "forge pr push with a failing Pre-push command must pass its stdout through: $(both)"
 grep -qxF "prepush warns: lint failed" "$tmp/err" || fail "forge pr push with a failing Pre-push command must pass its stderr through: $(both)"
 [ "$(pref forge/quick-x)" = "$c2" ] || fail "forge pr push with a failing Pre-push command must push nothing: origin has $(pref forge/quick-x), want $c2 (local $c3)"
 [ "$(wc -l <"$PREPUSH_LOG")" = 3 ] || fail "forge pr push must run the failing Pre-push command once: $(cat "$PREPUSH_LOG")"
