@@ -523,7 +523,7 @@ scope_props() {
 proc_start() {
   local s
   if [ ! -r "/proc/$1/stat" ]; then
-    s=$(ps -o lstart= -p "$1" 2>/dev/null) && [ -n "$s" ] && echo "${s// /_}"
+    s=$(ps -o lstart= -p "$1" 2>/dev/null) && [ -n "$s" ] && date -d "$s" +%s
     return
   fi
   s=$(cat "/proc/$1/stat" 2>/dev/null) || return 1

@@ -3867,7 +3867,7 @@ hl=free
 if [ -e "$h.lock" ] && ! flock -n "$h.lock" true; then hl=held; fi
 f=closed
 [ ! -e "/proc/$$/fd/6" ] || f=open
-i=$(readlink "/proc/$$/fd/0")
+i=$(if [ -e "/proc/$$/fd/0" ]; then readlink "/proc/$$/fd/0"; elif [ /dev/stdin -ef /dev/null ]; then echo /dev/null; fi)
 case ${1:-} in resume) k=phase ;; implement) k=verify ;; next) k=ship ;; *) k=other ;; esac
 c=0
 [ ! -f "$h" ] || c=$(jq -s --arg r "${FORGE_ROOT-}" --arg k "$k" --arg g "${2:-}" 'map(select(.root == $r and .kind == $k and .target == $g)) | length' "$h")
@@ -4569,7 +4569,7 @@ cat >"$bin/forge" <<'STUB'
 [ "$*" = "perf pull" ] || exit 0
 o=
 for f in 8 9; do [ ! -e "/proc/$$/fd/$f" ] || o+=" $f"; done
-printf '%s|%s|%s\n' "${FORGE_ROOT-unset}" "$(readlink "/proc/$$/fd/0")" "${o# }" >>"$WD_PULLS"
+printf '%s|%s|%s\n' "${FORGE_ROOT-unset}" "$(if [ -e "/proc/$$/fd/0" ]; then readlink "/proc/$$/fd/0"; elif [ /dev/stdin -ef /dev/null ]; then echo /dev/null; fi)" "${o# }" >>"$WD_PULLS"
 [ "$FORGE_ROOT" != "${WD_PULL_FAIL:-}" ] || { echo "stub pull failed" >&2; exit 3; }
 [ "$FORGE_ROOT" != "${WD_PULL_HANG:-}" ] || sleep 30
 STUB
