@@ -1,7 +1,5 @@
 # Contributing
 
-Anyone can fork jushyi/claude-forge and open a pull request. Only the maintainer, jushyi, merges. There is no response-time promise.
-
 ## Tests
 
 The suite needs `jq`, `rsync`, `check-jsonschema` and Python 3 with PyYAML. It stubs `claude` and needs no login.
