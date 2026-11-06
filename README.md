@@ -26,7 +26,7 @@ This project is unofficial and is not affiliated with or endorsed by Anthropic.
 
 CI has no Claude login, so it stubs the `claude` command. CI does not cover real background sessions, plan limits, desktop notifications, Chrome, or the `claude plugin` checks of the mods, which skip when `claude` is absent. No one has run forge with a real Claude login on macOS or WSL2 yet.
 
-**What macOS CI covers.** The job runs a real `./port --apply`, `forge doctor` and `./port --uninstall` with a stubbed `claude`, and checks that the guard fails closed under Bash 3.2. The test suite runs on macOS with Homebrew's GNU tools but takes forge's Linux code paths, so `launchctl`, `osascript` and memory reads have stubbed tests only. A few suite checks that read `/proc` pass without checking anything there.
+**What macOS CI covers.** The job runs a real `./port --apply`, `forge doctor`, `forge bg` through launchd and `./port --uninstall` with a stubbed `claude`, and checks that the guard fails closed under Bash 3.2. The test suite runs on macOS with Homebrew's GNU tools and real memory reads, with `FORGE_UNAME=Linux`, so its notification, background-job and watchdog cases take the Linux paths against stubs. The Darwin versions of those have their own stubbed tests.
 
 ## Dependencies
 

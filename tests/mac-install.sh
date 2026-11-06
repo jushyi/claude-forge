@@ -27,6 +27,11 @@ forge=$HOME/.local/bin/forge
 "$forge" doctor
 input='{"tool_name":"Bash","cwd":"/tmp","tool_input":{"command":"true"},"hook_event_name":"PreToolUse","session_id":"s"}'
 PATH=/usr/bin:/bin sh "$HOME/.claude/hooks/forge-hook.sh" forge-guard.sh <<<"$input"
+"$forge" bg forge-mac-check -- /bin/sh -c "touch '$tmp/bg-ran'"
+for _ in 1 2 3 4 5 6 7 8 9 10; do [ -e "$tmp/bg-ran" ] && break; sleep 1; done
+[ -e "$tmp/bg-ran" ] || { echo "forge bg must start a real launchd job"; exit 1; }
+"$forge" bg --stop forge-mac-check
+"$forge" notify "forge CI" "macOS notification check" || echo "osascript notification failed on this runner"
 cd "$tmp/proj"
 git init -q -b main
 PATH=$HOME/.local/bin:$PATH forge-init proj "A project."

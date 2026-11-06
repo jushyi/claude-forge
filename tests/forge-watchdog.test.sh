@@ -1668,7 +1668,7 @@ case ${1:-} in
     s=
     for ((i = 1; i < $#; i++)); do [ "${!i}" != --resume ] || { j=$((i + 1)); s=${!j}; }; done
     fds=closed
-    [ ! -e "/proc/$$/fd/6" ] && [ ! -e "/proc/$$/fd/9" ] || fds=open
+    [ ! -e "/dev/fd/6" ] && [ ! -e "/dev/fd/9" ] || fds=open
     [ -z "${WD_STDIN:-}" ] || cat >>"$WD_STDIN"
     [ -z "${WD_PATH:-}" ] || printf '%s\n' "$PATH" >>"$WD_PATH"
     printf 'resume %s %s\n' "$s" "$PWD" >>"$WD_ACTS"
@@ -3518,7 +3518,7 @@ lk=$XDG_RUNTIME_DIR/forge/sessions.lock
 l=free
 if [ -e "$lk" ] && ! flock -n "$lk" true; then l=held; fi
 f=closed
-[ ! -e "/proc/$$/fd/6" ] || f=open
+[ ! -e "/dev/fd/6" ] || f=open
 jq -cn --arg r "${FORGE_ROOT-unset}" --arg l "$l" --arg f "$f" '{root: $r, lock: $l, fd6: $f, args: $ARGS.positional}' --args -- "$@" >>"$WD_FORGES"
 if [ -s "$WD_FORGE_FAIL" ]; then echo "forge: cannot launch phase $2" >&2; exit 1; fi
 if [ -s "$WD_FORGE_REFUSE" ]; then
@@ -3866,7 +3866,7 @@ if [ -e "$lk" ] && ! flock -n "$lk" true; then l=held; fi
 hl=free
 if [ -e "$h.lock" ] && ! flock -n "$h.lock" true; then hl=held; fi
 f=closed
-[ ! -e "/proc/$$/fd/6" ] || f=open
+[ ! -e "/dev/fd/6" ] || f=open
 i=$(if [ -e "/proc/$$/fd/0" ]; then readlink "/proc/$$/fd/0"; elif [ /dev/stdin -ef /dev/null ]; then echo /dev/null; fi)
 case ${1:-} in resume) k=phase ;; implement) k=verify ;; next) k=ship ;; *) k=other ;; esac
 c=0
@@ -4568,7 +4568,7 @@ cat >"$bin/forge" <<'STUB'
 #!/usr/bin/env bash
 [ "$*" = "perf pull" ] || exit 0
 o=
-for f in 8 9; do [ ! -e "/proc/$$/fd/$f" ] || o+=" $f"; done
+for f in 8 9; do [ ! -e "/dev/fd/$f" ] || o+=" $f"; done
 printf '%s|%s|%s\n' "${FORGE_ROOT-unset}" "$(if [ -e "/proc/$$/fd/0" ]; then readlink "/proc/$$/fd/0"; elif [ /dev/stdin -ef /dev/null ]; then echo /dev/null; fi)" "${o# }" >>"$WD_PULLS"
 [ "$FORGE_ROOT" != "${WD_PULL_FAIL:-}" ] || { echo "stub pull failed" >&2; exit 3; }
 [ "$FORGE_ROOT" != "${WD_PULL_HANG:-}" ] || sleep 30
