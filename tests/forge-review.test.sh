@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export FORGE_UNAME=Linux
 root=$(cd "$(dirname "$0")/.." && pwd)
 fx=$root/tests/fixtures/forge
 forge=$root/bin/forge

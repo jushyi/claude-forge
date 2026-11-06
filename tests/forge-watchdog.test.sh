@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export FORGE_UNAME=Linux
 repo=$(cd "$(dirname "$0")/.." && pwd)
 forge=$repo/bin/forge
 export FORGE_TEMPLATES=$repo/templates FORGE_SCHEMAS=$repo/schemas LC_ALL=C

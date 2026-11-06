@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export FORGE_UNAME=Linux
 . "$(dirname "$0")/forge-common.sh"
 trap 'rm -rf "$tmp"' EXIT
 

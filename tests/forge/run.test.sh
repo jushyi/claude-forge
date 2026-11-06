@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export FORGE_UNAME=Linux
 . "$(dirname "$0")/../forge-common.sh"
 mkdir -p "$tmp/bin"
 stub_systemd "$tmp/bin"
