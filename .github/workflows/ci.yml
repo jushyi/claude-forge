@@ -90,10 +90,7 @@ jobs:
       - name: Real install with a stubbed claude
         run: tests/mac-install.sh
       - name: Test
-        env:
-          FORGE_UNAME: Linux
-          FORGE_RUN_ROOT: /tmp
-        run: mkdir -p /tmp/systemd/system && tests/ci.sh
+        run: tests/ci.sh
 
   wsl2:
     runs-on: windows-latest

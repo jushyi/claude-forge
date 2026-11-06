@@ -31,7 +31,8 @@ PATH=/usr/bin:/bin sh "$HOME/.claude/hooks/forge-hook.sh" forge-guard.sh <<<"$in
 for _ in 1 2 3 4 5 6 7 8 9 10; do [ -e "$tmp/bg-ran" ] && break; sleep 1; done
 [ -e "$tmp/bg-ran" ] || { echo "forge bg must start a real launchd job"; exit 1; }
 "$forge" bg --stop forge-mac-check
-"$forge" notify "forge CI" "macOS notification check" || echo "osascript notification failed on this runner"
+"$forge" notify "forge CI" "macOS notification check"
+launchctl print "gui/$(id -u)/com.github.claude-forge.watchdog" >/dev/null || { echo "the watchdog agent must be loaded"; exit 1; }
 cd "$tmp/proj"
 git init -q -b main
 PATH=$HOME/.local/bin:$PATH forge-init proj "A project."
