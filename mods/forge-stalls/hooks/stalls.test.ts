@@ -22,7 +22,7 @@ describe('isForgeSession', () => {
   })
 
   test('leaves other sessions out', async () => {
-    expect(isForgeSession('op i head there was a new claude code mods', '/home/op')).toBe(false)
+    expect(isForgeSession('op i head there was a new claude code mods', '/Users/op')).toBe(false)
     expect(isForgeSession('ACME 9057 ready', '/x')).toBe(false)
     expect(isForgeSession('example-app forge watchdog: slot cleared; continue', '/p/worktrees/backlog')).toBe(false)
     expect(isForgeSession('', '/x')).toBe(false)

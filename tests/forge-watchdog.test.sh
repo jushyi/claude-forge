@@ -1746,7 +1746,7 @@ rowpid() {
   local p=$((1000 + 10#$1))
   jq --arg i "aaaaaa$1" --argjson p "$p" 'map(if .id == $i then .pid = $p else . end)' "$agents" >"$agents.new"
   mv "$agents.new" "$agents"
-  proc "$p" - - /home/u/.local/share/claude/versions/2.1.293 --bg-pty-host
+  proc "$p" - - /Users/u/.local/share/claude/versions/2.1.293 --bg-pty-host
 }
 tlog() { printf '%s/%s.jsonl' "$(pdir "$wt/$tf-$1")" "$(sidn "$1")"; }
 starts() {
@@ -1770,7 +1770,7 @@ notes() {
   done
   touch -d "30 minutes ago" "$(tlog "$n")"
 }
-snap="source /home/u/.claude/shell-snapshots/snapshot-bash-1759900000000-abc123.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && eval 'sleep 600' < /dev/null && pwd -P >| /tmp/claude-1a2b-cwd"
+snap="source /Users/u/.claude/shell-snapshots/snapshot-bash-1759900000000-abc123.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && eval 'sleep 600' < /dev/null && pwd -P >| /tmp/claude-1a2b-cwd"
 py="python3 -c 'import time; time.sleep(120)'"
 penv() {
   local p=$1
@@ -1861,20 +1861,20 @@ parked 21-omicron "proj P21 $tfs" done "wait 05" 45 "proj P21 $tfs"
 parked 22-pi "proj P22 $tfs" done "wait 05" 46 "proj P22 $tfs"
 parked 23-rho "proj P23 $tfs" done "wait 05" 47 "proj P23 $tfs"
 for n in 07 09 10 11 12 13 14 15 16 17 21 22 23; do rowpid "$n"; done
-proc 2071 1007 1007 node /home/u/.local/share/forge/jbc/server.mjs
-proc 2072 2071 2071 node /home/u/.npm/_npx/1/node_modules/.bin/playwright-mcp --cdp-endpoint http://127.0.0.1:9222
-proc 2073 1007 1007 python /home/u/.local/bin/serena start-mcp-server --context claude-code
-proc 2074 1007 1007 /home/u/.cargo/bin/cargo build --release
-proc 2075 2074 2074 /home/u/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name engine --edition=2021 src/lib.rs
+proc 2071 1007 1007 node /Users/u/.local/share/forge/jbc/server.mjs
+proc 2072 2071 2071 node /Users/u/.npm/_npx/1/node_modules/.bin/playwright-mcp --cdp-endpoint http://127.0.0.1:9222
+proc 2073 1007 1007 python /Users/u/.local/bin/serena start-mcp-server --context claude-code
+proc 2074 1007 1007 /Users/u/.cargo/bin/cargo build --release
+proc 2075 2074 2074 /Users/u/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name engine --edition=2021 src/lib.rs
 proc 2076 1007 1007 python3 scripts/gen_shaders.py
 starts 07 a8b1f24ca4c579fc5 a386abb4fa9a13693 bzui28sfr bjqeokjtb bp67hm9zt
 jq -ce 'select(.toolUseResult.success and .toolUseResult.taskId == "1")' "$fx/tasklist.jsonl" >>"$(tlog 07)" || fail "tests/fixtures/watchdog/tasklist.jsonl holds a TaskUpdate result of task 1"
 notes 07 restart a386abb4fa9a13693
 notes 07 status a8b1f24ca4c579fc5 a386abb4fa9a13693 bzui28sfr bjqeokjtb bp67hm9zt
-proc 2111 1011 1011 node /home/u/.local/share/forge/jbc/server.mjs
+proc 2111 1011 1011 node /Users/u/.local/share/forge/jbc/server.mjs
 proc 2112 1011 5011 /bin/bash -c "$snap"
 proc 2113 2112 2112 timeout 30 tail -f /dev/null
-proc 2131 1013 1013 /home/u/.local/share/claude/versions/2.1.293 bg-spare
+proc 2131 1013 1013 /Users/u/.local/share/claude/versions/2.1.293 bg-spare
 proc 2132 2131 2131 /bin/bash -c "$snap"
 starts 14 bjqeokjtb bzui28sfr
 notes 14 status bjqeokjtb
@@ -1886,19 +1886,19 @@ starts 21 a386abb4fa9a13693
 notes 21 status a386abb4fa9a13693
 notes 21 restart a386abb4fa9a13693
 proc 2221 1022 1022 /bin/bash -c "${snap/sleep 600/cargo build --release}"
-proc 2222 2221 2221 /home/u/.cargo/bin/cargo build --release
-proc 2223 2222 2222 /home/u/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name engine --edition=2021 src/lib.rs
+proc 2222 2221 2221 /Users/u/.cargo/bin/cargo build --release
+proc 2223 2222 2222 /Users/u/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name engine --edition=2021 src/lib.rs
 proc 2224 2221 2221 python3 scripts/gen_shaders.py
-proc 2231 1023 1023 /home/u/.local/share/uv/tools/serena-agent/bin/python /home/u/.local/bin/serena start-mcp-server --context claude-code --project-from-cwd --mode no-memories
-proc 2232 1023 1023 node /home/u/.local/share/forge/jbc/server.mjs
+proc 2231 1023 1023 /Users/u/.local/share/uv/tools/serena-agent/bin/python /Users/u/.local/bin/serena start-mcp-server --context claude-code --project-from-cwd --mode no-memories
+proc 2232 1023 1023 node /Users/u/.local/share/forge/jbc/server.mjs
 proc 2233 1023 1023 "npm exec @playwright/mcp@0.0.82 --cdp-endpoint http://127.0.0.1:9222"
-proc 2234 2233 2233 node /home/u/.npm/_npx/53b5ca06f5b71ebd/node_modules/.bin/playwright-mcp --cdp-endpoint http://127.0.0.1:9222
+proc 2234 2233 2233 node /Users/u/.npm/_npx/53b5ca06f5b71ebd/node_modules/.bin/playwright-mcp --cdp-endpoint http://127.0.0.1:9222
 proc 2235 1023 1023 /bin/bash -c "${snap/sleep 600/$py}"
 proc 2236 2235 2235 python3 -c 'import time; time.sleep(120)'
 proc 2241 - - /bin/bash -c "$snap"
-penv 2241 HOME=/home/u "CLAUDE_CODE_SESSION_ID=$(sidn 20)" CLAUDECODE=1
+penv 2241 HOME=/Users/u "CLAUDE_CODE_SESSION_ID=$(sidn 20)" CLAUDECODE=1
 proc 2242 2241 2241 sleep 600
-proc 2243 - - python /home/u/.local/bin/serena start-mcp-server --context claude-code
+proc 2243 - - python /Users/u/.local/bin/serena start-mcp-server --context claude-code
 penv 2243 "CLAUDE_CODE_SESSION_ID=$(sidn 08)"
 proc 2244 - - /bin/bash -c "$snap"
 penv 2244 "CLAUDE_CODE_SESSION_ID=$(sidn 19)0" "X_SESSION=CLAUDE_CODE_SESSION_ID=$(sidn 08)"

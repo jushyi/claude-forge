@@ -14,7 +14,7 @@ const agents = [
   },
   { name: 'ACME discuss inv-release/release-flow', cwd: '/p/ACME', state: 'blocked', startedAt: NOW - 4 * 60_000 },
   { name: 'ACME P190 hardening/perf-pass', cwd: '/p/ACME', state: 'done', startedAt: NOW },
-  { name: 'op some chat', cwd: '/home/op', state: 'working', startedAt: NOW },
+  { name: 'op some chat', cwd: '/Users/op', state: 'working', startedAt: NOW },
 ]
 
 const status = {

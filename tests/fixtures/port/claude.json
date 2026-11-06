@@ -19,11 +19,11 @@
       "args": ["-y", "@playwright/mcp@latest"],
       "env": {}
     },
-    "brain-jev": {
+    "example-mcp": {
       "type": "stdio",
-      "command": "/home/operator/.local/bin/brain-jev-mcp",
+      "command": "/Users/operator/.local/bin/example-mcp",
       "args": [],
-      "env": {"BRAIN_JEV_TOKEN": "env-value-brain-9c1d"}
+      "env": {"EXAMPLE_TOKEN": "env-value-example-9c1d"}
     },
     "playwright": {
       "type": "stdio",
@@ -56,7 +56,7 @@
     "~/Projects/forge": {
       "hasTrustDialogAccepted": true
     },
-    "/home/operator/Projects/demo": {
+    "/Users/operator/Projects/demo": {
       "mcpServers": {
         "project-only": {
           "type": "stdio",

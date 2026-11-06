@@ -193,9 +193,9 @@ fi
 
 refuseset() {
   fresh
-  rm -rf "$tmp/brain" "$tmp/cold" && repo "$tmp/brain" && repo "$tmp/cold" && mkdir -p "$tmp/brain/.forge"
+  rm -rf "$tmp/atlas" "$tmp/cold" && repo "$tmp/atlas" && repo "$tmp/cold" && mkdir -p "$tmp/atlas/.forge"
   repo web && mkdir -p web/.forge && repo api
-  echo '{"repos": ["../brain", "../cold"]}' >.forge/repos.json
+  echo '{"repos": ["../atlas", "../cold"]}' >.forge/repos.json
   mkdir -p "$S"/features/crm-export
   echo "{\"phases\": $1}" >"$S"/features/crm-export/split.json
 }
@@ -215,9 +215,9 @@ refuseset "[$(ph export-core '' '[]'), $(ph export-api api '["export-core"]')]"
 refused "a child repo without .forge/" export-api api .forge
 refuseset "[$(ph export-core cold '[]')]"
 refused "a linked repo without .forge/" export-core cold .forge
-refuseset "[$(ph export-ui web '["export-core"]'), $(ph export-core brain '["export-form"]'), $(ph export-form web '[]')]"
-refused "a cycle between repos" cycle web brain
-refuseset "[$(ph export-core brain '[]'), $(ph export-mid '' '["export-core"]'), $(ph export-ui web '["export-mid"]')]"
+refuseset "[$(ph export-ui web '["export-core"]'), $(ph export-core atlas '["export-form"]'), $(ph export-form web '[]')]"
+refused "a cycle between repos" cycle web atlas
+refuseset "[$(ph export-core atlas '[]'), $(ph export-mid '' '["export-core"]'), $(ph export-ui web '["export-mid"]')]"
 "$forge" alloc crm/export >"$tmp/out" 2>&1 || fail "a split across repos with transitive dependencies must allocate: $(cat "$tmp/out")"
 [ -d "$S"/phases/07-export-ui ] || fail "an accepted split is numbered and allocated"
 h=$("$forge" alloc --help)
@@ -328,10 +328,10 @@ ok alloc-build
 fi
 
 if want alloc-reference; then
-refuseset "[$(ph export-core brain '[]'), $(ph export-form web '[]'), $(ph export-docs '' '[]'), $(ph export-ui web '["export-docs", "export-form", "export-core"]' | jq -c '.spec = ["Show the export."]'), $(ph export-tail web '["export-ui"]')]"
+refuseset "[$(ph export-core atlas '[]'), $(ph export-form web '[]'), $(ph export-docs '' '[]'), $(ph export-ui web '["export-docs", "export-form", "export-core"]' | jq -c '.spec = ["Show the export."]'), $(ph export-tail web '["export-ui"]')]"
 "$forge" alloc crm/export >"$tmp/out" 2>&1 || fail "alloc of a split with cross-repo dependencies: $(cat "$tmp/out")"
-pr=$PWD br=$(cd "$tmp/brain" && pwd)
-want=$(jq -cS . <<<"{\"track\": \"crm\", \"feature\": \"export\", \"number\": \"08\", \"slug\": \"export-ui\", \"repo\": \"web\", \"goal\": \"export-ui\", \"spec\": [\"Reference (read-only): brain feature worktree $br/.claude/worktrees/crm-export\", \"Reference (read-only): p feature worktree $pr/.claude/worktrees/crm-export\", \"Show the export.\"], \"requirements\": [], \"depends\": [\"07\", \"06\", \"05\"]}")
+pr=$PWD br=$(cd "$tmp/atlas" && pwd)
+want=$(jq -cS . <<<"{\"track\": \"crm\", \"feature\": \"export\", \"number\": \"08\", \"slug\": \"export-ui\", \"repo\": \"web\", \"goal\": \"export-ui\", \"spec\": [\"Reference (read-only): atlas feature worktree $br/.claude/worktrees/crm-export\", \"Reference (read-only): p feature worktree $pr/.claude/worktrees/crm-export\", \"Show the export.\"], \"requirements\": [], \"depends\": [\"07\", \"06\", \"05\"]}")
 [ "$(json "$S"/phases/08-export-ui/spec.json)" = "$want" ] || fail "a consumer phase's spec starts with one reference line per producer repo it depends on directly, in producer order: $(json "$S"/phases/08-export-ui/spec.json)"
 for d in 05-export-core 06-export-form 07-export-docs 09-export-tail; do
   [ "$(jq -c .spec "$S"/phases/$d/spec.json)" = '[]' ] || fail "$d depends directly on no other repo, so gets no reference line: $(json "$S"/phases/$d/spec.json)"

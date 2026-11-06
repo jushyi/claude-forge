@@ -13,7 +13,7 @@ printf '{"outputStyle": "google-dev-docs"}\n' >"$CLAUDE_CONFIG_DIR/settings.json
 printf -- '---\nname: google-dev-docs\nreminder: "Keep it short and \\"plain\\"."\n---\nBody\n' >"$CLAUDE_CONFIG_DIR/output-styles/google-dev-docs.md"
 unset FORGE_ROOT
 
-input() { jq -n --arg p "$1" '{hook_event_name: "UserPromptSubmit", session_id: "s1", cwd: "/home/u/Projects/acme", prompt: $p}'; }
+input() { jq -n --arg p "$1" '{hook_event_name: "UserPromptSubmit", session_id: "s1", cwd: "/Users/u/Projects/acme", prompt: $p}'; }
 
 out=$(input 'hello there' | "$hook") || fail "a plain prompt must exit 0"
 [ "$(jq -r .hookSpecificOutput.hookEventName <<<"$out")" = UserPromptSubmit ] || fail "a plain prompt must name the event, got: $out"
@@ -25,7 +25,7 @@ out=$(input '<scheduled-task name="x">run</scheduled-task>' | "$hook") || fail "
 out=$(input '<task-notification><task-id>a1</task-id><status>completed</status></task-notification>' | "$hook") || fail "a task notification must exit 0"
 [ -z "$out" ] || fail "a task-notification prompt must get no output, got: $out"
 
-out=$(input 'hello there' | FORGE_ROOT=/home/u/Projects/acme "$hook") || fail "a forge session must exit 0"
+out=$(input 'hello there' | FORGE_ROOT=/Users/u/Projects/acme "$hook") || fail "a forge session must exit 0"
 [ -z "$out" ] || fail "a non-empty FORGE_ROOT must get no output, got: $out"
 
 out=$(input 'hello there' | FORGE_ROOT= "$hook") || fail "an empty FORGE_ROOT must exit 0"

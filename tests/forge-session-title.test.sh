@@ -33,7 +33,7 @@ touch "$p/forge/.forge/PROJECT.md" "$p/forge/.claude/worktrees/rollout-72/.forge
 run() {
   local t=null
   [ $# -lt 4 ] || t=$(jq -n --arg t "$4" '$t')
-  jq -n --arg p "$1" --arg c "${2:-/home/u/Projects/acme}" --arg s "${3:-sid-$BASHPID-$RANDOM$RANDOM}" --argjson t "$t" \
+  jq -n --arg p "$1" --arg c "${2:-/Users/u/Projects/acme}" --arg s "${3:-sid-$BASHPID-$RANDOM$RANDOM}" --argjson t "$t" \
     '{hook_event_name: "UserPromptSubmit", session_id: $s, cwd: $c, prompt: $p} + (if $t == null then {} else {session_title: $t} end)' | "$hook"
 }
 title() { run "$@" | jq -r .hookSpecificOutput.sessionTitle; }

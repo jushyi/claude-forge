@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
 const NOW = 1_800_000_000_000
-const DIR = '/home/op/.claude/projects/-p-ACME-acme-hub--claude-worktrees-perf-191'
+const DIR = '/Users/op/.claude/projects/-p-ACME-acme-hub--claude-worktrees-perf-191'
 
 type Agent = { id: string; sessionId: string; name: string; cwd: string; state: string }
 
@@ -20,7 +20,7 @@ const PHASE: Agent = {
   cwd: '/p/ACME/acme-hub/.claude/worktrees/perf-191',
   state: 'working',
 }
-const CHAT: Agent = { id: 'cccc3333', sessionId: 's-chat', name: 'op some chat', cwd: '/home/op', state: 'blocked' }
+const CHAT: Agent = { id: 'cccc3333', sessionId: 's-chat', name: 'op some chat', cwd: '/Users/op', state: 'blocked' }
 
 const DISCUSS_NOTE = 'ACME discuss inv-release/release-flow needs you · claude attach aaaa1111'
 
@@ -50,7 +50,7 @@ function mockHost(on: On, subagentMtime: number, agents: Agent[], store = new Ma
     host.onSleep()
     return { value: undefined }
   })
-  on('env.get', () => ({ value: '/home/op' }))
+  on('env.get', () => ({ value: '/Users/op' }))
   on('process.run', () => ({
     value: {
       exitCode: 0,

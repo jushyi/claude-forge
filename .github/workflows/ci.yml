@@ -118,6 +118,6 @@ jobs:
         shell: wsl-bash {0}
         run: |
           useradd -m ci
-          cp -r src /home/ci/src
-          chown -R ci /home/ci/src
+          cp -r src ~ci/src
+          chown -R ci ~ci/src
           su - ci -c 'pipx install check-jsonschema && export PATH=$HOME/.local/bin:$PATH && git config --global user.name ci && git config --global user.email ci@example.com && cd ~/src && tests/ci.sh'

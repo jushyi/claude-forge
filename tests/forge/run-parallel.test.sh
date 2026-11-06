@@ -536,26 +536,26 @@ fresh
 git init -q -b main && git config user.name forge && git config user.email forge@example.com
 echo '[]' >"$CLAUDE_AGENTS"
 : >"$CLAUDE_LOG"
-p=$PWD sib=$tmp/brain
+p=$PWD sib=$tmp/atlas
 rm -rf "$sib" && repo "$sib"
 mkdir -p "$sib/.forge/contracts" && touch "$sib/.forge/contracts/.keep"
 git -C "$sib" add -A && git -C "$sib" commit -q -m forge
 git -C "$sib" branch forge/crm-export
-echo '{"repos": ["../brain"]}' >.forge/repos.json
+echo '{"repos": ["../atlas"]}' >.forge/repos.json
 mkdir -p "$S"/features/crm-export
-echo '{"phases": [{"slug": "export-core", "repo": "brain", "goal": "Core", "spec": [], "requirements": [], "depends": []}, {"slug": "export-api", "goal": "API", "spec": [], "requirements": [], "depends": ["export-core"]}]}' >"$S"/features/crm-export/split.json
+echo '{"phases": [{"slug": "export-core", "repo": "atlas", "goal": "Core", "spec": [], "requirements": [], "depends": []}, {"slug": "export-api", "goal": "API", "spec": [], "requirements": [], "depends": ["export-core"]}]}' >"$S"/features/crm-export/split.json
 "$forge" alloc crm/export >/dev/null
 git add -A && git commit -q -m init
-echo '[{"id": "a1", "name": "brain P05 crm/export", "state": "working"}]' >"$CLAUDE_AGENTS"
-[ "$(code "$forge" implement crm/export)" = 1 ] && grep -qF "already has a live session brain P05 crm/export" "$tmp/out" || fail "the running-session check comes before the collision check: $(cat "$tmp/out")"
+echo '[{"id": "a1", "name": "atlas P05 crm/export", "state": "working"}]' >"$CLAUDE_AGENTS"
+[ "$(code "$forge" implement crm/export)" = 1 ] && grep -qF "already has a live session atlas P05 crm/export" "$tmp/out" || fail "the running-session check comes before the collision check: $(cat "$tmp/out")"
 echo '[]' >"$CLAUDE_AGENTS"
 [ "$(code "$forge" implement crm/export)" = 1 ] || fail "implement of a fresh feature whose phase repo already has forge/crm-export must fail: $(cat "$tmp/out")"
-grep -q "brain" "$tmp/out" && grep -q "forge/crm-export" "$tmp/out" || fail "the collision refusal names the repo and the branch: $(cat "$tmp/out")"
+grep -q "atlas" "$tmp/out" && grep -q "forge/crm-export" "$tmp/out" || fail "the collision refusal names the repo and the branch: $(cat "$tmp/out")"
 [ ! -e "$sib/.claude/worktrees" ] && [ ! -e .claude/worktrees ] || fail "the collision refusal creates no worktree"
 [ ! -s "$CLAUDE_LOG" ] || ! grep -q -- " --bg " "$CLAUDE_LOG" || fail "the collision refusal starts no session"
 "$forge" resume 05 >/dev/null 2>"$tmp/err" || fail "resume of a crashed first phase skips the collision check: $(cat "$tmp/err")"
 [ "$(git -C "$sib/.claude/worktrees/crm-export" branch --show-current)" = forge/crm-export ] || fail "resume uses the existing forge/crm-export"
-[ "$(last)" = "$sib/.claude/worktrees/crm-export-05 | --bg -n p/brain P05 crm/export $opts bypassPermissions $s5 /forge-phase $p 05" ] || fail "resumed linked repo session: $(last)"
+[ "$(last)" = "$sib/.claude/worktrees/crm-export-05 | --bg -n p/atlas P05 crm/export $opts bypassPermissions $s5 /forge-phase $p 05" ] || fail "resumed linked repo session: $(last)"
 help=$("$forge" implement --help) || fail "forge implement --help exits 0"
 grep -qi "already" <<<"$help" || fail "implement help describes the collision refusal"
 ok collision
@@ -595,32 +595,32 @@ fi
 
 linkset() {
   fresh
-  rm -rf "$tmp/brain" && repo "$tmp/brain" && mkdir -p "$tmp/brain/.forge"
+  rm -rf "$tmp/atlas" && repo "$tmp/atlas" && mkdir -p "$tmp/atlas/.forge"
   repo web && mkdir -p web/.forge
-  echo '{"repos": ["../brain"]}' >.forge/repos.json
+  echo '{"repos": ["../atlas"]}' >.forge/repos.json
   mkdir -p "$S"/features/crm-export
   echo "{\"phases\": $1}" >"$S"/features/crm-export/split.json
   "$forge" alloc crm/export >/dev/null
-  pr=$PWD br=$(cd "$tmp/brain" && pwd)
+  pr=$PWD br=$(cd "$tmp/atlas" && pwd)
 }
 ph() { jq -cn --arg slug "$1" --arg repo "$2" --argjson depends "$3" '{$slug} + (if $repo == "" then {} else {$repo} end) + {goal: $slug, spec: [], requirements: [], $depends}'; }
 repos_out() { (cd "$tmp" && FORGE_ROOT=$pr "$forge" repos crm/export) >"$tmp/out" 2>&1; }
 if want repos; then
-linkset "[$(ph export-ui web '["export-core"]'), $(ph export-core brain '[]')]"
+linkset "[$(ph export-ui web '["export-core"]'), $(ph export-core atlas '[]')]"
 repos_out || fail "forge repos of a producer and a consumer: $(cat "$tmp/out")"
-[ "$(cat "$tmp/out")" = "$(printf 'brain %s\nweb %s' "$br" "$pr/web")" ] || fail "the producer repo prints before its consumer despite a higher phase number: $(cat "$tmp/out")"
-linkset "[$(ph export-ui web '[]'), $(ph export-docs '' '[]'), $(ph export-form web '[]'), $(ph export-core brain '[]')]"
+[ "$(cat "$tmp/out")" = "$(printf 'atlas %s\nweb %s' "$br" "$pr/web")" ] || fail "the producer repo prints before its consumer despite a higher phase number: $(cat "$tmp/out")"
+linkset "[$(ph export-ui web '[]'), $(ph export-docs '' '[]'), $(ph export-form web '[]'), $(ph export-core atlas '[]')]"
 repos_out || fail "forge repos of independent repos: $(cat "$tmp/out")"
 [ "$(cat "$tmp/out")" = "$(printf 'web %s\np %s\nbrain %s' "$pr/web" "$pr" "$br")" ] || fail "independent repos order by their lowest phase number: $(cat "$tmp/out")"
-linkset "[$(ph export-core brain '[]'), $(ph export-docs '' '["export-core"]')]"
+linkset "[$(ph export-core atlas '[]'), $(ph export-docs '' '["export-core"]')]"
 repos_out || fail "forge repos of a linked producer and a root consumer: $(cat "$tmp/out")"
-[ "$(cat "$tmp/out")" = "$(printf 'brain %s\np %s' "$br" "$pr")" ] || fail "the project root prints last when it consumes a linked repo: $(cat "$tmp/out")"
-linkset "[$(ph export-ui web '["export-core"]'), $(ph export-core brain '[]'), $(ph export-form web '[]')]"
+[ "$(cat "$tmp/out")" = "$(printf 'atlas %s\np %s' "$br" "$pr")" ] || fail "the project root prints last when it consumes a linked repo: $(cat "$tmp/out")"
+linkset "[$(ph export-ui web '["export-core"]'), $(ph export-core atlas '[]'), $(ph export-form web '[]')]"
 s="$S"/features/crm-export/split.json
 jq '(.phases[] | select(.slug == "export-core") | .depends) = ["export-form"]' $s >"$tmp/split" && mv "$tmp/split" $s
 jq '.depends = ["07"]' "$S"/phases/06-export-core/spec.json >"$tmp/spec" && mv "$tmp/spec" "$S"/phases/06-export-core/spec.json
 st=0; repos_out || st=$?
-[ $st = 1 ] || fail "forge repos with a cycle between web and brain must exit 1, got $st: $(cat "$tmp/out")"
+[ $st = 1 ] || fail "forge repos with a cycle between web and atlas must exit 1, got $st: $(cat "$tmp/out")"
 ok repos
 fi
 

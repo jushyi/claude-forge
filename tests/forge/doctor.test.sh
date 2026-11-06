@@ -190,9 +190,9 @@ fi
 if want hooks; then
 home
 a=$h/Projects/alpha
-repo "$a" true "$(hook 'doctor-missing-hook --flag' 'bash ~/Projects/.brain/hook.sh' 'bash "$CLAUDE_PROJECT_DIR/.claude/hooks/gone.sh" arg' "bash '\${HOME}/gone-too.sh'" 'bash ~/bin/ok.sh' 'bash ~/gone-semi.sh; exit 0' 'bash "$HOME/my dir/gone.sh" > /tmp/doctor-missing-log')"
+repo "$a" true "$(hook 'doctor-missing-hook --flag' 'bash ~/Projects/.atlas/hook.sh' 'bash "$CLAUDE_PROJECT_DIR/.claude/hooks/gone.sh" arg' "bash '\${HOME}/gone-too.sh'" 'bash ~/bin/ok.sh' 'bash ~/gone-semi.sh; exit 0' 'bash "$HOME/my dir/gone.sh" > /tmp/doctor-missing-log')"
 [ "$(doc)" = 1 ] || fail "a settings.json hook running a missing command or calling a missing script must exit 1: $(show)"
-want=$(printf '%s\n' "$(hruns "$a" doctor-missing-hook)" "$(hcalls "$a" "$h/Projects/.brain/hook.sh")" "$(hcalls "$a" "$a/.claude/hooks/gone.sh")" "$(hcalls "$a" "$h/gone-too.sh")" "$(hcalls "$a" "$h/gone-semi.sh")" "$(hcalls "$a" "$h/my dir/gone.sh")" | sort)
+want=$(printf '%s\n' "$(hruns "$a" doctor-missing-hook)" "$(hcalls "$a" "$h/Projects/.atlas/hook.sh")" "$(hcalls "$a" "$a/.claude/hooks/gone.sh")" "$(hcalls "$a" "$h/gone-too.sh")" "$(hcalls "$a" "$h/gone-semi.sh")" "$(hcalls "$a" "$h/my dir/gone.sh")" | sort)
 [ "$(sort "$tmp/out")" = "$want" ] || fail "hook problems print one line each with ~, \$HOME, \${HOME} and \$CLAUDE_PROJECT_DIR expanded and quotes stripped: $(show)"
 echo '{"hooks": ' >"$a/.claude/settings.json"
 [ "$(doc)" = 1 ] || fail "an unparsable settings.json must exit 1: $(show)"
@@ -233,9 +233,9 @@ fi
 if want two; then
 home
 a=$h/Projects/alpha b=$h/Projects/beta
-repo "$a" doctor-missing-tool "$(hook 'bash ~/Projects/.brain/hook.sh')"
+repo "$a" doctor-missing-tool "$(hook 'bash ~/Projects/.atlas/hook.sh')"
 repo "$b"
-want=$(printf '%s\n' "$(tline "$a" doctor-missing-tool)" "$(hcalls "$a" "$h/Projects/.brain/hook.sh")")
+want=$(printf '%s\n' "$(tline "$a" doctor-missing-tool)" "$(hcalls "$a" "$h/Projects/.atlas/hook.sh")")
 [ "$(doc)" = 1 ] || fail "a missing TESTING.md command and a missing hook script must exit 1: $(show)"
 [ "$(cat "$tmp/out")" = "$want" ] || fail "the fixture prints exactly its two problem lines: $(show)"
 ok two

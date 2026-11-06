@@ -48,7 +48,7 @@ describe('parseRun', () => {
   })
 
   test('leaves other sessions out', async () => {
-    expect(parseRun('op i head there was a new claude code mods', '/home/op')).toBeUndefined()
+    expect(parseRun('op i head there was a new claude code mods', '/Users/op')).toBeUndefined()
     expect(parseRun('ACME 9057 ready', '/x')).toBeUndefined()
     expect(parseRun('example-app forge watchdog: slot cleared; continue', '/p/worktrees/flight-planning-backlog')).toBeUndefined()
   })
